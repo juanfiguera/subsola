@@ -1,0 +1,23 @@
+# A self-hosted Subsola for one city: `docker compose up`, then open http://localhost:8080 once
+# the ingest service logs "is live" (a first build takes a few minutes). See README.
+services:
+  ingest:
+    build: .
+    command: ./selfhost/ingest.sh
+    environment:
+      CITY: ${CITY:-sea}
+      INGEST_EVERY_SECONDS: ${INGEST_EVERY_SECONDS:-86400}
+    volumes:
+      - ./selfhost-data:/data
+    restart: unless-stopped
+  web:
+    build: .
+    command: ./selfhost/web.sh
+    environment:
+      FEEDBACK_SALT: ${FEEDBACK_SALT:-change-me}
+      REQUESTER_KEY: ${REQUESTER_KEY:-change-me-too}
+    ports:
+      - '${PORT:-8080}:8080'
+    volumes:
+      - ./selfhost-data/public:/app/dist/local
+    restart: unless-stopped

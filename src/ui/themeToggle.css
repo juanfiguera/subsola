@@ -1,0 +1,105 @@
+/* The theme switch (src/ui/themeToggle.ts), shared by the map and the insights page. It reads only
+   the tokens both pages define: --panel, --panel-2, --line, --ink, --ink-2. */
+.theme-toggle {
+  flex: none;
+  /* Holds its place before the script fills it, so nothing in the bar shifts. */
+  width: 58px;
+  height: 32px;
+}
+
+.theme-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 58px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.theme-switch:hover {
+  color: var(--ink);
+}
+
+.theme-switch:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.theme-switch svg {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The knob sits under the active icon, so the state shows in position, not color alone. */
+.theme-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--panel);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  transition: transform 0.18s ease;
+}
+
+.theme-switch[aria-checked='true'] .theme-knob {
+  transform: translateX(26px);
+}
+
+.theme-switch[aria-checked='false'] .theme-sun,
+.theme-switch[aria-checked='true'] .theme-moon {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-knob {
+    transition: none;
+  }
+}
+
+/* A phone's top bar has no room for the track: the switch becomes one round button showing the
+   mode in effect, the size the other bar buttons are. Same breakpoint as the map's phone layout. */
+@media (max-width: 900px), (max-height: 520px) {
+  .theme-toggle,
+  .theme-switch {
+    width: 36px;
+    height: 36px;
+  }
+
+  .theme-switch {
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .theme-knob,
+  .theme-switch[aria-checked='true'] .theme-sun,
+  .theme-switch[aria-checked='false'] .theme-moon {
+    display: none;
+  }
+
+  .theme-switch svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media print {
+  .theme-toggle {
+    display: none;
+  }
+}

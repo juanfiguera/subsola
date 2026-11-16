@@ -1,0 +1,3371 @@
+/*
+ * Subsola: a clear map of what is under the street.
+ * A light model view, like a digital twin: pale ground, white panels, gray line work.
+ * Color only where it means something (APWA utility colors, yellow for the address and 811).
+ */
+@import './ui/themeToggle.css';
+
+:root {
+  --ground: #e6e9ee;
+  --panel: #ffffff;
+  --panel-2: #f3f5f8;
+  --line: rgb(20 30 50 / 0.09);
+  --ink: #1b2230;
+  --ink-2: #4f5a6d;
+  --ink-3: #8a94a6;
+  --hivis: #ffd60a;
+  --danger: #e5484d;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgb(20 30 50 / 0.06), 0 10px 28px rgb(20 30 50 / 0.08);
+  --display: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+  --body: 'Barlow', system-ui, sans-serif;
+  --topbar: 56px;
+  /* The side panels, so the toolbar can center in the map between them. */
+  --layers-w: 220px;
+  --card-w: 360px;
+  --site-links-h: 18px;
+  /* Behind the model when the camera is under the street: you are in the dirt now. */
+  --soil: #d9d1c4;
+  /* Each color below has a dark twin in the block that follows. */
+  --on-ink: #fff;
+  --ink-hover: #2a3346;
+  --ink-rgb: 27 34 48;
+  --on-hivis: #1b2230;
+  --hivis-hover: #ffcc00;
+  --hover: #e8ecf2;
+  --hover-soft: #edf0f4;
+  --underline: rgb(20 30 50 / 0.3);
+  --underline-soft: rgb(20 30 50 / 0.25);
+  --switch-off: #d5dae2;
+  --knob: #fff;
+  --knob-shadow: 0 1px 2px rgb(20 30 50 / 0.25);
+  --warn-bg: #fde8e8;
+  --warn-ink: #b4232a;
+  --tip-bg: rgb(27 34 48 / 0.94);
+  --tip-ink: #fff;
+  --tip-ink-2: #b9c1cf;
+  --tip-shadow: 0 8px 24px rgb(20 30 50 / 0.2);
+  --handle: #cfd5de;
+  --sheet-shadow: 0 -6px 28px rgb(20 30 50 / 0.12);
+  --axis: rgb(20 30 50 / 0.15);
+  --hit-hover: rgb(20 30 50 / 0.05);
+  --paper: #fff;
+  /* Street feature pins and dots, one neutral for all; scene/palette.ts matches it. */
+  --feature: #5d6878;
+  color-scheme: light;
+}
+
+/*
+ * Dark mode (docs/dark-mode.md): the same model a few steps down, set by public/theme.js before
+ * the first paint. Screen only, so the lot report always prints light. Elevation is lightness:
+ * ground, then panel, then inset. Muted text clears 4.5:1 on the inset; src/theme.test.ts checks.
+ */
+@media screen {
+  :root[data-theme='dark'] {
+    --ground: #14181e;
+    --panel: #1d222a;
+    --panel-2: #272d37;
+    --line: rgb(255 255 255 / 0.1);
+    --ink: #e7eaef;
+    --ink-2: #b0b8c5;
+    --ink-3: #959fae;
+    --danger: #ff6b70;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px rgb(0 0 0 / 0.35);
+    --soil: #221f1b;
+    --on-ink: #14181e;
+    /* The 811 button stays hi-vis yellow with dark text. */
+    --on-hivis: #1b2230;
+    --ink-hover: #ffffff;
+    --ink-rgb: 231 234 239;
+    --hover: #313845;
+    --hover-soft: #2d3440;
+    --underline: rgb(255 255 255 / 0.3);
+    --underline-soft: rgb(255 255 255 / 0.25);
+    --switch-off: #6b7486;
+    --knob: #f2f4f7;
+    /* A dark ring, so the knob holds its edge on a light ink track. */
+    --knob-shadow: 0 0 0 1px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+    --warn-bg: #3d2328;
+    --warn-ink: #ff9a9e;
+    --tip-bg: rgb(43 50 62 / 0.97);
+    --tip-ink: #f2f4f7;
+    --tip-ink-2: #bcc4d0;
+    --tip-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 8px 24px rgb(0 0 0 / 0.5);
+    --handle: #6b7486;
+    --sheet-shadow: 0 -6px 28px rgb(0 0 0 / 0.4);
+    --axis: #6b7486;
+    --hit-hover: rgb(255 255 255 / 0.06);
+    --paper: var(--panel);
+    --feature: #a3acb9;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ground);
+  color: var(--ink);
+  font: 500 14px/1.45 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-color: var(--underline);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+svg {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.scene {
+  position: fixed;
+  inset: 0;
+  background: var(--ground);
+  transition: background-color 300ms;
+}
+
+/* City map: the whole city, under the same panels. It stays mounted at zero opacity so its tiles
+   are ready, and cross-fades with the street view, which keeps drawing under it.
+   Doubled class so MapLibre's own `position: relative` doesn't win. */
+.city.city {
+  position: fixed;
+  inset: 0;
+  background: var(--ground);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 280ms ease,
+    visibility 0s linear 280ms;
+}
+
+.city.city.is-shown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 280ms ease;
+}
+
+.layers,
+.toolbar {
+  transition: opacity 280ms ease;
+}
+
+[data-mode='city'] .layers,
+[data-mode='city'] .toolbar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The link is to a street view; the city map has none to share. */
+[data-mode='city'] .share-button {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .city.city,
+  .city.city.is-shown,
+  .layers,
+  .toolbar {
+    transition: none;
+  }
+}
+
+/* The map runs under the top bar, so its north button sits below it. */
+.city .maplibregl-ctrl-top-left {
+  top: calc(var(--topbar) + 6px);
+  left: 6px;
+}
+
+/* MapLibre's controls are white with dark icon images; on the dark map they take our panel, and
+   the images flip to light. */
+:root[data-theme='dark'] .city .maplibregl-ctrl-group,
+:root[data-theme='dark'] .city .maplibregl-ctrl-attrib {
+  background: var(--panel);
+  color: var(--ink-2);
+}
+
+:root[data-theme='dark'] .city .maplibregl-ctrl-group button + button {
+  border-top-color: var(--line);
+}
+
+:root[data-theme='dark'] .city .maplibregl-ctrl-attrib a {
+  color: var(--ink-2);
+}
+
+:root[data-theme='dark'] .city .maplibregl-ctrl-icon,
+:root[data-theme='dark'] .city .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+.area-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.area strong {
+  display: block;
+  font: 700 19px/1.1 var(--display);
+}
+
+.area-when {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.area p {
+  margin: 4px 0 8px;
+  color: var(--ink-2);
+}
+
+.area-open {
+  padding: 6px 10px;
+  background: var(--panel-2);
+}
+
+.area-open:hover {
+  background: var(--hover);
+}
+
+[data-side='below'] .scene {
+  background: var(--soil);
+}
+
+/* Top bar */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 800 20px var(--display);
+  text-decoration: none;
+}
+
+/* A strip of locator paint: electric, gas, telecom, water, sewer. */
+.mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: linear-gradient(
+    90deg,
+    #e3262b 0 20%,
+    #f2c200 20% 40%,
+    #f47c20 40% 60%,
+    #1f6fd1 60% 80%,
+    #2e9a48 80%
+  );
+}
+
+/* Its own control, apart from the camera tabs: it leaves the street rather than turning it. */
+.city-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 14px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.city-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.city-button:hover,
+.city-button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.share-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.share-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.share-button:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.share-button[data-copied] .share-label,
+.share-button:not([data-copied]) .share-done {
+  display: none;
+}
+
+.views {
+  display: flex;
+  gap: 2px;
+  margin-left: 10px;
+}
+
+.views button {
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.views button:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.views button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--panel-2);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+.search {
+  flex: 1;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 36px;
+  margin-left: auto;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: var(--panel-2);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.search svg {
+  width: 15px;
+  height: 15px;
+  color: var(--ink-3);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 15px var(--body);
+}
+
+.search input::placeholder {
+  color: var(--ink-3);
+}
+
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search:focus-within {
+  border-color: var(--ink-3);
+  background: var(--panel);
+}
+
+.call-811 {
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: var(--hivis);
+  color: var(--on-hivis);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.call-811:hover {
+  background: var(--hivis-hover);
+}
+
+/* The ? that opens the explainer, beside the theme button and drawn the same way. */
+.help-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink-2);
+}
+
+.help-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.help-button:hover,
+.help-button[aria-expanded='true'] {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+/* What you're looking at: a panel under the top bar, over the card. */
+.explainer {
+  position: fixed;
+  top: calc(var(--topbar) + 10px);
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - var(--topbar) - 26px);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.explainer:focus {
+  outline: none;
+}
+
+.explainer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px 10px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.explainer-head h2 {
+  margin: 0;
+  font: 800 22px/1.1 var(--display);
+}
+
+.explainer-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--ink-2);
+}
+
+.explainer-close:hover {
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.explainer-close svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.explainer-body {
+  padding: 4px 18px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.explainer-body section + section {
+  border-top: 1px solid var(--line);
+}
+
+.explainer-body h3 {
+  margin: 14px 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.explainer-body p {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+}
+
+.explainer-body ul {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-body li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+}
+
+.explainer-colors {
+  grid-template-columns: 1fr 1fr;
+}
+
+.explainer-colors li {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+
+.explainer-colors strong {
+  color: var(--ink);
+}
+
+.explainer-colors span:not(.explainer-swatch) {
+  flex-basis: 100%;
+  padding-left: 22px;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.explainer-swatch {
+  flex: none;
+  width: 14px;
+  height: 6px;
+  margin-top: 7px;
+  border-radius: 3px;
+  background: var(--accent);
+  /* Steam's pale yellow needs an edge on the white panel. */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+
+.explainer-pins li {
+  align-items: flex-start;
+}
+
+.explainer-pins strong {
+  color: var(--ink);
+}
+
+.explainer-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #1f6fd1;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.explainer-pin {
+  flex: none;
+  width: 22px;
+  height: 28px;
+}
+
+.explainer-pin .pin-tail,
+.explainer-pin .pin-disc {
+  fill: var(--feature);
+}
+
+.explainer-pin .pin-halo {
+  fill: var(--panel);
+}
+
+.explainer-pin .pin-disc.is-ringed {
+  stroke: var(--ring);
+  stroke-width: 3.2;
+}
+
+.explainer-pin .pin-glyph {
+  fill: none;
+  stroke: var(--panel);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.explainer-markers {
+  display: flex;
+  flex: none;
+  gap: 3px;
+  width: 34px;
+  padding-top: 4px;
+}
+
+.explainer-marker {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.explainer-marker.is-lead {
+  background: var(--ink);
+}
+
+.explainer-marker.is-not-lead {
+  background: #1f6fd1;
+}
+
+.explainer-marker.is-unknown {
+  border: 1.5px solid #1f6fd1;
+  background: var(--panel);
+  box-shadow: none;
+}
+
+.explainer-notice .call-811 {
+  display: inline-block;
+  margin-top: 2px;
+}
+
+/* Layer list, left */
+.layers {
+  position: fixed;
+  top: calc(var(--topbar) + 16px);
+  left: 16px;
+  width: var(--layers-w);
+  /* Leaves room below for the map data credit (.map-credit-corner). */
+  max-height: calc(100vh - var(--topbar) - 32px - var(--site-links-h));
+  overflow-y: auto;
+  padding: 6px 8px 8px;
+  border-radius: var(--radius);
+  scrollbar-width: thin;
+}
+
+.layers-title {
+  margin: 10px 8px 4px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.layer-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.layer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.layer:hover {
+  background: var(--panel-2);
+}
+
+.layer-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+.provenance dd a {
+  overflow-wrap: anywhere;
+}
+
+/* Street features are round like their pins, ringed in their network's color when they have one. */
+.layer-swatch.is-feature {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.layer-swatch.is-ringed {
+  box-shadow: inset 0 0 0 2.5px var(--ring);
+}
+
+.layer-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.layer-note {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.layer-detail {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.switch {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--switch-off);
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--knob);
+  box-shadow: var(--knob-shadow);
+  transition: transform 0.15s;
+}
+
+.layer[aria-checked='true'] .switch {
+  background: var(--accent);
+}
+
+.layer[aria-checked='true'] .switch::after {
+  transform: translateX(12px);
+}
+
+.layer[aria-checked='false'] .layer-name,
+.layer[aria-checked='false'] .layer-swatch {
+  opacity: 0.45;
+}
+
+/* Bottom toolbar */
+.toolbar {
+  position: fixed;
+  left: calc(16px + var(--layers-w) + 12px);
+  right: calc(16px + var(--card-w) + 12px);
+  bottom: 16px;
+  width: fit-content;
+  max-width: calc(100% - var(--layers-w) - var(--card-w) - 56px);
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.toolbar > button {
+  white-space: nowrap;
+  display: grid;
+  place-items: center;
+  grid-auto-flow: column;
+  gap: 4px;
+  min-width: 34px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.toolbar svg {
+  width: 15px;
+  height: 15px;
+}
+
+.toolbar > button:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.photo-toggle {
+  --accent: var(--ink);
+}
+
+.photo-toggle[aria-checked='true'] {
+  color: var(--ink);
+}
+
+.photo-toggle[aria-checked='true'] .switch {
+  background: var(--accent);
+}
+
+.photo-toggle[aria-checked='true'] .switch::after {
+  transform: translateX(12px);
+}
+
+.toolbar strong {
+  color: var(--ink);
+}
+
+/* The dial turns with the map. The east dot rides the rim, so a mirrored view (seen from
+   below, east on the left) shows at a glance. */
+.toolbar > .compass {
+  padding: 3px 4px;
+}
+
+.compass svg {
+  width: 26px;
+  height: 26px;
+  stroke: none;
+}
+
+.compass-dial {
+  fill: var(--panel-2);
+  stroke: var(--line);
+}
+
+.compass-north,
+.compass-east {
+  transform-origin: 14px 14px;
+}
+
+.compass-north {
+  transform: rotate(var(--north, 0deg));
+}
+
+.compass-east {
+  transform: rotate(var(--east, 90deg));
+  fill: var(--ink-3);
+}
+
+.compass-needle {
+  fill: var(--ink);
+}
+
+.compass-tail {
+  fill: var(--ink-3);
+}
+
+.side-eye {
+  fill: currentColor;
+  stroke: none;
+  transition: transform 200ms;
+}
+
+[data-side='below'] .toolbar > .side {
+  color: var(--on-ink);
+  background: var(--ink);
+}
+
+[data-side='below'] .side-eye {
+  transform: translateY(9px);
+}
+
+.toolbar-rule {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--line);
+}
+
+/* About, the other pages and contact: small under the card on a wide screen, at the foot of the
+   card on a phone. */
+.site-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.site-links a,
+.site-links .link {
+  color: var(--ink-2);
+  font: inherit;
+  text-decoration: none;
+}
+
+.site-links a:hover,
+.site-links .link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-links-corner {
+  position: fixed;
+  right: 16px;
+  bottom: 6px;
+  z-index: 5;
+  justify-content: flex-end;
+  gap: 8px;
+  /* One line, as wide as the card, so it never climbs into it. */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  max-width: var(--card-w);
+  /* Pipe labels are drawn on the map canvas below; a panel behind the links keeps them legible. */
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 1px 2px rgb(20 30 50 / 0.08);
+}
+
+/* A data credit, set apart from Subsola's links: bottom left, as maps put their attribution. */
+.map-credit {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.map-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--underline-soft);
+  text-underline-offset: 2px;
+}
+
+.map-credit a:hover {
+  color: var(--ink);
+}
+
+.map-credit-corner {
+  position: fixed;
+  left: 16px;
+  bottom: 8px;
+  z-index: 5;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.map-credit-card {
+  display: none;
+  margin-top: 6px;
+}
+
+.site-links-card {
+  display: none;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* Details card, right */
+.card {
+  position: fixed;
+  top: calc(var(--topbar) + 16px);
+  right: 16px;
+  width: var(--card-w);
+  /* Leaves room below for the site links (.site-links-corner). */
+  max-height: calc(100vh - var(--topbar) - 32px - var(--site-links-h));
+  overflow-y: auto;
+  padding: 18px 18px 14px;
+  border-radius: var(--radius);
+  scrollbar-width: thin;
+}
+
+.hood {
+  display: block;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.card-title {
+  margin: 2px 0 6px;
+  font: 800 30px/1 var(--display);
+  overflow-wrap: anywhere;
+}
+
+.hero-line {
+  margin: 0 0 14px;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.tiles {
+  display: grid;
+  /* minmax(0, ...) so a long value wraps instead of pushing the tile past the card. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  text-align: left;
+}
+
+.tile:hover {
+  box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--hover-soft);
+}
+
+.tile-badge {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 800 15px var(--display);
+}
+
+.tile-label {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tile-value {
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.stat dt {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.stat dd {
+  margin: 2px 0 0;
+  font: 800 22px/1.1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-skeleton {
+  height: 50px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.layers .chip-skeleton {
+  height: 30px;
+  margin: 0 8px 6px;
+}
+
+.confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  cursor: help;
+}
+
+/* A mark per level, so the label never depends on color: solid is a published location,
+   half is a record of the block or lot, a ring is volunteer-mapped, dashed is drawn by rule. */
+.confidence::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.confidence-block-level::before,
+.confidence-lot-level::before {
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.confidence-crowdsourced::before {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.confidence-inferred::before {
+  width: 6px;
+  height: 6px;
+  background: none;
+  border: 1.5px dashed currentColor;
+}
+
+.fine {
+  margin: 12px 0 0;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.records-stale {
+  color: var(--danger);
+}
+
+.fine a,
+.link {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--underline-soft);
+  text-underline-offset: 3px;
+}
+
+/* A second link in a line of fine print, set apart so the two don't read as one. */
+.fine-link {
+  margin-left: 14px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: -4px 0 4px -6px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 7px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.back:hover {
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.back svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
+/* First visit only, so it may take the room; it goes away for good with one press. */
+.guide {
+  margin: 10px 0 14px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.guide h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.guide p {
+  margin: 0 0 10px;
+  color: var(--ink-2);
+}
+
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.guide .pill {
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.guide .pill-ink {
+  border-color: transparent;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.guide .pill-ink:hover {
+  background: var(--ink-hover);
+}
+
+/* A search that landed nowhere Subsola can show. */
+.coverage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 6px;
+}
+
+.coverage-actions .pill {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.coverage-actions .pill-ink {
+  border-color: transparent;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.coverage-cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.coverage-cities li {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Beta beside a city's name, with why on hover or tap. Ink, never a utility hue or hi-vis. */
+.beta-tag {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border: 1px solid var(--ink-3);
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+}
+
+.beta-tag:hover,
+.beta-tag[aria-expanded='true'] {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.beta-reason {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.depth-block {
+  margin: 4px 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--accent);
+}
+
+.depth-block p {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+}
+
+.depth-kicker {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.depth-big {
+  display: block;
+  font: 800 28px/1.05 var(--display);
+}
+
+.quote-card {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent);
+}
+
+.quote-card blockquote {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.quote-card figcaption {
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.card-section h2 {
+  margin: 14px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.records {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.record {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 0 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+}
+
+.record-date {
+  grid-row: span 3;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.record-who {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.record-job {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-self: start;
+  margin-top: 4px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.record-job svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  margin: 6px 0 12px;
+}
+
+.facts dt {
+  color: var(--ink-3);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.since {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.since select {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.compare {
+  width: 100%;
+  margin: 10px 0 4px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare th {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.compare th:first-child,
+.compare td:first-child {
+  text-align: left;
+}
+
+.compare td {
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+  text-align: right;
+}
+
+.compare-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Years before the one being compared from step back. */
+.history .before path {
+  opacity: 0.25;
+}
+
+.history {
+  margin: 0;
+}
+
+.history svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Bars are filled shapes; the icon stroke default would outline each one. */
+  stroke: none;
+}
+
+.history .axis {
+  stroke: var(--axis);
+}
+
+.history text {
+  fill: var(--ink-3);
+  font: 500 10px var(--body);
+}
+
+.history .peak {
+  fill: var(--ink-2);
+}
+
+.history .hit {
+  fill: transparent;
+}
+
+.history .year:hover .hit {
+  fill: var(--hit-hover);
+}
+
+.label-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.label-list li {
+  display: grid;
+  justify-items: start;
+}
+
+.label-list .confidence {
+  margin: 0 0 3px;
+}
+
+.label-list span {
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+/*
+ * The About card (src/ui/about.ts), after the /mcp page: icon rows with one plain line each and
+ * the rest in disclosures. Secondary text is --ink-2, since the map's --ink-3 is too light for
+ * small text on white.
+ */
+.about-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -4px 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.about-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.about-chips .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.about-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.about-icon .icon {
+  width: 17px;
+  height: 17px;
+}
+
+.about-warn {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  margin: 0 0 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+}
+
+.about-warn .about-icon {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.about-warn h2 {
+  margin: 0 0 2px;
+  font-size: 15px;
+}
+
+.about-warn p {
+  margin: 0 0 6px;
+  color: var(--ink-2);
+}
+
+.about-warn p:last-child {
+  margin: 0;
+}
+
+.about-warn strong {
+  color: var(--ink);
+}
+
+.about-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* Small caps labels, as the /mcp page heads its groups. */
+.about-section h2,
+.about-section-head h2 {
+  margin: 0 0 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.about-lede {
+  margin: 0 0 10px;
+  color: var(--ink-2);
+}
+
+.about-rows,
+.about-links,
+.source-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-rows {
+  gap: 12px;
+}
+
+.about-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.about-row h3 {
+  margin: 0 0 1px;
+  font-size: 14.5px;
+  line-height: 1.3;
+}
+
+.about-row p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.about-more {
+  margin-top: 4px;
+}
+
+.about-more summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 0;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.about-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.about-more summary::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin: 0 2px 0 1px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+
+.about-more[open] > summary::before {
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.about-more summary:hover {
+  color: var(--ink);
+}
+
+.about-more > .source-rows {
+  margin-top: 8px;
+}
+
+.source-rows + .about-more {
+  margin-top: 8px;
+}
+
+.about-more > p,
+.about-more > .label-list {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
+.about-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.about-section-head h2 {
+  margin: 0;
+}
+
+.about-tally {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.about-empty {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.source-rows {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.source-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+}
+
+.source-row:first-child {
+  border-top: 0;
+}
+
+.source-mark {
+  padding-top: 2px;
+  color: var(--ink-2);
+}
+
+.source-mark .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.source-error .source-mark,
+.source-error .source-state {
+  color: var(--danger);
+}
+
+.source-name {
+  display: grid;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.source-name span {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.source-state {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.about-links {
+  gap: 2px;
+  margin: 4px -8px 0;
+}
+
+/* On its own after the sources, so it gets the same divider a section would. */
+.about-feedback {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.about-link {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 16px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 10px;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+}
+
+.about-link:hover {
+  background: var(--panel-2);
+}
+
+.about-link:hover .about-icon {
+  background: var(--panel);
+}
+
+.about-link-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.about-link-text strong {
+  font-size: 14px;
+}
+
+.about-link-text span {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.about-link-arrow {
+  color: var(--ink-2);
+}
+
+.about-link-arrow .icon {
+  width: 16px;
+  height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-more summary::before {
+    transition: none;
+  }
+}
+
+/* The maker's links, after the agenticpoa.com footer: icon, then name. */
+.maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.maker a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.maker a:hover {
+  color: var(--ink);
+}
+
+.maker svg {
+  width: 14px;
+  height: 14px;
+}
+
+.error-text {
+  color: var(--danger);
+}
+
+.pill {
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-weight: 600;
+}
+
+.retry {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+/* Dig check */
+.dig-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 6px 0 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: 700;
+  text-align: left;
+}
+
+.dig-cta:hover {
+  background: var(--ink-hover);
+}
+
+.dig-cta svg,
+.toolbar-dig svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.8;
+}
+
+.toolbar > .toolbar-dig {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.toolbar > .toolbar-dig:hover {
+  background: var(--ink-hover);
+  color: var(--on-ink);
+}
+
+.verdict {
+  margin: 4px 0 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid var(--verdict);
+  background: var(--panel-2);
+}
+
+.verdict p {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.verdict-call-first {
+  --verdict: var(--danger);
+}
+
+.verdict-likely-deeper {
+  --verdict: var(--ink-2);
+}
+
+.verdict-no-records {
+  --verdict: var(--ink-3);
+}
+
+.dig-tasks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.dig-tasks button {
+  display: grid;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: var(--panel-2);
+  border: 1px solid transparent;
+  text-align: left;
+  font-weight: 600;
+}
+
+.dig-tasks button span {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.dig-tasks button[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--panel);
+}
+
+.dig-custom {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.dig-custom input {
+  accent-color: var(--ink);
+}
+
+.dig-custom output {
+  min-width: 56px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.dig-hits {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dig-hit {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.dig-hit strong,
+.dig-hit small {
+  display: block;
+}
+
+.dig-hit small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.dig-hit em {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dig-hit.reach-reaches em,
+.dig-hit.reach-unknown em {
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.dig-811 {
+  display: block;
+  margin-top: 14px;
+  padding: 12px;
+  text-align: center;
+}
+
+/* Live work */
+.live h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 3px rgb(var(--ink-rgb) / 0.2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot {
+    animation: live 1.6s ease-out infinite;
+  }
+}
+
+@keyframes live {
+  from {
+    box-shadow: 0 0 0 0 rgb(var(--ink-rgb) / 0.45);
+  }
+  to {
+    box-shadow: 0 0 0 8px rgb(var(--ink-rgb) / 0);
+  }
+}
+
+.live-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: var(--panel-2);
+  font-weight: 600;
+}
+
+.live-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.live-list button {
+  display: grid;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--ink);
+  text-align: left;
+}
+
+.live-list button:hover {
+  background: var(--hover);
+}
+
+.live-list span {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+/* Hover callout: dark on the light model so it reads as a layer above the scene. */
+.tooltip {
+  position: fixed;
+  z-index: 10;
+  display: grid;
+  gap: 2px;
+  max-width: 280px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--tip-bg);
+  color: var(--tip-ink);
+  font-size: 13px;
+  pointer-events: none;
+  box-shadow: var(--tip-shadow);
+}
+
+.tooltip strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tooltip strong::before {
+  content: '';
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--tip-ink);
+}
+
+.tooltip span {
+  color: var(--tip-ink-2);
+}
+
+.tooltip .confidence {
+  justify-self: start;
+  margin: 3px 0 0;
+  padding: 0;
+  background: none;
+  color: var(--tip-ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --layers-w: 190px;
+    --card-w: 320px;
+  }
+}
+
+/* Between the side panels there's room for the toolbar's icons, not all its words. */
+@media (max-width: 1180px) {
+  .toolbar .control-label,
+  .toolbar #side-label {
+    display: none;
+  }
+}
+
+/* Phone-only pieces; on a wide screen the sheet is just the card. */
+.sheet {
+  display: contents;
+}
+
+.sheet-handle,
+.toolbar > .layers-toggle,
+.photo-icon,
+.phone-key {
+  display: none;
+}
+
+/*
+ * Phones, upright or sideways: one header row, round buttons down the right edge, camera tabs
+ * floating over the map, and the card as a bottom sheet (peek, half or full) so the map gets
+ * the screen. The toolbar's own box goes away so each control can sit where a thumb reaches it.
+ */
+@media (max-width: 900px), (max-height: 520px) {
+  #site-links {
+    display: none;
+  }
+
+  .site-links-card {
+    display: flex;
+  }
+
+  .map-credit-card {
+    display: block;
+  }
+
+  :root {
+    --top: calc(var(--topbar) + env(safe-area-inset-top));
+    --edge-left: max(12px, env(safe-area-inset-left));
+    --edge-right: max(12px, env(safe-area-inset-right));
+    --round: 44px;
+  }
+
+  .topbar {
+    height: var(--top);
+    gap: 8px;
+    padding: env(safe-area-inset-top) var(--edge-right) 0 var(--edge-left);
+  }
+
+  .brand > span:last-child,
+  .control-label {
+    display: none;
+  }
+
+  /* Gives way to the buttons beside it; otherwise a wider fallback font pushes Call 811 off. */
+  .search {
+    min-width: 0;
+    height: 40px;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Under 16px, iOS zooms the whole page when the field gets focus. */
+  .search input {
+    font-size: 16px;
+  }
+
+  .call-811 {
+    padding: 10px 12px;
+  }
+
+  /* Round buttons down the right edge. */
+  .city-button,
+  .share-button,
+  .help-button,
+  .toolbar > .layers-toggle,
+  .toolbar > .compass,
+  .toolbar > .photo-toggle {
+    position: fixed;
+    right: var(--edge-right);
+    display: grid;
+    place-items: center;
+    width: var(--round);
+    height: var(--round);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    color: var(--ink);
+  }
+
+  .city-button {
+    top: calc(var(--top) + 12px);
+  }
+
+  .toolbar > .layers-toggle {
+    top: calc(var(--top) + 12px + (var(--round) + 8px));
+  }
+
+  .toolbar > .compass {
+    top: calc(var(--top) + 12px + 2 * (var(--round) + 8px));
+  }
+
+  .toolbar > .photo-toggle {
+    top: calc(var(--top) + 12px + 3 * (var(--round) + 8px));
+  }
+
+  .share-button {
+    top: calc(var(--top) + 12px + 4 * (var(--round) + 8px));
+  }
+
+  .help-button {
+    top: calc(var(--top) + 12px + 5 * (var(--round) + 8px));
+  }
+
+  .help-button svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  /* The explainer fills the screen under the header, over the sheet, until it's closed. */
+  .explainer {
+    top: calc(var(--top) + 8px);
+    left: var(--edge-left);
+    right: var(--edge-right);
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    max-height: none;
+  }
+
+  /*
+   * The color key: tucked under the header in the corner the round buttons leave free, away
+   * from the street the camera centers on. Out of the way of the layer list and the city map.
+   */
+  .phone-key:not([hidden]) {
+    position: fixed;
+    top: calc(var(--top) + 12px);
+    left: var(--edge-left);
+    right: calc(var(--edge-right) + var(--round) + 10px);
+    max-width: 300px;
+    display: block;
+    padding: 8px 30px 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  [data-layers='open'] .phone-key,
+  [data-mode='city'] .phone-key {
+    display: none;
+  }
+
+  .phone-key-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .phone-key-colors li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .phone-key-swatch {
+    width: 12px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--accent);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  }
+
+  .phone-key-lines {
+    display: flex;
+    margin-top: 4px;
+  }
+
+  .phone-key-more {
+    margin-left: auto;
+    padding: 2px 0;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--underline);
+    text-underline-offset: 3px;
+  }
+
+  .phone-key-close {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    color: var(--ink-3);
+  }
+
+  .phone-key-close svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  .share-button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .share-button[data-copied] {
+    color: var(--ink);
+    background: var(--panel-2);
+  }
+
+  .layers-toggle svg,
+  .photo-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+  }
+
+  .photo-toggle .switch {
+    display: none;
+  }
+
+  .toolbar > .layers-toggle[aria-expanded='true'],
+  .toolbar > .photo-toggle[aria-checked='true'] {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  .toolbar {
+    display: contents;
+  }
+
+  /* A thumb turns the map with two fingers, and the card has its own "Check a spot". */
+  .toolbar > .toolbar-dig,
+  .toolbar > .toolbar-rule,
+  .toolbar > [data-rotate],
+  .toolbar > .side {
+    display: none;
+  }
+
+  /* Camera tabs and depth float just above the sheet, wherever it is. */
+  .views,
+  .toolbar > #stretch {
+    position: fixed;
+    bottom: calc(var(--sheet, 0px) + 10px);
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+  }
+
+  .views {
+    left: var(--edge-left);
+    padding: 3px;
+  }
+
+  .views button {
+    min-height: 38px;
+    padding: 0 11px;
+  }
+
+  .toolbar > #stretch {
+    right: var(--edge-right);
+    height: var(--round);
+  }
+
+  [data-sheet='full'] .views,
+  [data-sheet='full'] .toolbar > #stretch {
+    display: none;
+  }
+
+  /* Layers open as a panel from their button. */
+  .layers {
+    display: none;
+    top: calc(var(--top) + 12px);
+    left: var(--edge-left);
+    right: calc(var(--edge-right) + var(--round) + 8px);
+    width: auto;
+    max-height: calc(100dvh - var(--top) - var(--sheet, 0px) - 84px);
+  }
+
+  [data-layers='open'] .layers {
+    display: block;
+  }
+
+  .layer {
+    min-height: 44px;
+  }
+
+  /* The card as a bottom sheet. */
+  .sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(var(--peek) + env(safe-area-inset-bottom));
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    background: var(--panel);
+    box-shadow: var(--sheet-shadow);
+    transition: height 220ms ease;
+    --peek: 128px;
+  }
+
+  [data-sheet='half'] .sheet {
+    height: 50dvh;
+  }
+
+  [data-sheet='full'] .sheet {
+    height: calc(100dvh - var(--top) - 8px);
+  }
+
+  .sheet.is-dragging {
+    transition: none;
+  }
+
+  .sheet-handle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 100%;
+    height: 26px;
+    padding: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .sheet-handle span {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--handle);
+  }
+
+  .card {
+    position: static;
+    flex: 1;
+    width: auto;
+    min-height: 0;
+    max-height: none;
+    padding: 0 16px 16px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overscroll-behavior: contain;
+  }
+
+  /* The city map has its own controls; only search, the card and the way back stay. */
+  [data-mode='city'] .layers-toggle,
+  [data-mode='city'] .toolbar > .compass,
+  [data-mode='city'] .toolbar > .photo-toggle,
+  [data-mode='city'] .views,
+  [data-mode='city'] .toolbar > #stretch {
+    display: none;
+  }
+}
+
+/* A tablet held upright: the sheet keeps to a readable width on the left. */
+@media (min-width: 600px) and (max-width: 900px) {
+  .sheet {
+    left: var(--edge-left);
+    right: auto;
+    width: 460px;
+  }
+}
+
+/*
+ * A phone on its side has little height: a shorter peek, the sheet never covers it all, and the
+ * round buttons run along the top instead of down a side they'd overflow.
+ */
+@media (max-height: 520px) {
+  .sheet {
+    --peek: 96px;
+  }
+
+  [data-sheet='half'] .sheet {
+    height: 60dvh;
+  }
+
+  .city-button,
+  .share-button,
+  .help-button,
+  .toolbar > .layers-toggle,
+  .toolbar > .compass,
+  .toolbar > .photo-toggle {
+    top: calc(var(--top) + 10px);
+  }
+
+  .share-button {
+    right: calc(var(--edge-right) + 4 * (var(--round) + 8px));
+  }
+
+  .help-button {
+    right: calc(var(--edge-right) + 5 * (var(--round) + 8px));
+  }
+
+  .toolbar > .layers-toggle {
+    right: calc(var(--edge-right) + (var(--round) + 8px));
+  }
+
+  .toolbar > .compass {
+    right: calc(var(--edge-right) + 2 * (var(--round) + 8px));
+  }
+
+  .toolbar > .photo-toggle {
+    right: calc(var(--edge-right) + 3 * (var(--round) + 8px));
+  }
+
+  .layers {
+    top: calc(var(--top) + 10px + var(--round) + 8px);
+    right: var(--edge-right);
+  }
+}
+
+/* Lot report: a sheet of paper over the map, and the only thing that prints. */
+.report-cta {
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 10px 14px;
+  background: var(--panel-2);
+  text-align: left;
+}
+
+.report-cta:hover {
+  background: var(--hover);
+}
+
+/* Quiet on purpose: a text link under the report, for people who'd rather ask an assistant. */
+.ai-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 2px 2px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ai-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ai-link svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.report {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  padding: 0 16px 48px;
+  background: var(--ground);
+}
+
+.report:focus {
+  outline: none;
+}
+
+.report-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: 816px;
+  margin: 0 auto;
+  padding: 12px 0;
+  background: inherit;
+}
+
+.report-bar .pill {
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.report-bar .pill-ink {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.report-page {
+  /* Its own stack, so the watermark can sit under the content and still over the paper. */
+  position: relative;
+  isolation: isolate;
+  max-width: 816px;
+  margin: 0 auto;
+  padding: 48px 56px 40px;
+  border-radius: 4px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+/* The logo and name across the sheet, faint, so a saved or printed report says where it's from. */
+.report-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  gap: 0.22em;
+  color: var(--ink);
+  font: 800 120px/1 var(--display);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 0.05;
+  pointer-events: none;
+  user-select: none;
+  transform: translate(-50%, -50%) rotate(-30deg);
+}
+
+.report-watermark .mark {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 0.2em;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.report-head {
+  padding-bottom: 20px;
+  border-bottom: 3px solid var(--ink);
+}
+
+.report-kicker {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.report-head h1 {
+  margin: 0 0 6px;
+  font: 800 52px/0.95 var(--display);
+  overflow-wrap: anywhere;
+}
+
+.report-meta {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.report-notice {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--hivis);
+  background: var(--panel-2);
+  font-weight: 600;
+}
+
+.report-notice a {
+  color: inherit;
+}
+
+.report-section {
+  padding: 22px 0 6px;
+  border-bottom: 1px solid var(--line);
+  break-inside: avoid-page;
+}
+
+.report-section h2 {
+  margin: 0 0 12px;
+  font: 700 24px/1.1 var(--display);
+}
+
+.report-lines {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.report-line h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.report-line p {
+  margin: 4px 0 10px;
+  color: var(--ink-2);
+}
+
+.report-line .report-verdict {
+  margin: 4px 0 2px;
+  color: var(--ink);
+  font: 800 32px/1 var(--display);
+}
+
+.report-line .report-verdict-warn {
+  color: var(--danger);
+}
+
+.report-swatch {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: 0;
+}
+
+.report-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0 0 12px;
+}
+
+.report-facts dt {
+  color: var(--ink-3);
+}
+
+.report-facts dd {
+  margin: 0;
+}
+
+.report-table {
+  width: 100%;
+  margin: 8px 0 14px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-table caption {
+  padding-bottom: 6px;
+  color: var(--ink-2);
+  font-weight: 600;
+  text-align: left;
+}
+
+.report-table th {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink-2);
+  font-weight: 600;
+  text-align: left;
+  vertical-align: bottom;
+}
+
+.report-table td {
+  padding: 7px 8px 7px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.report-nowrap {
+  white-space: nowrap;
+}
+
+.report-note,
+.report-live {
+  color: var(--ink-2);
+}
+
+.report-live {
+  padding: 8px 12px;
+  border-left: 3px solid var(--ink);
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.report-figure {
+  margin: 0 0 8px;
+}
+
+.report-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* The app's icon rule strokes every svg; the drawing sets its own strokes. */
+  fill: none;
+  stroke: none;
+  font-family: var(--body);
+}
+
+.report-figure text {
+  stroke: none;
+}
+
+.report-figure figcaption {
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.report-figure .grid {
+  stroke: var(--line);
+}
+
+.report-figure .tick {
+  fill: var(--ink-3);
+  font-size: 11px;
+}
+
+.report-figure .place {
+  fill: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-figure .lot {
+  fill: var(--panel-2);
+}
+
+.report-figure .surface,
+.report-figure .lot-line {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.report-figure .lot-line {
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.report-figure .curb {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.report-figure .service {
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.report-figure .range {
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0.25;
+}
+
+.report-figure .range.unknown {
+  stroke-width: 3;
+  stroke-dasharray: 2 5;
+  opacity: 1;
+}
+
+.report-figure .pipe {
+  fill: var(--accent);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.report-figure .pipe-label {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.report-list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: var(--ink-2);
+}
+
+.report-list li + li {
+  margin-top: 4px;
+}
+
+.report-811 {
+  border-bottom: 0;
+}
+
+.report-811 p {
+  margin: 0 0 12px;
+}
+
+.report-811 .call-811 {
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
+.report-sources {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .report {
+    padding: 0 8px 24px;
+  }
+
+  .report-page {
+    padding: 28px 18px;
+  }
+
+  .report-head h1 {
+    font-size: 40px;
+  }
+
+  .report-lines {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* Six columns don't fit a phone; the table scrolls inside itself instead of the page. */
+  .report-section:has(.report-table) {
+    overflow-x: auto;
+  }
+
+  .report-table {
+    min-width: 560px;
+  }
+}
+
+.report-print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 0.5in;
+  }
+
+  #site-links {
+    display: none;
+  }
+
+  .report-print-only {
+    display: block;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+  }
+
+  /* A button means nothing on paper; the line under it says where to go. */
+  .report .call-811 {
+    display: none;
+  }
+
+  /* Sections may split across sheets, but not through the drawing, a service line or a row. */
+  .report-figure,
+  .report-lines,
+  tr {
+    break-inside: avoid;
+  }
+
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+    background: #fff;
+  }
+
+  body > :not(.report) {
+    display: none !important;
+  }
+
+  .report {
+    position: static;
+    overflow: visible;
+    padding: 0;
+    background: #fff;
+  }
+
+  .report-bar {
+    display: none;
+  }
+
+  /* Small enough that a typical lot fits on one or two sheets. */
+  .report-page {
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+    font-size: 8.5pt;
+    line-height: 1.35;
+  }
+
+  /* Fixed repeats it in the middle of every printed page, not just once on a long report. */
+  .report-watermark {
+    position: fixed;
+    font-size: 96pt;
+    opacity: 0.06;
+  }
+
+  .report-head {
+    padding-bottom: 8px;
+    border-bottom-width: 2px;
+  }
+
+  .report-kicker {
+    font-size: 9pt;
+  }
+
+  .report-head h1 {
+    font-size: 28pt;
+  }
+
+  .report-section {
+    padding: 9px 0 2px;
+    break-inside: auto;
+  }
+
+  .report-section h2 {
+    margin-bottom: 5px;
+    font-size: 13pt;
+    break-after: avoid;
+  }
+
+  .report-lines {
+    gap: 18px;
+  }
+
+  .report-line .report-verdict {
+    font-size: 17pt;
+  }
+
+  .report-line p,
+  .report-facts {
+    margin-bottom: 4px;
+  }
+
+  .report-figure {
+    break-inside: avoid;
+  }
+
+  .report-figure svg {
+    width: auto;
+    max-width: 100%;
+    max-height: 2.3in;
+  }
+
+  .report-figure figcaption {
+    font-size: 7.5pt;
+  }
+
+  .report-table {
+    margin: 4px 0 8px;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 2px 8px 2px 0;
+  }
+
+  .report-table tr {
+    break-inside: avoid;
+  }
+
+  .report-sources {
+    font-size: 7pt;
+  }
+
+  .report * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-sources a {
+    color: inherit;
+  }
+}
+
+/* subsola.com/?debug, for screenshots from a phone. */
+.debug-panel {
+  position: fixed;
+  inset: auto 8px 8px 8px;
+  z-index: 1000;
+  max-height: 45vh;
+  overflow: auto;
+  margin: 0;
+  padding: 8px;
+  background: rgb(0 0 0 / 82%);
+  color: #fff;
+  font:
+    11px/1.35 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+  pointer-events: auto;
+}
+
+.feedback-form {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.feedback-form label {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.feedback-form textarea,
+.feedback-form input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.feedback-form button {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+/* Filled like the card's other main actions, so it reads as the button that sends. */
+.feedback-form button[type='submit'] {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feedback-form button[type='submit']:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+/* The outcome, big enough that nobody wonders whether it went. */
+.feedback-status {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.feedback-status:focus {
+  outline: none;
+}
+
+.feedback-status p {
+  margin: 0;
+}
+
+.feedback-status[data-kind='error'] {
+  display: flex;
+  gap: 10px;
+  border: 1px solid var(--danger);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.feedback-status[data-kind='error'] strong {
+  display: block;
+  font-size: 15px;
+}
+
+.feedback-status-icon svg,
+.feedback-sent-icon svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.feedback-status-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.feedback-sent {
+  margin-top: 14px;
+  padding: 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-2);
+  text-align: center;
+}
+
+.feedback-sent:focus {
+  outline: none;
+}
+
+.feedback-sent-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: #2e9a48;
+  color: #fff;
+}
+
+.feedback-sent-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.4;
+}
+
+.feedback-sent h2 {
+  margin: 0 0 4px;
+  font: 800 24px/1.1 var(--display);
+}
+
+.feedback-sent p {
+  margin: 0 0 14px;
+  color: var(--ink-2);
+}
+
+.feedback-sent .pill {
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+/* Still a button while the message or the bot check is missing, just not ready yet. */
+.feedback-form button[type='submit']:disabled {
+  background: var(--panel-2);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.feedback-check {
+  min-height: 65px;
+}

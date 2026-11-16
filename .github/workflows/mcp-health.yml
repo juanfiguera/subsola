@@ -1,0 +1,33 @@
+name: MCP health
+
+# Asks https://subsola.com/mcp to connect and answer one real question, by hand. The scheduled
+# check now lives in workers/health (the subsola-health Worker, every 5 minutes, with email
+# alerts): GitHub's scheduler never ran the old 15-minute schedule on time. Both run the same
+# check, server/mcp/healthCheck.ts. Its calls carry the User-Agent subsola-health/1, which
+# /mcp/stats keeps apart from real use.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: mcp-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          sparse-checkout: |
+            .github/scripts/mcp-health.mjs
+            server/mcp/healthCheck.ts
+            package.json
+          sparse-checkout-cone-mode: false
+      # Node 22.18 and later run the TypeScript check file directly, with no packages.
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+      - run: node .github/scripts/mcp-health.mjs

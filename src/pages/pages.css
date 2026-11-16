@@ -1,0 +1,336 @@
+/*
+ * The generated pages: one per city and the 404 page. The insights page's look (pale ground,
+ * white panels, Barlow) in a smaller sheet, since these pages are text and links.
+ */
+:root {
+  --ground: #e6e9ee;
+  --panel: #ffffff;
+  --panel-2: #f3f5f8;
+  --line: rgb(20 30 50 / 0.09);
+  --ink: #1b2230;
+  --ink-2: #4f5a6d;
+  /* Dark enough for 4.5:1 on white and on the ground. */
+  --ink-3: #5f697c;
+  --hivis: #ffd60a;
+  --danger: #e5484d;
+  /* Text on an ink fill (buttons, tags); ink flips light in dark mode, so this flips dark. */
+  --on-ink: #ffffff;
+  --ink-hover: #2c3547;
+  --underline: rgb(20 30 50 / 0.35);
+  --radius: 14px;
+  --display: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+  --body: 'Barlow', system-ui, sans-serif;
+  color-scheme: light;
+}
+
+/* Dark mode, set by public/theme.js before the first paint, with the map's values (src/style.css). */
+@media screen {
+  :root[data-theme='dark'] {
+    --ground: #14181e;
+    --panel: #1d222a;
+    --panel-2: #272d37;
+    --line: rgb(255 255 255 / 0.1);
+    --ink: #e7eaef;
+    --ink-2: #b0b8c5;
+    --ink-3: #959fae;
+    --danger: #ff6b70;
+    --on-ink: #14181e;
+    --ink-hover: #ffffff;
+    --underline: rgb(255 255 255 / 0.3);
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--ground);
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 500 17px/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
+}
+
+a {
+  color: var(--ink);
+  text-decoration-color: var(--underline);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: 16px;
+  top: -48px;
+  z-index: 2;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: 600;
+}
+
+.skip:focus {
+  top: 8px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 800 20px var(--display);
+  text-decoration: none;
+}
+
+/* A strip of locator paint, as on the map. */
+.mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: linear-gradient(
+    90deg,
+    #e3262b 0 20%,
+    #f2c200 20% 40%,
+    #f47c20 40% 60%,
+    #1f6fd1 60% 80%,
+    #2e9a48 80%
+  );
+}
+
+.site-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.site-nav a {
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px 16px 56px;
+}
+
+.intro {
+  margin-bottom: 28px;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+h1 {
+  margin: 2px 0 12px;
+  font: 800 48px/1 var(--display);
+}
+
+.lede {
+  margin: 0 0 22px;
+  color: var(--ink-2);
+  font-size: 19px;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 22px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 700 18px var(--body);
+  text-decoration: none;
+}
+
+.cta:hover {
+  background: var(--ink-hover);
+}
+
+.cta:focus-visible {
+  outline-offset: 3px;
+}
+
+.block {
+  margin: 0 0 32px;
+}
+
+.block > h2 {
+  margin: 0 0 8px;
+  font: 800 28px/1.05 var(--display);
+}
+
+.block > p {
+  margin: 0 0 12px;
+}
+
+b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.warn {
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--hivis);
+  background: var(--panel);
+}
+
+.warn > p:last-child {
+  margin-bottom: 0;
+}
+
+.beta {
+  margin: 0 0 32px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink-2);
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.note {
+  color: var(--ink-3);
+  font-size: 15px;
+}
+
+.sources {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.sources li {
+  display: grid;
+  gap: 1px;
+}
+
+.sources span {
+  color: var(--ink-3);
+  font-size: 15px;
+}
+
+.city-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.city-list a {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.city-list a:hover {
+  background: var(--panel-2);
+}
+
+.city-list .tag {
+  margin-left: 4px;
+}
+
+.page-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  h1 {
+    font-size: 38px;
+  }
+
+  .lede {
+    font-size: 18px;
+  }
+
+  /* The brand mark says "map"; the bar keeps the two other links. */
+  .site-nav a[href='/'] {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-nav a {
+    padding: 6px;
+    font-size: 14px;
+  }
+}
+
+.plain-list {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.plain-list li + li {
+  margin-top: 8px;
+}

@@ -1,0 +1,11 @@
+# Cloudflare Pages settings for subsola.com. Secrets (TURNSTILE_SECRET, FEEDBACK_SALT) are set
+# with `wrangler pages secret put` and never live here.
+name = "subsola"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+[[d1_databases]]
+binding = "FEEDBACK_DB"
+database_name = "subsola-feedback"
+database_id = "82940006-3be9-40f3-81ad-d6b49b5794df"
+migrations_dir = "migrations"

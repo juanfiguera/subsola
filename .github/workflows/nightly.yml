@@ -1,0 +1,147 @@
+name: Nightly build
+
+# Rebuilds every cell from a fresh download each night and sends the ones that changed to R2.
+# A full rebuild takes about 90 minutes and also picks up rows the cities deleted or corrected.
+on:
+  schedule:
+    - cron: '0 8 * * *' # 4 am in New York during daylight time, 3 am in winter
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      issues: write
+      actions: write # to delete superseded caches
+    steps:
+      # Raw downloads, the permit buckets and every city's cells outgrew the runner's free disk
+      # once LA's sidewalks and Seattle's side sewers came in. The image's Android, .NET, Haskell
+      # and CodeQL toolchains are never used here and hold most of the space.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 11.0.9 # match devEngines locally; newer pnpm rewrites the lockfile
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update -q && sudo apt-get install -y -q osmium-tool
+      # NYC's permits from before 2022 never change, and Socrata takes longer than five minutes a
+      # page that deep into 3.7M rows, so they're fetched once and kept between nights.
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            data/raw/permitsHistoric
+            data/raw/connectionPermitsHistoric
+          key: frozen-pages-v1-${{ github.run_id }}
+          restore-keys: frozen-pages-v1-
+      # The last complete download of each optional layer, for a night a city server turns us away
+      # (pipeline/download.ts falls back to it).
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: data/last-good
+          key: last-good-v1-${{ github.run_id }}
+          restore-keys: last-good-v1-
+      # Pages already on disk are kept, so later passes only retry the few a city server dropped.
+      # NYC Open Data has stalled on one page for half an hour, so the last pass waits it out first.
+      - run: pnpm download || pnpm download || (sleep 600 && pnpm download)
+        env:
+          SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+      # Saved even when the download fails, so the pages a night did get aren't fetched again.
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        if: always()
+        with:
+          path: |
+            data/raw/permitsHistoric
+            data/raw/connectionPermitsHistoric
+          key: frozen-pages-v1-${{ github.run_id }}
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        if: always()
+        with:
+          path: data/last-good
+          key: last-good-v1-${{ github.run_id }}
+      # Every night saves new copies under a new key, and the repo's caches are capped at 10 GB,
+      # so all but the newest of each kind go once tonight's are saved.
+      - name: Delete superseded caches
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for prefix in frozen-pages-v1- last-good-v1-; do
+            gh cache list --repo "$GITHUB_REPOSITORY" --key "$prefix" --limit 100 --sort created_at --order desc --json id --jq '.[1:][].id' |
+              xargs -r -n1 gh cache delete --repo "$GITHUB_REPOSITORY"
+          done
+      - run: pnpm download-osm
+      # Logs what's left, so the next time the build nears the runner's disk it shows here first.
+      - run: pnpm build-cells && df -h /
+      # The figures for subsola.com/insights; upload-cells publishes data/insights.json with the
+      # cells. A failure here shouldn't hold back the map, so the cells still go and the page
+      # keeps last night's figures.
+      # It reads every city's cells at once and ran past Node's default heap; the runner has 16 GB.
+      - run: pnpm insights
+        continue-on-error: true
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+      - run: pnpm upload-cells
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      # Toronto's permits, archived for a city that isn't on the map yet (docs/archive.md). Toronto
+      # publishes a rolling 30 months and drops the oldest rows weekly, so the archive matters more
+      # than any one night: it runs even after a failed map step, and a Toronto outage or a bad
+      # archive run never fails the map's night.
+      - run: pnpm archive-toronto
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 20
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: stats
+          path: |
+            data/stats.json
+            data/insights.json
+          if-no-files-found: ignore
+      # A failed night is otherwise only visible on the Actions tab. An open issue emails the
+      # owner, collects repeat failures as comments, and closes itself once a night succeeds.
+      - name: Report failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          open=$(gh api 'repos/{owner}/{repo}/issues?labels=nightly-failure&state=open' --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "Failed again: $RUN_URL"
+          else
+            gh label create nightly-failure --color B60205 --force
+            gh issue create --label nightly-failure --title "Nightly build failed" \
+              --body "The citywide data was not updated. Run: $RUN_URL"
+          fi
+      - name: Close failure reports
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for number in $(gh api 'repos/{owner}/{repo}/issues?labels=nightly-failure&state=open' --jq '.[].number'); do
+            gh issue close "$number" --comment "Fixed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          done

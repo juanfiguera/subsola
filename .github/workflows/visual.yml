@@ -1,0 +1,59 @@
+name: Visual
+
+# Screenshots of the built app compared with the committed Linux baselines. The network is
+# replayed from tests/visual/network.har.zip, so nightly data updates don't move the pictures.
+# To make or refresh baselines, run this workflow by hand with "update" ticked, download the
+# "baselines" artifact into tests/visual/street.pw.ts-snapshots, review and commit it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      update:
+        description: Write new baselines instead of comparing
+        type: boolean
+        default: false
+
+concurrency:
+  group: visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      # The URL the recording was made against; the replay answers for it.
+      VITE_CELLS_URL: https://data.subsola.com
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 11.0.9 # match devEngines locally; newer pnpm rewrites the lockfile
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      # Until the first baselines are committed there's nothing to compare against.
+      - name: Compare screenshots
+        if: ${{ !inputs.update && hashFiles('tests/visual/street.pw.ts-snapshots/*-linux.png') != '' }}
+        run: pnpm test:visual
+      - name: Write baselines
+        if: ${{ inputs.update }}
+        run: pnpm test:visual --update-snapshots=all
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ inputs.update }}
+        with:
+          name: baselines
+          path: tests/visual/street.pw.ts-snapshots/*-linux.png
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ failure() }}
+        with:
+          name: report
+          path: playwright-report

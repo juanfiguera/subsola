@@ -1,0 +1,14 @@
+node_modules
+dist
+data
+selfhost-data
+.git
+.wrangler
+.env
+.env.*
+.claude
+.gstack
+coverage
+playwright-report
+test-results
+docs/designs

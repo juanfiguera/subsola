@@ -1,0 +1,31 @@
+# The scheduled health check of https://subsola.com/mcp (docs/mcp.md, "Monitoring"). A standalone
+# Worker, apart from the Pages project, because GitHub's scheduled workflows ran late or not at
+# all. Deploy from the repository root:
+#   wrangler deploy -c workers/health/wrangler.toml
+name = "subsola-health"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+# No public URL: it only runs on its schedule.
+workers_dev = false
+preview_urls = false
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+# The database the Pages project uses; this Worker writes only health_checks.
+[[d1_databases]]
+binding = "DB"
+database_name = "subsola-feedback"
+database_id = "82940006-3be9-40f3-81ad-d6b49b5794df"
+
+# Alerts go to the one address the binding allows.
+[[send_email]]
+name = "ALERT_EMAIL"
+destination_address = "hello@subsola.com"
+
+[vars]
+ALERT_FROM = "health@subsola.com"
+ALERT_TO = "hello@subsola.com"
+
+[observability]
+enabled = true

@@ -1,0 +1,13 @@
+allowBuilds:
+  # Pulled in by posthog-js; its install script only prints a banner.
+  core-js: false
+  esbuild: true
+  # wrangler's local runtime; its install script fetches the platform binary.
+  workerd: true
+overrides:
+  # Reached only through a Node-side texture tool under deck.gl, never the page; pinned past an
+  # infinite-loop bug so audits stay clean.
+  image-size: '>=2.0.3'
+# A freshly published version waits a day before it can be installed: most hijacked packages
+# are caught and pulled within hours.
+minimumReleaseAge: 1440

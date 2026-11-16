@@ -1,0 +1,29 @@
+# Cloudflare Pages response headers.
+#
+# The content security policy lists every origin the page talks to, so injected markup can't
+# load a script or send data anywhere else: city geocoders and open data, the cell bucket, map
+# tiles and aerial photos, Sentry, PostHog, Turnstile and Cloudflare Web Analytics. A new data source needs adding here.
+# 'unsafe-inline' styles are for the style="--accent:..." attributes the cards write.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tiles.openfreemap.org https://orthos.its.ny.gov https://maps2.dcgis.dc.gov https://tile.sf.gov https://imagery.nationalmap.gov; connect-src 'self' data: blob: https://cloudflareinsights.com https://data.subsola.com https://tiles.openfreemap.org https://data.cityofnewyork.us https://geosearch.planninglabs.nyc https://maps2.dcgis.dc.gov https://gis.sf.gov https://geocode.gis.lacounty.gov https://webmaps.sandiego.gov https://gismaps.kingcounty.gov https://services.arcgis.com https://services1.arcgis.com https://datacatalog.cookcountyil.gov https://*.ingest.us.sentry.io https://us.i.posthog.com https://us-assets.i.posthog.com https://challenges.cloudflare.com https://orthos.its.ny.gov https://tile.sf.gov https://imagery.nationalmap.gov; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), clipboard-write=(self), fullscreen=(self)
+  Cross-Origin-Opener-Policy: same-origin
+
+# Vite names these by content, so a new build never reuses a name.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Let browsers reuse the fixture models for a day, then refresh in the background.
+/models/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/api/*
+  Cache-Control: no-store
+
+# The fonts the street preview pictures are drawn with (functions/og/street.ts).
+/fonts/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

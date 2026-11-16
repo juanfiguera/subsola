@@ -1,0 +1,16 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage
+.gstack
+data
+# Visual tests: only Linux baselines from CI are kept; local runs write their own.
+tests/visual/**/*-darwin.png
+tests/visual/**/*-win32.png
+playwright-report
+test-results
+.wrangler/
+selfhost-data

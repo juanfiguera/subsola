@@ -1,0 +1,84 @@
+name: Deploy
+
+# Publishes the app to Cloudflare Pages on every push to main, reading the citywide cells from
+# the R2 bucket. Only the built static page is published; the repo stays private.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      # The bucket's custom domain; its r2.dev address is rate-limited and meant for testing.
+      VITE_CELLS_URL: https://data.subsola.com
+      VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Both public by design: they end up in the page. Unset, analytics and feedback stay off.
+      VITE_POSTHOG_KEY: ${{ vars.POSTHOG_KEY }}
+      VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 11.0.9 # match devEngines locally; newer pnpm rewrites the lockfile
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      # Checks the secret's shape without printing it: an empty or mistyped value would
+      # otherwise turn error reporting off without a sound.
+      - name: Check the Sentry DSN
+        run: |
+          if [[ ! "$VITE_SENTRY_DSN" =~ ^https://[0-9a-f]+@[a-z0-9.-]+\.sentry\.io/[0-9]+$ ]]; then
+            echo "::error::SENTRY_DSN is missing or not a Sentry DSN"
+            exit 1
+          fi
+          echo "SENTRY_DSN looks right"
+      - run: pnpm build
+      # The feedback endpoint, bundled with what it imports, so the deploy job needs no packages.
+      - run: pnpm exec wrangler pages functions build functions --outdir dist/_worker.js --output-routes-path dist/_routes.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: site
+          path: dist
+          # Keeps dist/.well-known (the MCP Registry's domain key); hidden folders are left out otherwise.
+          include-hidden-files: true
+          retention-days: 3
+
+  # Apart from the build, so the Cloudflare token never shares a job with the project's
+  # dependencies and their install scripts. Only a pinned wrangler runs here.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          sparse-checkout: wrangler.toml
+          sparse-checkout-cone-mode: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: site
+          path: dist
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+      - name: Publish to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+        run: npx --yes wrangler@4.158.0 pages deploy dist --project-name subsola --branch main

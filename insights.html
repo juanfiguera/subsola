@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e6e9ee" />
+    <!-- Before anything paints: sets the light or dark theme (docs/dark-mode.md). -->
+    <script src="/theme.js"></script>
+    <title>Under the street: Subsola insights</title>
+    <meta
+      name="description"
+      content="How often city streets get dug up, who digs them and what pipes lie under them, from the cities' own public records. Updated every night."
+    />
+    <link rel="canonical" href="https://subsola.com/insights" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Subsola" />
+    <meta property="og:url" content="https://subsola.com/insights" />
+    <meta property="og:title" content="Under the street: Subsola insights" />
+    <meta
+      property="og:description"
+      content="How often streets get dug up, who digs them and what's buried underneath, from the cities' own public records."
+    />
+    <meta property="og:image" content="https://subsola.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="A street cut open to show water, sewer, gas, electric and telecom lines below it."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to the figures</a>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Subsola map">
+        <span class="mark" aria-hidden="true"></span>
+        <span>Subsola</span>
+      </a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/">Map</a>
+        <a href="/mcp">Use with AI assistants</a>
+      </nav>
+      <div id="theme-toggle"></div>
+    </header>
+
+    <div class="layout">
+      <nav id="section-nav" class="side" aria-label="On this page" data-after-load hidden>
+        <p>On this page</p>
+        <ol>
+          <li><a href="#repeat">Dug again</a></li>
+          <li><a href="#next-crew">Another utility</a></li>
+          <li><a href="#most-dug">Most-dug blocks</a></li>
+          <li><a href="#who-digs">Who digs</a></li>
+          <li><a href="#pipes">Pipes</a></li>
+          <li><a href="#lead">Lead lines</a></li>
+          <li><a href="#methods">Methods</a></li>
+        </ol>
+      </nav>
+
+      <main id="main" class="page">
+        <header class="intro">
+          <p class="kicker">Insights</p>
+          <h1>Under the street</h1>
+          <p class="lede">
+            How often the cities Subsola maps dig up their streets, who does the digging, and what's
+            buried down there. Every figure comes from the cities' own open data, recounted each
+            night.
+          </p>
+          <ul class="chips" aria-label="At a glance">
+            <li class="chip"><span data-icon="clock"></span>Recounted nightly</li>
+            <li class="chip"><span data-icon="file"></span>Cities' own open data</li>
+            <li class="chip" data-after-load hidden>
+              <span data-icon="check"></span><span>As of <span data-fig="built-date"></span></span>
+            </li>
+          </ul>
+        </header>
+
+        <p id="loading" class="loading" role="status">Loading the latest figures…</p>
+
+        <div id="load-error" class="load-error" role="alert" hidden>
+          <strong>The figures didn't load.</strong>
+          <p>
+            The nightly numbers couldn't be fetched or read, so nothing is shown rather than a
+            half-empty page. Check your connection and try again; if it keeps failing, the data
+            server may be down for a while.
+          </p>
+          <button id="retry" class="button" type="button">Try again</button>
+        </div>
+
+        <div id="figures" hidden>
+          <section class="hero" aria-labelledby="hero-title">
+            <h2 id="hero-title" class="hero-title">Dug, patched, dug again</h2>
+            <div class="stats">
+              <p class="stat">
+                <span class="stat-place">New York City</span>
+                <span class="stat-number" data-fig="nyc-1yr"></span>
+                <span class="stat-text"
+                  >of digs on a block are followed by another dig on the same block within a
+                  year.</span
+                >
+              </p>
+              <p class="stat">
+                <span class="stat-place">Washington, DC</span>
+                <span class="stat-number" data-fig="dc-1yr"></span>
+                <span class="stat-text">of digs, by the same measure.</span>
+              </p>
+            </div>
+            <p class="hero-foot">
+              A dig is one company's permits for one utility on one block.
+              <a href="#methods">How the digs are counted</a>
+            </p>
+          </section>
+
+          <section class="block" id="repeat" aria-labelledby="repeat-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="repeat"></span>
+              <div>
+                <h2 id="repeat-title">How soon a block is dug again</h2>
+                <p>
+                  Half the time, the next dig on a New York block comes within
+                  <b data-fig="nyc-median-days"></b> days. In DC it's
+                  <b data-fig="dc-median-days"></b> days.
+                </p>
+              </div>
+            </div>
+            <div class="pair">
+              <figure class="panel-figure">
+                <figcaption>
+                  <strong>Digs followed by another dig on the same block</strong>
+                  <span>Within one year, and within three years</span>
+                </figcaption>
+                <div id="chart-repeat"></div>
+              </figure>
+              <figure class="panel-figure">
+                <figcaption>
+                  <strong>Median days between digs on a block</strong>
+                  <span>Half of the gaps between one dig and the next are shorter</span>
+                </figcaption>
+                <div id="chart-gap"></div>
+              </figure>
+            </div>
+            <details class="note-card">
+              <summary>What counts as a dig, and which cities are left out</summary>
+              <p>
+                A dig here is one company's permits for one utility on one block, with permits less
+                than 30 days apart counted as one dig.
+              </p>
+              <p>
+                Los Angeles and San Diego are left out of the dig charts. They file one permit per
+                job, often for a whole street rather than a block, so a repeat there says more about
+                how permits are filed than about digging.
+              </p>
+            </details>
+          </section>
+
+          <section class="block" id="next-crew" aria-labelledby="next-crew-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="swap"></span>
+              <div>
+                <h2 id="next-crew-title">A different utility, back within 90 days</h2>
+                <p>
+                  In DC, <b data-fig="dc-other-90"></b> of digs started within 90 days of a dig on
+                  the same block by a different company working on a different utility. In New York
+                  it's <b data-fig="nyc-other-90"></b>. Each of those is a street patched and then
+                  opened again.
+                </p>
+              </div>
+            </div>
+            <figure class="panel-figure">
+              <figcaption>
+                <strong>Digs within 90 days of another utility's dig on the same block</strong>
+                <span>A different permit holder working on a different utility</span>
+              </figcaption>
+              <div id="chart-other"></div>
+            </figure>
+          </section>
+
+          <section class="block" id="most-dug" aria-labelledby="most-dug-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="pin"></span>
+              <div>
+                <h2 id="most-dug-title">The most-dug blocks</h2>
+                <p>
+                  <span data-fig="top-block"></span> has been dug
+                  <b data-fig="top-block-digs"></b> times since
+                  <span data-fig="nyc-first-year"></span>, by crews doing
+                  <b data-fig="top-block-utilities"></b> kinds of utility work.
+                </p>
+              </div>
+            </div>
+            <p class="caption-line">
+              Each city's records start in a different year, so compare blocks within a city.
+            </p>
+            <div id="most-dug-list" class="dug-cities"></div>
+          </section>
+
+          <section class="block" id="who-digs" aria-labelledby="who-digs-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="crew"></span>
+              <div>
+                <h2 id="who-digs-title">Who digs in New York</h2>
+                <p>
+                  Con Edison holds <b data-fig="con-ed-pct"></b> of New York's street-opening
+                  permits since <span data-fig="nyc-first-year"></span>. National Grid, which also
+                  files under its old KeySpan and Brooklyn Union Gas names, holds
+                  <b data-fig="national-grid-pct"></b>.
+                </p>
+              </div>
+            </div>
+            <figure class="panel-figure">
+              <figcaption>
+                <strong>Share of NYC street-opening permits by holder</strong>
+                <span
+                  >Largest holders, <span data-fig="nyc-first-year"></span> to
+                  <span data-fig="nyc-last-year"></span>, with permit counts</span
+                >
+              </figcaption>
+              <div id="chart-holders"></div>
+            </figure>
+            <details class="note-card">
+              <summary>How permit holders are grouped</summary>
+              <p>
+                National Grid's KeySpan and Brooklyn Union Gas filings are counted as National Grid.
+                Permits filed under names that may be a person's are grouped and not shown.
+              </p>
+            </details>
+          </section>
+
+          <section class="block" id="pipes" aria-labelledby="pipes-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="pipes"></span>
+              <div>
+                <h2 id="pipes-title">What's buried down there</h2>
+                <p>
+                  By length, <b data-fig="sd-water-top-pct"></b> of San Diego's water mains are
+                  <span data-fig="sd-water-top"></span>, <b data-fig="la-sewer-top-pct"></b> of Los
+                  Angeles sewers are <span data-fig="la-sewer-top"></span>, and
+                  <b data-fig="sea-water-top-pct"></b> of Seattle's water mains are
+                  <span data-fig="sea-water-top"></span>. Half of Seattle's mapped water mains went
+                  in before <b data-fig="sea-water-year"></b>, and
+                  <b data-fig="den-sewer-top-pct"></b> of Denver's sanitary sewers are
+                  <span data-fig="den-sewer-top"></span>.
+                </p>
+              </div>
+            </div>
+            <p class="caption-line">
+              <strong>Pipe material by share of length.</strong> Each city publishes different
+              pipes. New York publishes no main locations at all.
+            </p>
+            <ul id="pipe-systems" class="systems"></ul>
+          </section>
+
+          <section class="block" id="lead" aria-labelledby="lead-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="drop"></span>
+              <div>
+                <h2 id="lead-title">Lead pipes into buildings</h2>
+                <p>
+                  New York, DC, San Diego, Seattle and Denver publish an inventory of the service
+                  lines that run from the water main into each building. In New York,
+                  <b data-fig="nyc-lead-pct"></b> of tax lots, <b data-fig="nyc-lead"></b> of them,
+                  still have a lead line.
+                </p>
+              </div>
+            </div>
+            <ul class="lead-facts">
+              <li>
+                <strong>San Diego</strong>
+                <span
+                  ><b data-fig="sd-lead"></b> lead lines in an inventory of
+                  <b data-fig="sd-total"></b> meters</span
+                >
+              </li>
+              <li>
+                <strong>Seattle</strong>
+                <span
+                  ><b data-fig="sea-lead"></b> lead lines among
+                  <b data-fig="sea-total"></b> services</span
+                >
+              </li>
+              <li>
+                <strong>Denver</strong>
+                <span
+                  ><b data-fig="den-lead"></b> confirmed lead lines among
+                  <b data-fig="den-total"></b> premises</span
+                >
+              </li>
+            </ul>
+            <figure class="panel-figure">
+              <figcaption>
+                <strong>Service lines by what they're made of</strong>
+                <span>Share of each city's inventory, with counts</span>
+              </figcaption>
+              <div id="chart-lead"></div>
+            </figure>
+            <details class="note-card">
+              <summary>Each city counts differently</summary>
+              <p>
+                New York counts tax lots. DC counts premises and shows only lead it has verified;
+                suspected lead is under not yet known, and DC Water files galvanized pipe under lead
+                rather than apart. San Diego counts water meters. Seattle publishes only the
+                material of its own part of each service, up to the owner's pipe, and no lead
+                classification. Denver Water counts premises, files galvanized pipe downstream of
+                lead under lead, and puts the lines it calls likely lead under not yet known.
+              </p>
+              <p>Galvanized pipe can carry lead it picked up from older pipe upstream.</p>
+            </details>
+          </section>
+
+          <section class="block" id="methods" aria-labelledby="methods-title">
+            <div class="block-head">
+              <span class="block-icon" data-icon="book"></span>
+              <div>
+                <h2 id="methods-title">How these numbers were counted</h2>
+                <p>
+                  Figures as of <span data-fig="built-date"></span>, from the nightly build of the
+                  map's data.
+                </p>
+              </div>
+            </div>
+            <div class="methods">
+              <details>
+                <summary>Permits, not shovels</summary>
+                <p>
+                  A permit is permission to open the street, not proof that it was opened. Permits
+                  that never cut the street, such as New York's permits to open a manhole or store
+                  material, are left out.
+                </p>
+              </details>
+              <details>
+                <summary>One dig</summary>
+                <p>
+                  One company's permits for one utility on one block, with permits less than 30 days
+                  apart counted together. The one-year share leaves out digs from the last year of
+                  records, and the three-year share the last three, since what came after them can't
+                  be seen yet.
+                </p>
+              </details>
+              <details>
+                <summary>Cities left out of the dig figures</summary>
+                <p>
+                  Los Angeles and San Diego file one permit per job and often place it on a whole
+                  street rather than a block, so their digs aren't comparable and aren't charted.
+                </p>
+              </details>
+              <details>
+                <summary>Years covered</summary>
+                <p>
+                  The years each city's permits cover in earnest, from the first year with at least
+                  a tenth of its busiest year's permits:
+                </p>
+                <ul id="years-covered" class="plain"></ul>
+              </details>
+              <details>
+                <summary>Pipes</summary>
+                <p>
+                  Shares are by length of the pipe each city maps today. San Diego and Seattle
+                  publish water and sewer mains; Los Angeles and San Francisco publish sewers; DC
+                  publishes water mains 16 inches and larger. Seattle's water layer holds only
+                  distribution mains, 10 inches and smaller. Denver publishes sanitary sewers and
+                  storm drains, and Denver Water no mains. New York publishes no mains. Install
+                  years are as recorded, and half the dated length is older than the median year.
+                </p>
+              </details>
+              <details>
+                <summary>Lead service lines</summary>
+                <p>
+                  Counts only, no addresses: New York DEP by tax lot, DC Water by premise, San Diego
+                  by meter, Seattle Public Utilities by service and Denver Water by premise.
+                </p>
+              </details>
+              <details>
+                <summary>Sources</summary>
+                <ul id="source-list" class="sources"></ul>
+                <p>Compiled by Subsola from the files above, as each city publishes them.</p>
+              </details>
+            </div>
+          </section>
+        </div>
+
+        <nav class="page-foot" aria-label="More from Subsola">
+          <a class="foot-link" href="/">
+            <span class="block-icon" data-icon="pin"></span>
+            <span class="foot-text"
+              ><strong>Back to the map</strong><span>See what's under an address</span></span
+            >
+          </a>
+          <a class="foot-link" href="/mcp">
+            <span class="block-icon" data-icon="chat"></span>
+            <span class="foot-text"
+              ><strong>Use with AI assistants</strong
+              ><span>Ask these records from Claude or another assistant</span></span
+            >
+          </a>
+          <a class="foot-link" href="/credits">
+            <span class="block-icon" data-icon="book"></span>
+            <span class="foot-text"
+              ><strong>Data credits</strong><span>Whose public records these are</span></span
+            >
+          </a>
+          <a class="foot-link" href="/privacy">
+            <span class="block-icon" data-icon="lock"></span>
+            <span class="foot-text"
+              ><strong>Privacy</strong><span>What Subsola keeps and never stores</span></span
+            >
+          </a>
+        </nav>
+      </main>
+    </div>
+    <script type="module" src="/src/insights/main.ts"></script>
+  </body>
+</html>
