@@ -1,60 +1,231 @@
-# Subsola
+<p align="center">
+  <a href="https://subsola.com"><img src=".github/assets/banner.png" alt="Subsola: what's under the street, mapped from public records. Research, not a utility locate. Call 811 before you dig." width="100%"></a>
+</p>
 
-What public records say is under city streets, mapped.
+<h1 align="center">Subsola</h1>
 
-Subsola reads what cities, counties and utilities publish (excavation permits, utility maps,
-lead service line inventories, street fixtures) and draws the street in 3D with each utility
-likely under it at its expected depth. Type an address in New York City, Washington, DC, San
-Francisco, Los Angeles, San Diego, Seattle, Denver or Chicago and you get the lines out front,
-who has dug there and when, and a lot report you can print. The same records answer AI
-assistants through an MCP server at `/mcp`.
+<p align="center"><strong>Type an address. See what public records say is under the street.</strong></p>
 
-It runs at [subsola.com](https://subsola.com). This repository is the whole thing: the map, the
-MCP server, and the nightly pipeline that downloads the records and builds the files both read.
+<p align="center">
+  <a href="https://github.com/juanfiguera/subsola/actions/workflows/deploy.yml"><img alt="deploy status" src="https://img.shields.io/github/actions/workflow/status/juanfiguera/subsola/deploy.yml?branch=main&style=flat-square&label=deploy&labelColor=1b2230&color=e6e9ef"></a>
+  <a href="LICENSE"><img alt="license AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-e6e9ef?style=flat-square&labelColor=1b2230"></a>
+  <a href="#try-it-in-your-browser"><img alt="8 US cities" src="https://img.shields.io/badge/cities-8_US-e6e9ef?style=flat-square&labelColor=1b2230"></a>
+  <a href="#ask-your-ai-assistant"><img alt="MCP server" src="https://img.shields.io/badge/MCP-subsola.com%2Fmcp-e6e9ef?style=flat-square&labelColor=1b2230"></a>
+  <a href="#run-your-own-copy"><img alt="self-host with Docker" src="https://img.shields.io/badge/self--host-docker_compose_up-e6e9ef?style=flat-square&labelColor=1b2230"></a>
+</p>
 
-## What it is not
+<p align="center">
+  <a href="#try-it-in-your-browser">Try it</a> &middot;
+  <a href="#ask-your-ai-assistant">Ask your AI</a> &middot;
+  <a href="#run-your-own-copy">Run your own</a> &middot;
+  <a href="#what-youll-see">What you'll see</a> &middot;
+  <a href="#cities-and-where-the-data-comes-from">Cities</a> &middot;
+  <a href="#hack-on-it">Hack on it</a>
+</p>
 
-Read this before trusting a line on the map.
+Hi, and welcome. Subsola gathers what cities and utilities already publish (excavation permits,
+pipe maps, lead service line inventories, hydrants and catch basins) and turns it into a 3D
+street with every utility drawn at its expected depth. Pick an address in New York City,
+Washington DC, San Francisco, Los Angeles, San Diego, Seattle, Denver or Chicago, and in a few
+seconds you'll know which lines run out front, who has dug there and when, and whether the water
+line to the building is lead.
 
-- **Not a utility locate.** Nothing here replaces the mark-out the law requires before digging.
-  Call 811 (each city's one-call center is linked on its map and in every answer) at least two
-  working days ahead.
-- **Positions are approximate unless an owner publishes them.** Where a utility publishes its
-  own map (San Francisco's and Los Angeles's sewers, Seattle's water, sewer and electric, San
-  Diego's sewer and water, Denver's sewers), lines follow it. Everywhere else a line means
-  excavation permits show that utility on that block, and it is drawn at a standard offset in
-  the street, not where the pipe is. Every card says which.
-- **Depths are code minimums unless measured.** Depth comes from installation standards (federal
-  gas rules, city water and sewer specifications), drawn at the shallowest depth a digger could
-  meet the line, except where an owner publishes a measured depth (sewer inverts and rims in
-  several cities). Electric, telecom and steam owners publish no burial depths, so those are
-  marked unknown.
-- **Absence proves nothing.** A line no one has dug up since the records begin won't appear, and
+It's for anyone about to dig or build: engineers doing site research, contractors scoping a
+trench, buyers checking a property, or the curious. Everything here, the map, the AI assistant
+server and the nightly data pipeline, is in this repo and free to run yourself.
+
+<p align="center">
+  <img src=".github/assets/map-3d.jpg" alt="Subsola's 3D view of 33 Union Square West in Manhattan: white building blocks, colored utility lines running under each street, water service lines dropping to every lot, and a card listing active work and expected depths." width="100%">
+</p>
+
+> [!IMPORTANT]
+> **Subsola is research, not a utility locate.** Lines are drawn from public records, often at a
+> standard spot in the street rather than where the pipe really is. Before you dig, call **811**
+> (it's free) so the utilities mark their lines. More in [Before you dig](#before-you-dig).
+
+## Try it in your browser
+
+No install, no account. Open **[subsola.com](https://subsola.com)** and type an address, or jump
+straight to one of these:
+
+| City           | Try                                                                                                                    | Good for seeing                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| New York       | [33 Union Square West](https://subsola.com/?q=33%20Union%20Square%20West%2C%20New%20York%2C%20NY)                      | Steam, gas, lead lines and decades of permits       |
+| Washington, DC | [800 F St NW](https://subsola.com/?q=800%20F%20St%20NW%2C%20Washington%2C%20DC)                                        | Permits from every utility downtown                 |
+| San Francisco  | [1 Dr Carlton B Goodlett Pl](https://subsola.com/?q=1%20Dr%20Carlton%20B%20Goodlett%20Pl%2C%20San%20Francisco%2C%20CA) | The city's own sewer map, with measured depths      |
+| Los Angeles    | [200 N Spring St](https://subsola.com/?q=200%20N%20Spring%20St%2C%20Los%20Angeles%2C%20CA)                             | Sewers and storm drains from LA Sanitation          |
+| San Diego      | [100 W Broadway](https://subsola.com/?q=100%20W%20Broadway%2C%20San%20Diego%2C%20CA)                                   | Sewer and water mains from SanGIS                   |
+| Seattle        | [1420 5th Ave](https://subsola.com/?q=1420%205th%20Ave%2C%20Seattle%2C%20WA)                                           | Water, sewer and electric from the owners' own maps |
+| Denver         | [33 E Bayaud Ave](https://subsola.com/?q=33%20E%20Bayaud%20Ave%2C%20Denver%2C%20CO)                                    | Sewers and storm drains (beta)                      |
+| Chicago        | [233 S Wacker Dr](https://subsola.com/?q=233%20S%20Wacker%20Dr%2C%20Chicago%2C%20IL)                                   | Thirty years of street opening permits (beta)       |
+
+A few things to try once you're there: drag to move and right-drag to tilt, tap any line for
+where it came from, press **Check a location** to drill down from a spot, and open the **lot
+report** for a page you can print or save as a PDF.
+
+## Ask your AI assistant
+
+Subsola is also an [MCP server](https://subsola.com/mcp), so Claude, ChatGPT, Cursor or any MCP
+client can look things up for you. It's free, read-only and needs no sign-in. The server URL:
+
+```text
+https://subsola.com/mcp
+```
+
+**Claude Code**, in a terminal:
+
+```bash
+claude mcp add --transport http subsola https://subsola.com/mcp
+```
+
+**Claude** (claude.ai or the desktop app): open Customize, then Connectors, choose **Add custom
+connector**, paste the URL above, and pick **No sign-in**. Steps for ChatGPT, Cursor, VS Code and
+others are on [subsola.com/mcp](https://subsola.com/mcp).
+
+Then just ask:
+
+- _"I'm planning a 3 ft trench at 1420 5th Ave, Seattle. Which utilities run in the street in front, and how deep are they expected to be?"_
+- _"We're buying 800 F St NW, Washington, DC. Has the block seen much utility work lately?"_
+- _"Which utility permits near 55 Water St, New York keep getting renewed?"_
+
+It has two tools, `whats_under` and `recent_digs`, and every answer ends with the city's 811
+notice and the credits its publishers ask for.
+
+## Run your own copy
+
+One command gets you the map, the MCP server and a nightly data refresh for one city. You'll need
+[Docker](https://docs.docker.com/get-docker/).
+
+```bash
+git clone https://github.com/juanfiguera/subsola.git && cd subsola
+docker compose up
+```
+
+Grab a coffee while it builds. When the logs say **`subsola ingest: sea is live`** (about 5
+minutes for Seattle, the default), open:
+
+- **http://localhost:8080**, your own Subsola map
+- **http://localhost:8080/mcp**, your own MCP server, ready for your AI assistant
+
+What's happening behind the scenes:
+
+- **`ingest`** downloads the city's public records straight from the publishers (about 70 MB for
+  Seattle), builds the map files, swaps them in, and does it again every day. If a night's build
+  fails, it keeps serving the last good one.
+- **`web`** serves the map, the MCP server and those files, on the same Cloudflare runtime that
+  runs subsola.com.
+
+**Want a different city?** Set `CITY` to `nyc`, `dc`, `sf`, `la`, `sd`, `sea`, `den` or `chi`:
+
+```bash
+CITY=sf docker compose up
+```
+
+<details>
+<summary><strong>Settings, and if something goes wrong</strong></summary>
+
+<br>
+
+| Variable                         | Default      | What it does                                                                                         |
+| -------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| `CITY`                           | `sea`        | Which city to build                                                                                  |
+| `PORT`                           | `8080`       | Where the map and `/mcp` listen                                                                      |
+| `INGEST_EVERY_SECONDS`           | `86400`      | How long to wait between data refreshes                                                              |
+| `FEEDBACK_SALT`, `REQUESTER_KEY` | placeholders | Secrets that hash visitors' IPs for rate limits and stats. Set your own if others will use your copy |
+
+Your city's data lives in `./selfhost-data`, so it survives restarts.
+
+- **Port 8080 is taken:** run `PORT=3000 docker compose up` and use that port instead.
+- **The image build times out downloading packages:** that's a slow connection to npm. Run
+  `docker compose build` again; downloads are cached, so it picks up where it stopped.
+- **The map loads but the street is empty:** the first build isn't done yet. Wait for
+  `is live` in the logs (`docker compose logs -f ingest`).
+- **New York takes a while:** it's the biggest city by far (3.7 million permits, about an hour
+  to download) and its OpenStreetMap points need `osmium-tool`. The others take minutes.
+- **Analytics and error reports** are off unless you build with your own `VITE_POSTHOG_KEY`,
+  `VITE_SENTRY_DSN` and `VITE_TURNSTILE_SITE_KEY`.
+
+</details>
+
+<details>
+<summary><strong>Prefer not to use Docker?</strong></summary>
+
+<br>
+
+You'll need Node 22 and [pnpm](https://pnpm.io/installation).
+
+```bash
+pnpm install
+CITY=sea pnpm download      # one city's public records into data/raw
+CITY=sea pnpm build-cells   # the map files, into data/cells
+echo "VITE_CELLS_URL=/cells" > .env.local
+pnpm dev                    # http://localhost:5173
+```
+
+</details>
+
+A copy you run carries the same credits and the same paused sources as subsola.com; see
+[Cities and where the data comes from](#cities-and-where-the-data-comes-from).
+
+## What you'll see
+
+Every line wears the color utilities use to mark the street:
+
+<p><img alt="Electric" src="https://img.shields.io/badge/Electric-e3262b?style=flat-square"> <img alt="Gas" src="https://img.shields.io/badge/Gas-f2c200?style=flat-square"> <img alt="Telecom" src="https://img.shields.io/badge/Telecom-f47c20?style=flat-square"> <img alt="Water" src="https://img.shields.io/badge/Water-1f6fd1?style=flat-square"> <img alt="Sewer" src="https://img.shields.io/badge/Sewer-2e9a48?style=flat-square"> <img alt="Steam" src="https://img.shields.io/badge/Steam-fde68a?style=flat-square"></p>
+
+Tap a line and its card tells you how it was placed: from the **owner's own map** (the most
+precise), from **excavation permits** on the block, or **inferred** from how streets are
+usually built. Depths come with the code or standard behind them, or the measured depth where an
+owner publishes one.
+
+<table>
+  <tr>
+    <td width="68%" valign="top"><img src=".github/assets/lot-report.jpg" alt="A Subsola lot report for 1420 5th Ave, Seattle: the water service and side sewer for the lot, and a cross-section of the street showing each utility's expected depth."><br><sub><strong>The lot report:</strong> the building's water and sewer lines, and a cross-section of the street. Print it or save it as a PDF.</sub></td>
+    <td width="32%" valign="top"><img src=".github/assets/phone.jpg" alt="Subsola on a phone at San Francisco City Hall: the color legend, sewers with measured depths, and the address sheet."><br><sub><strong>On a phone:</strong> the same map, with a sheet you can pull up.</sub></td>
+  </tr>
+</table>
+
+More of what the map can do, from crew dig notes to flow direction: [docs/features.md](docs/features.md).
+
+## Before you dig
+
+Subsola is careful to tell you how much to trust each line. Here's the short version:
+
+- **It's not a utility locate.** Call 811 at least two working days before you dig. Each city's
+  one-call center is linked on its map and in every answer.
+- **Positions are approximate unless an owner publishes them.** San Francisco's and Los Angeles's
+  sewers, Seattle's water, sewer and electric, San Diego's sewer and water, and Denver's sewers
+  follow the owners' maps. Everywhere else, a line means permits show that utility on that block,
+  and it's drawn at a standard spot in the street.
+- **Depths are code minimums unless measured.** They come from installation standards, drawn at
+  the shallowest depth a digger could meet the line. Electric, telecom and steam owners publish no
+  burial depths, so those say "depth not published".
+- **No line doesn't mean no pipe.** A line nobody has dug up since records began won't show, and
   gas, electric and telecom companies keep their routes private.
-- **Records lag.** They are rebuilt nightly from each city's published data, which has its own
-  delays and errors; every answer gives its records-as-of date.
+- **Records lag a little.** They're rebuilt every night, and every answer says how fresh they are.
 
-More on what the map shows: [docs/features.md](docs/features.md). City by city:
-[docs/regions/](docs/regions/).
+## Cities and where the data comes from
 
-## Cities and sources
+Subsola stands on public records. These are the publishers, and the credit each one asks for:
 
-| City           | Main sources                                                                                                                | Credit required                                                                                        |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| New York       | NYC Open Data (DOT permits, DEP hydrants, catch basins, lead service lines, connection permits; OTI streets), OpenStreetMap | None by law today; Subsola names each dataset                                                          |
-| Washington, DC | Open Data DC (DDOT permits, OCTO streets, OTR lots, DOEE outfalls)                                                          | "Source: Open Data DC, [agency]; CC BY 4.0; modified by Subsola"                                       |
-| San Francisco  | DataSF (Public Works permits, streets, SFMTA signals), the City's sewer and hydrant map services                            | None required                                                                                          |
-| Los Angeles    | City of Los Angeles GeoHub (Engineering permits, Sanitation sewers and storm drains), LA County eGIS                        | None required                                                                                          |
-| San Diego      | City of San Diego open data (permits), SanGIS (streets, sewers, water mains, storm drains)                                  | "GIS data derived, modified, reduced, and/or processed from SanGIS downloadable data - www.sangis.org" |
-| Seattle        | City of Seattle open data (SDOT permits, Seattle Public Utilities, Seattle City Light)                                      | None required                                                                                          |
-| Denver         | City of Denver Open Data Catalog (permits, Wastewater sewers and storm drains)                                              | "City of Denver Open Data Catalog", CC BY 3.0, both linked                                             |
-| Chicago        | City of Chicago data portal (CDOT permits), Cook County address points                                                      | Chicago's disclaimer, word for word (below)                                                            |
+| City           | Main sources                                                                                            | Credit required                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| New York       | NYC Open Data (DOT permits; DEP hydrants, catch basins, lead service lines; OTI streets), OpenStreetMap | None by law today; Subsola names each dataset                                                          |
+| Washington, DC | Open Data DC (DDOT permits, OCTO streets, OTR lots, DOEE outfalls)                                      | "Source: Open Data DC, [agency]; CC BY 4.0; modified by Subsola"                                       |
+| San Francisco  | DataSF (Public Works permits, streets, SFMTA signals), the City's sewer and hydrant maps                | None required                                                                                          |
+| Los Angeles    | City of Los Angeles GeoHub (Engineering permits, Sanitation sewers and storm drains), LA County eGIS    | None required                                                                                          |
+| San Diego      | City of San Diego open data (permits), SanGIS (streets, sewers, water mains, storm drains)              | "GIS data derived, modified, reduced, and/or processed from SanGIS downloadable data - www.sangis.org" |
+| Seattle        | City of Seattle open data (SDOT permits, Seattle Public Utilities, Seattle City Light)                  | None required                                                                                          |
+| Denver         | City of Denver Open Data Catalog (permits, Wastewater sewers and storm drains)                          | "City of Denver Open Data Catalog", CC BY 3.0, both linked                                             |
+| Chicago        | City of Chicago data portal (CDOT permits), Cook County address points                                  | Chicago's disclaimer, word for word                                                                    |
 
-The full credits, as the site shows them, are at [subsola.com/credits](https://subsola.com/credits)
-and in `src/attribution.ts`. If you run your own copy, you owe the same credits; the app shows
-them for you.
+The app shows these credits for you, on every city's card, in lot reports and in MCP answers.
+They're all on [subsola.com/credits](https://subsola.com/credits) and in `src/attribution.ts`.
 
-## Data terms and attribution
+<details>
+<summary><strong>Every source's terms, and the layers paused while we ask permission</strong></summary>
+
+<br>
 
 Subsola republishes derived public records (drawn lines, permit lists, lot reports) on the site,
 in the cell files at data.subsola.com and through the MCP server. Each publisher's terms were read
@@ -123,81 +294,45 @@ reports and answers say the record is paused and link to the publisher's own map
 been asked of each publisher; removing an entry brings the source back with the next build. San
 Diego's permits moved to the city's open data portal (PDDL) instead of being paused.
 
-## Self-hosting
+</details>
 
-One command runs the map, the MCP server and the nightly ingestion for one city:
+## Hack on it
 
-```sh
-git clone https://github.com/juanfiguera/subsola.git && cd subsola
-docker compose up
-```
+Glad you're here. Getting set up takes a minute:
 
-Then open http://localhost:8080 once the `ingest` service logs `is live`. The first build of
-Seattle, the default, downloads about 70 MB of public records and takes a few minutes. The MCP
-server answers at http://localhost:8080/mcp.
-
-What runs:
-
-- **ingest** downloads one city's records from the publishers, builds the 250 m cells the map and
-  the MCP server read, swaps them in whole, then waits a day and does it again
-  (`selfhost/ingest.sh`). A failed night keeps the last good cells.
-- **web** serves the built map, the MCP server and the cells on Cloudflare's local Pages runtime
-  (`wrangler pages dev`), the same code that runs on subsola.com (`selfhost/web.sh`). The
-  feedback form and the MCP rate limits keep their rows in a local SQLite copy of D1.
-
-Settings, as environment variables for `docker compose`:
-
-| Variable                         | Default      | What it does                                                            |
-| -------------------------------- | ------------ | ----------------------------------------------------------------------- |
-| `CITY`                           | `sea`        | The city to build: `nyc`, `dc`, `sf`, `la`, `sd`, `sea`, `den` or `chi` |
-| `PORT`                           | `8080`       | Where the map and `/mcp` listen                                         |
-| `INGEST_EVERY_SECONDS`           | `86400`      | How long ingest waits between builds                                    |
-| `FEEDBACK_SALT`, `REQUESTER_KEY` | placeholders | Secrets that hash IPs for rate limits and stats; set your own           |
-
-Cells go to `./selfhost-data`. New York is the largest city by far (3.7 million permits, about
-an hour to download) and also needs `osmium-tool` for its OpenStreetMap points; the other cities
-build in minutes. Error reporting, analytics and the feedback form's bot check stay off unless
-you build with your own `VITE_SENTRY_DSN`, `VITE_POSTHOG_KEY` and `VITE_TURNSTILE_SITE_KEY`.
-
-The sources paused for their terms (see above) stay paused in your copy too. Each publisher's
-terms apply to your copy as they do to subsola.com.
-
-Without Docker, the same steps by hand:
-
-```sh
+```bash
 pnpm install
-CITY=sea pnpm download      # one city's records into data/raw
-CITY=sea pnpm build-cells   # data/cells
-echo "VITE_CELLS_URL=/cells" > .env.local
-pnpm dev                    # http://localhost:5173; the dev server serves data/cells at /cells
-```
-
-## Development
-
-```sh
-pnpm install
-pnpm dev          # http://localhost:5173; without VITE_CELLS_URL, NYC loads live from NYC Open Data
-pnpm typecheck
-pnpm lint
-pnpm test
+pnpm dev          # http://localhost:5173 (New York loads live from NYC Open Data)
+pnpm test         # unit tests
+pnpm typecheck && pnpm lint
 pnpm build
 ```
 
-Optional: `VITE_SOCRATA_APP_TOKEN` in `.env` (see `.env.example`) raises NYC Open Data's rate
-limits.
+How it fits together:
 
-**The full build.** `pnpm download` fetches every city's datasets (it resumes if stopped),
-`pnpm download-osm` cuts OpenStreetMap's manholes, lamps and signals from Geofabrik's New York
-extract (needs `osmium-tool`), `pnpm build-cells` writes about 80,000 cells to `data/cells`, and
-`pnpm insights` writes `data/insights.json` for the Insights page. On subsola.com the nightly
-workflow (`.github/workflows/nightly.yml`) runs these and `pnpm upload-cells`, which sends the
-changed cells to a Cloudflare R2 bucket (credentials in `.env.r2`), and every push to `main`
-deploys the site to Cloudflare Pages (`.github/workflows/deploy.yml`).
+```text
+city and utility open data
+        |  nightly: pnpm download, then pnpm build-cells
+        v
+250 m map cells (data/cells, or data.subsola.com)
+        |
+        +--> the map (src/)            3D street, cards, lot reports
+        +--> the MCP server (server/)  whats_under, recent_digs at /mcp
+```
 
-**Visual tests** (`pnpm test:visual`) replay recorded network captures in `tests/visual` and
-compare screenshots; only Linux baselines from CI are kept.
+- **The full build:** `pnpm download` fetches every city's records (it resumes if stopped),
+  `pnpm download-osm` adds OpenStreetMap's manholes, lamps and signals for New York (needs
+  `osmium-tool`), `pnpm build-cells` writes about 80,000 cells, and `pnpm insights` writes the
+  figures behind [subsola.com/insights](https://subsola.com/insights).
+- **Visual tests:** `pnpm test:visual` replays recorded network traffic and compares screenshots
+  (Linux baselines come from CI).
+- **Each city's details**, from quirks in its permits to what it doesn't publish, are in
+  [docs/regions/](docs/regions/). The MCP server is described in [docs/mcp.md](docs/mcp.md).
 
-## Depth
+<details>
+<summary><strong>How depths are chosen</strong></summary>
+
+<br>
 
 No NYC dataset publishes pipe depths, so the scene uses installation standards and draws each
 pipe at its **shallowest expected depth**: the depth a digger would hit it first.
@@ -214,7 +349,12 @@ scale; every label stays in real feet. Utilities are drawn side by side because 
 position in the street is not public, except where crew dig notes place a lane (see Crew dig
 spots).
 
-## Layout
+</details>
+
+<details>
+<summary><strong>Where things live</strong></summary>
+
+<br>
 
 - `src/sources/` one module per data source, all validated with Zod
 - `src/scene/` the 3D world: `local.ts` (meters around the address), `build.ts` (data to
@@ -223,12 +363,27 @@ spots).
 - `src/depth.ts` depth standards with citations
 - `src/brief.ts` per-utility summary
 
+</details>
+
+### Contributing
+
+Issues and pull requests are welcome, from a typo to a new city. A few pointers:
+
+- **Spotted a wrong line or a missing source?** Open an issue with the address; that's often
+  enough for us to find it.
+- **Adding a city?** Copy the shape of an existing one: its datasets and build in `pipeline/<city>/`,
+  its depth rules in `src/depth.ts`, its region in `src/regions.ts`, and a write-up in
+  `docs/regions/`. Check its data terms first and add its credit to `src/attribution.ts`.
+- **Before a pull request,** run `pnpm typecheck`, `pnpm lint` and `pnpm test`.
+- **Publishers:** if you'd like your data credited differently, email
+  [hello@subsola.com](mailto:hello@subsola.com).
+
 ## License
 
-Subsola is free software under the [GNU Affero General Public License v3.0](LICENSE): you can
-use, change and share it, and if you run a changed version for others over a network, you must
-offer them its source. See [NOTICE](NOTICE). The Subsola name and logo are not covered by this
-license.
+Subsola is free software under the [GNU Affero General Public License v3.0](LICENSE). Use it,
+change it and share it; if you run a changed version for others over a network, offer them its
+source too. The Subsola name and logo are not covered by this license (see [NOTICE](NOTICE)).
 
-The public records it reads belong to their publishers and carry their own terms; see "Data
-terms and attribution" above.
+The public records it reads belong to their publishers and carry their own terms, listed above.
+
+<p align="center"><sub>Made by <a href="https://subsola.com">Central Park Labs</a>. Questions or ideas? <a href="mailto:hello@subsola.com">hello@subsola.com</a></sub></p>
