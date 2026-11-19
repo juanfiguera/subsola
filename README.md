@@ -386,4 +386,4 @@ source too. The Subsola name and logo are not covered by this license (see [NOTI
 
 The public records it reads belong to their publishers and carry their own terms, listed above.
 
-<p align="center"><sub>Made by <a href="https://subsola.com">Central Park Labs</a>. Questions or ideas? <a href="mailto:hello@subsola.com">hello@subsola.com</a></sub></p>
+<p align="center"><sub>Questions or ideas? <a href="mailto:hello@subsola.com">hello@subsola.com</a></sub></p>
