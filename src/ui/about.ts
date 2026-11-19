@@ -1,4 +1,4 @@
-import { REGIONS, cityNames, type Region } from '../regions';
+import { REGIONS, type Region } from '../regions';
 import { CONFIDENCE_LABELS, SOURCES, type Confidence, type SourceKey } from '../sources/catalog';
 import { depthStandards } from '../depth';
 import { UTILITY_STYLES } from '../utilities';
@@ -137,7 +137,7 @@ const linkRow = (icon: IconName, title: string, line: string, attributes: string
 export const aboutCard = (statuses: Map<SourceKey, SourceStatus>, region: Region) => `
   ${backButton}
   <h1 class="card-title">About Subsola</h1>
-  <p class="hero-line">A map of the pipes and cables under the streets of ${escapeHtml(cityNames())}, drawn from public records.</p>
+  <p class="hero-line">Utility research for people who plan work in the street: engineers, contractors, utility coordinators and real estate teams. The pipes and cables under the street, mapped from public records.</p>
   <ul class="about-chips" aria-label="At a glance">
     <li>${ICONS.pin}${REGIONS.length} cities</li>
     <li>${ICONS.clock}Rebuilt nightly</li>
@@ -151,6 +151,15 @@ export const aboutCard = (statuses: Map<SourceKey, SourceStatus>, region: Region
       <p><strong>Before any digging,</strong> ${escapeHtml(region.markout.law)} requires a free request to <a href="${escapeHtml(region.markout.url)}" target="_blank" rel="noopener">${escapeHtml(region.markout.center)}</a> at least ${escapeHtml(region.markout.notice)} ahead.</p>
     </div>
   </div>
+  <section class="card-section about-section" aria-labelledby="about-uses-title">
+    <h2 id="about-uses-title">What it's for</h2>
+    <ul class="about-rows">
+      ${row('file', 'Site research', 'Which utilities serve a lot, how deep they likely run and who digs there, before the survey.')}
+      ${row('crew', 'Scoping a dig', 'What is likely in the way of a trench and at what depth, to plan the work and the locate request.')}
+      ${row('check', 'Due diligence', "A property's water service and house sewer, lead status where the city publishes it, and how often its street gets opened.")}
+      ${row('repeat', 'Coordinating street work', 'Who has permits out front today and who keeps coming back, so the same block is not opened twice.')}
+    </ul>
+  </section>
   <section class="card-section about-section" aria-labelledby="about-how-title">
     <h2 id="about-how-title">How the map is built</h2>
     <p class="about-lede">From excavation permits, city asset inventories and, in New York, OpenStreetMap.</p>

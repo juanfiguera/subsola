@@ -109,7 +109,7 @@ const otherCities = (region: Region) =>
     .join('');
 
 export const cityDescription = (region: Region) =>
-  `A free 3D map of the water, sewer, gas, electric and telecom lines under ${region.name} streets, from city permits and utility records. Research, not a utility locate: call ${region.markout.center} before you dig.`;
+  `A free 3D map of the water, sewer, gas, electric and telecom lines under ${region.name} streets, from city permits and utility records, for site research, dig scoping and due diligence. Research, not a utility locate: call ${region.markout.center} before you dig.`;
 
 export const cityPage = (region: Region, figures: CityFigures | undefined, stylesheet: string) => {
   const facts = CITY_FACTS[region.id];
@@ -138,7 +138,7 @@ export const cityPage = (region: Region, figures: CityFigures | undefined, style
     `<header class="intro">
         ${region.beta ? '<p class="kicker"><span class="tag">Beta</span></p>' : ''}
         <h1>${escapeHtml(title)}</h1>
-        <p class="lede">See what's likely under any ${escapeHtml(region.name)} street: water mains, sewers, gas, electric and telecom lines, drawn in 3D from the city's own public records. Free, with no account.</p>
+        <p class="lede">Research what's under any ${escapeHtml(region.name)} street before you design, bid or dig: water mains, sewers, gas, electric and telecom lines, drawn in 3D from the city's own public records. Free, with no account.</p>
         <a class="cta" href="${mapLink(facts?.mapAddress ?? null)}">Open the ${escapeHtml(region.name)} map</a>
       </header>
       ${region.beta ? `<p class="beta"><strong>Beta.</strong> ${escapeHtml(region.beta)}</p>` : ''}
