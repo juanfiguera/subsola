@@ -41,8 +41,18 @@ const PURPOSE_CHARS = 240;
 // SanGIS files "05TH AVE"; people and the permits write "5th Av".
 const withoutLeadingZeros = (name: string) => name.replace(/\b0+(\d)/g, '$1');
 
-// Permits filed with no place of their own sit on the permit office, 1222 First Avenue.
+// Permits filed with no place of their own sit on the permit office, 1222 First Avenue. Some
+// say so in the address; others keep their real address (Bellevue Av, El Cajon Bl) but carry
+// the office's point, about 60 of them in the 2026-11 file.
 const PLACEHOLDER = /^1222\s+0?1st\s+av/i;
+const PERMIT_OFFICE: [number, number] = [-117.16334, 32.71832];
+
+/** Whether a point is the permit office's, within the 60 m or so its copies wander. */
+export const atPermitOffice = ([lng, lat]: [number, number]) =>
+  Math.hypot(
+    (lng - PERMIT_OFFICE[0]) * 111_320 * Math.cos((lat * Math.PI) / 180),
+    (lat - PERMIT_OFFICE[1]) * 110_540,
+  ) < 75;
 
 const isoDate = (millis: number | null | undefined) =>
   millis && millis > 0 ? new Date(millis).toISOString().slice(0, 10) : undefined;
@@ -441,6 +451,12 @@ const groupSdPermits = async (
       counts.utility += 1;
       const at: [number, number] = [row.GIS_LONGITUDE, row.GIS_LATITUDE];
       const block = nearestBlock(at, sdPermitStreet(row.GIS_ADDRESS));
+      // At the office with its own street nowhere near: the point is the placeholder.
+      if (!block && atPermitOffice(at)) {
+        counts.utility -= 1;
+        counts.placeholder += 1;
+        continue;
+      }
       const place = block ? block.key : `${at[0].toFixed(5)},${at[1].toFixed(5)}`;
       const geometry: Geometry = block
         ? { type: 'LineString', coordinates: blockByKey.get(block.key)!.path }

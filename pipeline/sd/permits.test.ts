@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classifySdPermit } from './permits';
-import { sdPermitDates, sdPermitStreet } from './build';
+import { atPermitOffice, sdPermitDates, sdPermitStreet } from './build';
 import { csvRowMatches } from '../csv';
 import { SD_DATASETS, sdPermitSchema } from './datasets';
 
@@ -165,5 +165,13 @@ describe('the portal CSV', () => {
     expect(csvRowMatches({ APPROVAL_TYPE: 'Right Of Way Permit-Traffic Control' }, before)).toBe(
       false,
     );
+  });
+});
+
+describe('atPermitOffice', () => {
+  it('knows the point placeholder permits carry, and not a block away', () => {
+    expect(atPermitOffice([-117.163345, 32.718317])).toBe(true);
+    expect(atPermitOffice([-117.163257387, 32.717787035])).toBe(true);
+    expect(atPermitOffice([-117.1612, 32.7193])).toBe(false);
   });
 });

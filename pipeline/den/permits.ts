@@ -100,6 +100,9 @@ export const classifyDenPermit = (
 ): DenWork | null => {
   const kind = purpose?.trim() ?? '';
   const holder = company?.trim() ?? '';
+  // Xcel files its own fiber as "Fiber Optics" (1,612 permits by 2026-11), so its 97 "Cable"
+  // permits are power cable.
+  if (kind === 'Cable' && XCEL.test(holder)) return work('electric', 'Xcel Energy');
   const named = BY_PURPOSE[kind];
   if (named) return work(named, ownerFor(named, holder));
   if (!BY_COMPANY.has(kind) || !holder) return null;

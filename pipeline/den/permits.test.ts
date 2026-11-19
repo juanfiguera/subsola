@@ -22,6 +22,16 @@ describe('classifyDenPermit', () => {
     expect(classifyDenPermit('Fire Hydrant', null)?.utility).toBe('water');
   });
 
+  it("reads Xcel's cable as power and its fiber as telecom", () => {
+    expect(classifyDenPermit('Cable', 'Xcel Energy')).toEqual({
+      utility: 'electric',
+      owner: 'Xcel Energy',
+      assumed: false,
+    });
+    expect(classifyDenPermit('Fiber Optics', 'Xcel Energy')?.utility).toBe('telecom');
+    expect(classifyDenPermit('Cable', 'COMCAST CABLE')?.utility).toBe('telecom');
+  });
+
   it('reads the company where the purpose is only "Utility"', () => {
     expect(classifyDenPermit('Utility', 'DENVER WATER BOARD')?.utility).toBe('water');
     expect(classifyDenPermit('Utility', 'QWEST - NORTH OF ALAMEDA')).toEqual({
