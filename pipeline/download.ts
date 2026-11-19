@@ -150,7 +150,23 @@ const countPages = async (spec: DatasetSpec, rows: number): Promise<number> => {
   return Math.ceil((high - low + 1) / spec.pageRows);
 };
 
+/**
+ * A layer being republished answers a count of 0 for a while (Seattle's streets did on
+ * 2026-11-18), and no dataset we use is really empty, so a zero is retried like a busy server and
+ * then counts as a failure: optional layers fall back to their last good copy.
+ */
 const countRows = async (spec: DatasetSpec): Promise<number> => {
+  for (let attempt = 0; ; attempt++) {
+    const rows = await countRowsOnce(spec);
+    const delay = RETRY_DELAYS_MS[attempt];
+    if (rows > 0) return rows;
+    if (delay === undefined) throw new Error(`${spec.name} reports no rows`);
+    console.warn(`  retrying in ${delay / 1000}s after a count of 0`);
+    await sleep(delay);
+  }
+};
+
+const countRowsOnce = async (spec: DatasetSpec): Promise<number> => {
   if (spec.arcgis) {
     const body = (await fetchArcgis(arcgisUrl(spec.arcgis, { returnCountOnly: 'true' }))) as {
       count?: number;
