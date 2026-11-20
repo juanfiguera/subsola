@@ -54,6 +54,8 @@ const ASSETS: Record<City, Record<string, string[]>> = {
   },
   // Chicago publishes none of its hydrants, inlets, lights or signals.
   chi: {},
+  // Dallas publishes no hydrants, inlets or manholes; its lights and signal cabinets aren't built.
+  dal: {},
 };
 
 export const assetInsights = async (streetMiles: Record<City, Figure<number>>) => {

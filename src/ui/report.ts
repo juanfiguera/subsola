@@ -25,6 +25,8 @@ import {
   DC_SERVICE_SUMMARY,
   CHI_NO_HOUSE_SEWER,
   CHI_NO_SERVICE,
+  DAL_NO_HOUSE_SEWER,
+  DAL_NO_SERVICE,
   DEN_NO_SERVICE,
   denServiceText,
   serviceNeedsAction,
@@ -209,6 +211,29 @@ const chiSewerBlock = () => `
       <h3>${swatch(UTILITY_STYLES.sewer.color)}House sewer</h3>
       <p class="report-verdict">Not published</p>
       <p>${CHI_NO_HOUSE_SEWER}</p>
+    </div>`;
+
+const dalWaterBlock = (report: LotReport) => {
+  const lot = report.water?.lot;
+  if (lot?.source !== 'dalServiceLines' || !lot.sides)
+    return `<div class="report-line"><h3>${swatch(UTILITY_STYLES.water.color)}Water service</h3><p>${DAL_NO_SERVICE}</p></div>`;
+  const { summary, note, facts: rows } = sidedServiceText({ ...lot, sides: lot.sides });
+  const needsAction = lot.material === 'lead' || lot.material === 'galvanized';
+  return `
+    <div class="report-line">
+      <h3>${swatch(UTILITY_STYLES.water.color)}Water service</h3>
+      <p class="report-verdict${needsAction ? ' report-verdict-warn' : ''}">${escapeHtml(serviceLabel(lot))}</p>
+      <p>${summary}</p>
+      ${facts([...rows, ['Size and route', 'Not published']])}
+      <p class="report-note">${note}</p>
+    </div>`;
+};
+
+const dalSewerBlock = () => `
+    <div class="report-line">
+      <h3>${swatch(UTILITY_STYLES.sewer.color)}House sewer</h3>
+      <p class="report-verdict">Not published</p>
+      <p>${DAL_NO_HOUSE_SEWER}</p>
     </div>`;
 
 const dcSewerBlock = () => `
@@ -661,6 +686,9 @@ const denSources = () =>
 const chiSources = () =>
   `public way opening permits from ${sourceLink(SOURCES.chiPermits.name, SOURCES.chiPermits.url)}, Chicago Department of Transportation, with the utility read from the company named and words in the permit's description. Chicago publishes no map of its water mains, sewers or street assets, so every line here comes from permits. Streets and buildings from the City of Chicago data portal.`;
 
+const dalSources = () =>
+  `right of way permits from ${sourceLink(SOURCES.dalPermits.name, SOURCES.dalPermits.url)}, City of Dallas Transportation and Public Works, with the utility from the city's own list and the owner from the company named. Dallas publishes no map of its water mains, sewers, storm drains or street assets, so every line here comes from permits. Water service material from Dallas Water Utilities' ${sourceLink(SOURCES.dalServiceLines.name, SOURCES.dalServiceLines.url)}. Streets from ${sourceLink(SOURCES.dalStreets.name, SOURCES.dalStreets.url)}, Dallas Open Data; buildings from FEMA's ${sourceLink(SOURCES.dalBuildings.name, SOURCES.dalBuildings.url)}, CC BY 4.0.`;
+
 export const lotReportHtml = (report: LotReport, heading: ReportHeading) => {
   const lot = lotName(report.bbl, heading.region);
   const city = heading.region.id;
@@ -695,7 +723,9 @@ export const lotReportHtml = (report: LotReport, heading: ReportHeading) => {
                       ? `<div class="report-lines">${pausedWaterBlock('denServiceLines') ?? denWaterBlock(report)}${denSewerBlock()}</div>`
                       : city === 'chi'
                         ? `<div class="report-lines">${chiWaterBlock()}${chiSewerBlock()}</div>`
-                        : `<div class="report-lines">${waterBlock(report)}${sewerBlock(report)}</div>${connectionTable(report)}`
+                        : city === 'dal'
+                          ? `<div class="report-lines">${dalWaterBlock(report)}${dalSewerBlock()}</div>`
+                          : `<div class="report-lines">${waterBlock(report)}${sewerBlock(report)}</div>${connectionTable(report)}`
         }
       </section>
 
@@ -730,7 +760,7 @@ export const lotReportHtml = (report: LotReport, heading: ReportHeading) => {
       </section>
 
       <footer class="report-sources">
-        <p>Sources: ${city === 'dc' ? dcSources() : city === 'sf' ? sfSources() : city === 'la' ? laSources() : city === 'sd' ? sdSources() : city === 'sea' ? seaSources() : city === 'den' ? denSources() : city === 'chi' ? chiSources() : nycSources()} Prepared by Subsola from public data only. This is not a utility locate. Call 811 before you dig.</p>
+        <p>Sources: ${city === 'dc' ? dcSources() : city === 'sf' ? sfSources() : city === 'la' ? laSources() : city === 'sd' ? sdSources() : city === 'sea' ? seaSources() : city === 'den' ? denSources() : city === 'chi' ? chiSources() : city === 'dal' ? dalSources() : nycSources()} Prepared by Subsola from public data only. This is not a utility locate. Call 811 before you dig.</p>
         <p>${linkCredit(CITY_CREDITS[city], escapeHtml)} ${linkCredit(OSM_CREDIT, escapeHtml)} ${escapeHtml(NOT_ENDORSED)} <a href="/credits#credits-${city}">All data credits</a></p>
         <p class="report-print-only">Live map of this street: <a href="${escapeHtml(heading.link)}">${escapeHtml(heading.link)}</a></p>
       </footer>

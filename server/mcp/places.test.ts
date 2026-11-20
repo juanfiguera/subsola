@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { namesAnotherPlace } from './places';
-import { CHI, DC, DEN, LA, NYC, SD, SEA } from '../../src/regions';
+import { CHI, DAL, DC, DEN, LA, NYC, SD, SEA } from '../../src/regions';
 
 describe('namesAnotherPlace', () => {
   it('flags an address in another state that a city geocoder matched anyway', () => {
@@ -20,6 +20,8 @@ describe('namesAnotherPlace', () => {
     expect(namesAnotherPlace('1437 Bannock St, Denver, CO 80302', DEN)).toBe(true);
     expect(namesAnotherPlace('1060 W Addison St, Chicago, IL 60613', CHI)).toBe(false);
     expect(namesAnotherPlace('1060 W Addison St, Chicago, IL 62613', CHI)).toBe(true);
+    expect(namesAnotherPlace('1500 Marilla St, Dallas, TX 75201', DAL)).toBe(false);
+    expect(namesAnotherPlace('1500 Marilla St, Dallas, TX 77002', DAL)).toBe(true);
   });
 
   it('reads Washington as DC and LA or SD as the city, not another state', () => {

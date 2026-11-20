@@ -189,6 +189,15 @@ const chicagoData = (
   license: 'City of Chicago data portal terms of use; provided as is',
 });
 
+const DAL_AGOL = 'https://services2.arcgis.com/rwnOSbfKSwyTBcwN/arcgis/rest/services';
+// The city's layers set no license and Dallas Open Data names none; credited to the city as
+// published.
+const DAL_LICENSE = 'City of Dallas open data; no license stated, provided as is';
+
+/** A City of Dallas layer on its ArcGIS Online organization; `id` is its full query URL. */
+const dalLayer = (layer: string, name: string, publisher: string, confidence: Confidence) =>
+  cityLayer(`${DAL_AGOL}/${layer}`, name, publisher, confidence, DAL_LICENSE);
+
 const SF_SEWERS = 'https://gis.sf.gov/svc/rest/services/boe/SEWER_ASSETS_ALL_STATUS/FeatureServer';
 const SF_AGOL = 'https://services.arcgis.com/Zs2aNLFN00jrS4gG/arcgis/rest/services';
 
@@ -674,6 +683,60 @@ export const SOURCES = {
   ),
   chiStreets: chicagoData('pr57-gg9e', 'Street Center Lines', 'City of Chicago', 'context'),
   chiBuildings: chicagoData('syp8-uezg', 'Building Footprints', 'City of Chicago', 'context'),
+  // Right of way permits. Only the work, the dates, the site and the contractors are asked for;
+  // the applicant's name and company as typed and the free-text description stay on the portal
+  // (pipeline/dal/datasets.ts).
+  dalPermits: dalLayer(
+    'ROW/FeatureServer/2',
+    'Right of way permits',
+    'City of Dallas Transportation and Public Works',
+    'block-level',
+  ),
+  dalPermitLines: dalLayer(
+    'ROW/FeatureServer/1',
+    'Right of way permits (lines)',
+    'City of Dallas Transportation and Public Works',
+    'block-level',
+  ),
+  dalPermitPoints: dalLayer(
+    'ROW/FeatureServer/0',
+    'Right of way permits (points)',
+    'City of Dallas Transportation and Public Works',
+    'block-level',
+  ),
+  dalStreets: {
+    id: 'exp2-seaw',
+    name: 'Streets',
+    publisher: 'City of Dallas GIS Services',
+    url: 'https://www.dallasopendata.com/d/exp2-seaw',
+    confidence: 'context',
+    license: DAL_LICENSE,
+  },
+  // The arterials, which the city files apart from its other streets.
+  dalMajorStreets: {
+    id: 'dja8-bezq',
+    name: 'Major Streets',
+    publisher: 'City of Dallas GIS Services',
+    url: 'https://www.dallasopendata.com/d/dja8-bezq',
+    confidence: 'context',
+    license: DAL_LICENSE,
+  },
+  dalBuildings: {
+    id: 'https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/USA_Structures_View/FeatureServer/0',
+    name: 'USA Structures',
+    publisher: 'FEMA and Oak Ridge National Laboratory',
+    url: 'https://www.arcgis.com/home/item.html?id=0ec8512ad21e4bb987d7e848d14e7e24',
+    confidence: 'context',
+    license: 'CC BY 4.0',
+  },
+  // Dallas Water Utilities' inventory for the EPA's lead rule. Only the address, the materials
+  // and how they're known are read, never the account id.
+  dalServiceLines: dalLayer(
+    'ServiceLine_viewing_270d198a2a4f44cdbc63b617e6c52ff2/FeatureServer/0',
+    'Service line inventory',
+    'Dallas Water Utilities',
+    'lot-level',
+  ),
   conEdStructures: {
     id: 'con-ed-structures',
     name: 'Network structures (hosting capacity map)',

@@ -113,6 +113,7 @@ import { distanceMeters, feetFromMeters } from './geo';
 import { parseGlbMeshes } from './scene/glb';
 import {
   CHI,
+  DAL,
   DEN,
   LA,
   NYC,
@@ -572,12 +573,12 @@ const renderCard = ({ missed = false } = {}) => {
       loading: !state.permitsLoaded,
       failed: state.permitsFailed,
       hydrants:
-        state.region === CHI
+        state.region === CHI || state.region === DAL
           ? null
           : state.assets.filter((a) => a.properties.kind === 'hydrant' && nearPlace(a.geometry))
               .length,
       catchBasins:
-        state.region === CHI
+        state.region === CHI || state.region === DAL
           ? null
           : state.assets.filter((a) => a.properties.kind === 'catch-basin' && nearPlace(a.geometry))
               .length,
@@ -2085,6 +2086,7 @@ const markBuiltStatuses = () => {
   if (state.region === SEA) return markBuiltSeaStatuses();
   if (state.region === DEN) return markBuiltDenStatuses();
   if (state.region === CHI) return markBuiltChiStatuses();
+  if (state.region === DAL) return markBuiltDalStatuses();
   if (state.region !== NYC) return markBuiltDcStatuses();
   const ground = state.groundData;
   const records = state.permitGroups.flatMap((group) => group.properties.permits);
@@ -2277,6 +2279,21 @@ const markBuiltChiStatuses = () => {
     chiPermits: state.permitGroups.flatMap((group) => group.properties.permits).length,
     chiStreets: state.streets.length,
     chiBuildings: state.groundData?.buildings.features.length ?? 0,
+  };
+  for (const [key, count] of Object.entries(counts))
+    setStatus(key as SourceKey, { state: 'ok', count });
+};
+
+/** Dallas's sources card: permits, the ground and the service line inventory; no pipes. */
+const markBuiltDalStatuses = () => {
+  const records = state.permitGroups.flatMap((group) => group.properties.permits).length;
+  const counts: Partial<Record<SourceKey, number>> = {
+    dalPermits: records,
+    dalPermitLines: records,
+    dalPermitPoints: records,
+    dalStreets: state.streets.length,
+    dalBuildings: state.groundData?.buildings.features.length ?? 0,
+    dalServiceLines: state.serviceLots.length,
   };
   for (const [key, count] of Object.entries(counts))
     setStatus(key as SourceKey, { state: 'ok', count });

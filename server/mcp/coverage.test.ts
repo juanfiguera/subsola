@@ -30,6 +30,14 @@ describe('coverage', () => {
     }
   });
 
+  it('reads right in the matrix, Dallas included', () => {
+    const html = docsPage('nonce');
+    const dallas = /<tr><th scope="row">Dallas<\/th>(.*?)<\/tr>/.exec(html)?.[1] ?? '';
+    expect(dallas).toContain('Since 2021');
+    expect(dallas).toContain('None published');
+    expect(dallas).toContain('Texas811');
+  });
+
   it('reads right in the matrix, Chicago included', () => {
     const html = docsPage('nonce');
     const row = (name: string) =>

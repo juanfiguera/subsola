@@ -2,6 +2,11 @@
 
 Ideas not yet scheduled, newest first.
 
+- **Dallas alleys, street lights and signal cabinets** (added 2026-11-19). Many Dallas utility
+  lines run in alleys, which the city publishes (`ALLEYS_SHAPEFILE` on its ArcGIS organization);
+  drawing them as blocks would put alley permits where they are instead of on the nearest street.
+  The city also publishes street lights and signal cabinets. See docs/regions/dal.md.
+
 - **LA permit history back to 1987** (added 2026-11-11). The Bureau of Engineering's permit list,
   `data.lacity.org` dataset `j7mw-thyc`, has about 640k permits since 1987 under a public domain
   dedication. LA's map starts in 2000 today; this could add 13 more years of digs to repeat-dig
@@ -20,6 +25,7 @@ Ideas not yet scheduled, newest first.
 
 ## Done
 
+- **Ninth city: Dallas** (done 2026-11-19). See [regions/dal.md](regions/dal.md).
 - **Seventh and eighth cities: Denver, then Chicago** (done 2026-11-11). See
   [regions/den.md](regions/den.md) and [regions/chi.md](regions/chi.md).
 - **An MCP server for the data** (done 2026-11-08). `https://subsola.com/mcp`, with `whats_under`

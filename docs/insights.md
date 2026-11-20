@@ -1,6 +1,6 @@
 # Insights page
 
-`https://subsola.com/insights` shows what the records say across the eight cities: how often a
+`https://subsola.com/insights` shows what the records say across the nine cities: how often a
 block is dug again, who digs in New York, the most-dug blocks, pipe materials and lead service
 lines. Every number on it is read from `insights.json` when the page loads; none is typed into the
 markup.
@@ -25,7 +25,7 @@ The nightly also attaches `data/insights.json` to the run's `stats` artifact.
 
 - `permits.<city>.reopening`: repeat digs within 1 and 3 years, median days between digs, digs
   within 90 days of another utility, and the most-visited blocks. Only NYC, DC, SF, Seattle,
-  Denver and Chicago are charted; LA and San Diego file one permit per job, often for a whole street.
+  Denver, Chicago and Dallas are charted; LA and San Diego file one permit per job, often for a whole street.
 - `permits.nyc.topHolders` and `streetOpenings`: New York's largest permit holders. The page
   combines a company's old names (KeySpan and Brooklyn Union Gas into National Grid) and leaves out
   the group of names that may be a person's.
@@ -34,9 +34,10 @@ The nightly also attaches `data/insights.json` to the run's `stats` artifact.
   DC's 16 in and larger water mains.
 - `leadServiceLines.<city>.summary`: one shape per city (`unit`, `total`, `lead`, `galvanized`,
   `unknown` and their shares) from `pipeline/insights/lead.ts`. DC's galvanized is null, since DC
-  Water files galvanized pipe under lead, as does Denver Water; Denver's and Chicago's figures are
-  optional in the schema, so a file from before either joined still loads. Chicago publishes no
-  pipes and no inventory, so it has permit figures only. A city whose inventory didn't download has a total of 0
+  Water files galvanized pipe under lead, as does Denver Water; Denver's, Chicago's and Dallas's
+  figures are optional in the schema, so a file from before any of them joined still loads.
+  Chicago publishes no pipes and no inventory, so it has permit figures only; Dallas publishes no
+  pipes, so it has permit and lead line figures. A city whose inventory didn't download has a total of 0
   and is left off the chart.
 - `models.licenses`: the name, publisher, license and link of each dataset, for the sources list.
 - `cellsBuiltAt`: the "Figures as of" date.
@@ -51,7 +52,9 @@ has a figure.
 `insights.json` is public. It holds counts, street segments and company names: block names are
 public street segments, never addresses; NYC permittees that don't read as a company or agency are
 grouped as "Holder not shown (may be a person)", and so are Chicago's (the build does it, from
-`pipeline/chi/permits.ts`); the lead line figures are counts only.
+`pipeline/chi/permits.ts`); Dallas's holders are only the owners the portal finds in the company
+field, or the first contractor that reads as a company (`pipeline/dal/permits.ts`), and Dallas's
+block names are the street and its block's address range; the lead line figures are counts only.
 `pnpm insights` also refuses to write the file if any string in it looks like an email address or
 phone number (`pipeline/insights/privacy.ts`).
 

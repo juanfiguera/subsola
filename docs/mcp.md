@@ -432,12 +432,12 @@ What each portal step takes:
 3. **Listing**:
    - Name: `Subsola`
    - One-liner (200 max): `What public records say is under city streets: utility lines and
-their expected depths, lead service lines, and recent excavation permits, in 8 US cities.`
+their expected depths, lead service lines, and recent excavation permits, in 9 US cities.`
    - Description (2,000 max):
 
      > Subsola reads city and utility public records to answer what is likely under the street at
      > an address in New York City, Washington DC, San Francisco, Los Angeles, San Diego, Seattle,
-     > Denver and Chicago.
+     > Denver, Chicago and Dallas.
      >
      > Ask about an address and Subsola returns each utility likely in the street in front (water,
      > sewer, storm drain, gas, electric, telecom, steam), how far it runs from the lot line, its

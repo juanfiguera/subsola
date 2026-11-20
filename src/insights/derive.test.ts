@@ -131,6 +131,7 @@ const fixture = () =>
       dc: lead('premises', 127835, null),
       sd: lead('water meters', 281006, 5),
       sea: lead('water services', 0, 0),
+      dal: lead('water services', 325950, 22),
     },
     models: {
       licenses: Object.fromEntries(
@@ -194,6 +195,7 @@ describe('digs', () => {
       'sea',
       'den',
       'chi',
+      'dal',
     ]);
   });
 
@@ -210,6 +212,22 @@ describe('digs', () => {
     expect(reopeningRows(older).map((row) => row.city)).not.toContain('chi');
     expect(sourceCredits(older).map((credit) => credit.city)).not.toContain('chi');
     expect(mostDugBlocks(older).map((block) => block.city)).not.toContain('chi');
+  });
+
+  it('reads a file from before Dallas joined, and leaves Dallas out', () => {
+    const withoutDallas = <T extends object>(byCity: T) =>
+      Object.fromEntries(Object.entries(byCity).filter(([city]) => city !== 'dal'));
+    const current = fixture();
+    const older = insightsSchema.parse({
+      ...current,
+      permits: withoutDallas(current.permits),
+      cities: withoutDallas(current.cities),
+      leadServiceLines: withoutDallas(current.leadServiceLines),
+      models: { licenses: withoutDallas(current.models.licenses) },
+    });
+    expect(reopeningRows(older).map((row) => row.city)).not.toContain('dal');
+    expect(leadRows(older).map((row) => row.city)).not.toContain('dal');
+    expect(mostDugBlocks(older).map((block) => block.city)).not.toContain('dal');
   });
 
   it('reads a file from before Denver joined, and leaves Denver out', () => {
@@ -271,7 +289,7 @@ describe('pipes', () => {
 
 describe('lead service lines', () => {
   it('leaves out a city whose inventory did not download', () => {
-    expect(leadRows(fixture()).map((row) => row.city)).toEqual(['nyc', 'dc', 'sd']);
+    expect(leadRows(fixture()).map((row) => row.city)).toEqual(['nyc', 'dc', 'sd', 'dal']);
   });
 
   it('never rounds a real handful down to nothing', () => {

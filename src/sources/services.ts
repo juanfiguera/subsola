@@ -29,7 +29,12 @@ export interface ServiceLot {
   lot: MultiPolygon;
   /** Whose inventory: DEP's in New York, DC Water's in DC, the city's in San Diego, SPU's, Denver Water's. */
   source:
-    'serviceLines' | 'dcServiceLines' | 'sdServiceLines' | 'seaServiceLines' | 'denServiceLines';
+    | 'serviceLines'
+    | 'dcServiceLines'
+    | 'sdServiceLines'
+    | 'seaServiceLines'
+    | 'denServiceLines'
+    | 'dalServiceLines';
   sides?: { public: ServiceSide; private: ServiceSide };
   /** Where the line leaves the main, where the utility maps it (Seattle). */
   tap?: [number, number];
@@ -71,7 +76,13 @@ const sideSchema = z.object({
  */
 export const builtServiceLotRowSchema = serviceLotRowSchema.extend({
   source: z
-    .enum(['dcServiceLines', 'sdServiceLines', 'seaServiceLines', 'denServiceLines'])
+    .enum([
+      'dcServiceLines',
+      'sdServiceLines',
+      'seaServiceLines',
+      'denServiceLines',
+      'dalServiceLines',
+    ])
     .optional(),
   public_side: sideSchema.optional(),
   private_side: sideSchema.optional(),

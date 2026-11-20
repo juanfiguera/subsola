@@ -84,7 +84,8 @@ export interface LotReportInput {
 // About a wide street from the lot line: a line farther than this belongs to another street.
 const FRONT_REACH_M = 25;
 // Denver Water places a line by a point on the building, about 20 m back from the street, so the
-// street out front reaches that much farther from it.
+// street out front reaches that much farther from it. Dallas Water Utilities' points sit the same
+// way, about 27 m back.
 const DEN_FRONT_REACH_M = 45;
 // Crew notes this close to the lot line describe digs in front of it.
 const DIG_SPOT_REACH_M = 40;
@@ -112,7 +113,10 @@ export const buildLotReport = (input: LotReportInput): LotReport => {
     ? { point: placedBy.b, from: 'service' }
     : (input.frontage ?? { point: input.origin ?? [0, 0], from: 'address' });
   const lotLine: Vec2 = lotLineFrom.point;
-  const reach = water?.lot.source === 'denServiceLines' ? DEN_FRONT_REACH_M : FRONT_REACH_M;
+  const reach =
+    water?.lot.source === 'denServiceLines' || water?.lot.source === 'dalServiceLines'
+      ? DEN_FRONT_REACH_M
+      : FRONT_REACH_M;
 
   const nearest = new Map<UtilityKind, { run: PipeRun; distanceM: number }>();
   // The nearest mapped main of each utility: San Diego maps both its water and its sewers. Its

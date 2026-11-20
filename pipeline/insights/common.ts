@@ -1,8 +1,8 @@
 import type { Position } from 'geojson';
 import type { UtilityKind } from '../../src/utilities';
 
-export type City = 'nyc' | 'dc' | 'sf' | 'la' | 'sd' | 'sea' | 'den' | 'chi';
-export const CITIES: City[] = ['nyc', 'dc', 'sf', 'la', 'sd', 'sea', 'den', 'chi'];
+export type City = 'nyc' | 'dc' | 'sf' | 'la' | 'sd' | 'sea' | 'den' | 'chi' | 'dal';
+export const CITIES: City[] = ['nyc', 'dc', 'sf', 'la', 'sd', 'sea', 'den', 'chi', 'dal'];
 
 export const CITY_NAMES: Record<City, string> = {
   nyc: 'New York City',
@@ -13,6 +13,7 @@ export const CITY_NAMES: Record<City, string> = {
   sea: 'Seattle',
   den: 'Denver',
   chi: 'Chicago',
+  dal: 'Dallas',
 };
 
 /** Where a number came from, so every figure in insights.json can be checked. */

@@ -22,6 +22,8 @@ export interface CityFacts {
   serviceLines: SourceKey | null;
   /** What the inventory counts, or why there's none to show. */
   serviceLineNote: string;
+  /** What else the map draws there, where it isn't the usual street assets from open data. */
+  alsoDraws?: string;
 }
 
 /**
@@ -105,6 +107,19 @@ export const CITY_FACTS: Partial<Record<RegionId, CityFacts>> = {
     serviceLines: null,
     serviceLineNote:
       'The Department of Water Management lets people look up one address at a time at leadsafechicago.org but publishes no inventory, so the map shows none.',
+    alsoDraws: "The map also draws streets and buildings from the city's open data.",
+  },
+  dal: {
+    mapAddress: '1500 Marilla St, Dallas',
+    permits: ['dalPermits'],
+    mains: [],
+    unmapped:
+      'Dallas publishes no water main, sewer, storm drain, gas or electric maps, and no manholes, inlets or hydrants, so every line here is placed from right of way permits. Many lines here run in alleys; a permit in an alley is drawn on the nearest street.',
+    serviceLines: 'dalServiceLines',
+    serviceLineNote:
+      "Dallas Water Utilities' inventory gives the utility and customer side material for each service. It lists no lead and a handful of galvanized lines to replace; most customer sides are not yet known.",
+    alsoDraws:
+      "The map also draws streets from the city's open data and buildings from FEMA's USA Structures.",
   },
 };
 

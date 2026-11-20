@@ -8,6 +8,8 @@ import type { seaStreetSchema } from '../sea/datasets';
 import type { denStreetSchema } from '../den/datasets';
 import type { chiStreetSchema } from '../chi/datasets';
 import { chiStreetName, isDrawnChiStreet } from '../chi/streets';
+import type { dalStreetSchema } from '../dal/datasets';
+import { dalStreetName } from '../dal/build';
 import { DRAWN_LAYERS, isActive } from '../sf/build';
 import type { sfStreetSchema } from '../sf/datasets';
 import { readRows } from '../raw';
@@ -46,6 +48,7 @@ export const readStreets = async (): Promise<Streets> => {
     sea: 0,
     den: 0,
     chi: 0,
+    dal: 0,
   };
 
   for await (const row of rowsOf<typeof streetRowSchema>('centerline'))
@@ -112,6 +115,22 @@ export const readStreets = async (): Promise<Streets> => {
     blockNames.set(`chi|${row.objectid}`, clean(name, from && `from ${from}`, to && `to ${to}`));
   }
 
+  // Dallas's centerline names no cross streets, so a block reads by its address range.
+  for (const [dataset, prefix] of [
+    ['dalStreets', ''],
+    ['dalMajorStreets', 'm'],
+  ] as const)
+    for await (const row of rowsOf<typeof dalStreetSchema>(dataset)) {
+      const name = dalStreetName(row);
+      if (!row.the_geom || !name) continue;
+      total.dal += miles(row.the_geom.coordinates);
+      const numbers = [row.l_f_add, row.l_t_add, row.r_f_add, row.r_t_add]
+        .map(Number)
+        .filter((number) => Number.isFinite(number) && number > 0);
+      const range = numbers.length ? `${Math.min(...numbers)} to ${Math.max(...numbers)}` : null;
+      blockNames.set(`dal|${prefix}${row.objectid}`, clean(name, range && `(${range})`));
+    }
+
   const source = (datasets: string[], filter: string) => ({ datasets, filter });
   return {
     blockNames,
@@ -142,6 +161,13 @@ export const readStreets = async (): Promise<Streets> => {
         source(
           ['chiStreets'],
           'City of Chicago street centerlines, less rivers, expressways and their ramps, vacated and proposed streets',
+        ),
+      ),
+      dal: figure(
+        round(total.dal),
+        source(
+          ['dalStreets', 'dalMajorStreets'],
+          'Dallas street centerlines with a side in the city, less private, unbuilt and freeway segments, trails and walkways',
         ),
       ),
     },

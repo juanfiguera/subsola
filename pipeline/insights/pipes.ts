@@ -7,6 +7,8 @@ import { sdServiceLine } from '../sd/services';
 import type { seaServiceSchema } from '../sea/datasets';
 import { seaServiceLine } from '../sea/services';
 import type { denServiceSchema } from '../den/datasets';
+import type { dalServiceSchema } from '../dal/datasets';
+import { dalServiceLine } from '../dal/services';
 import { denLeadCategory } from '../den/services';
 import { readRows } from '../raw';
 import type { BuiltMain } from './cells';
@@ -189,8 +191,9 @@ const specOf = (name: string): DatasetSpec => {
 
 /**
  * Lead service line inventories: NYC by tax lot, DC by premise, San Diego by meter, SPU's map of
- * its services by material, and Denver Water by premise. Counts only, no addresses. Each city's `summary` puts its
- * count in one shape (lead.ts) for the insights page.
+ * its services by material, Denver Water by premise and Dallas Water Utilities by service. Counts
+ * only, no addresses. Each city's `summary` puts its count in one shape (lead.ts) for the insights
+ * page.
  */
 export const leadServiceInsights = async () => {
   const nyc = new Map<string, number>();
@@ -249,6 +252,14 @@ export const leadServiceInsights = async () => {
     denPremises += 1;
     tally(den, known.category);
     tally(denMaterials, known.material);
+  }
+  const dal = new Map<string, number>();
+  let dalServices = 0;
+  for await (const row of readRows(specOf('dalServiceLines')) as AsyncIterable<
+    z.infer<typeof dalServiceSchema>
+  >) {
+    dalServices += 1;
+    tally(dal, dalServiceLine(row).material);
   }
   const shares = (counts: Map<string, number>, whole: number) =>
     Object.fromEntries(
@@ -344,6 +355,22 @@ export const leadServiceInsights = async () => {
             'lead is confirmed lead, which takes in galvanized pipe downstream of lead; likely and unlikely lead count as unknown',
         },
       ),
+    },
+    dal: {
+      services: figure(dalServices, {
+        datasets: ['dalServiceLines'],
+        filter: 'Dallas Water Utilities service line inventory, one row per service',
+      }),
+      material: figure(shares(dal, dalServices), {
+        datasets: ['dalServiceLines'],
+        filter:
+          "DWU's status for the whole line, else the worse of the utility and customer sides; galvanized only where DWU requires replacement",
+      }),
+      summary: figure(leadSummary('water services', dalServices, materialLeadCounts(dal)), {
+        datasets: ['dalServiceLines'],
+        filter:
+          'as material: lead, galvanized requiring replacement, and unknown, of every service in the inventory',
+      }),
     },
   };
 };

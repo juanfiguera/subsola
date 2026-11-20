@@ -12,7 +12,7 @@ describe('missedPlace', () => {
     ['1 Elm St, St. Louis, MO', 'St Louis, MO'],
     ['1 Elm St, Saint Louis', 'St Louis, MO'],
     ['1 Elm St, Oakland, CA', 'Oakland, CA'],
-    ['1 Elm St, Smallville, TX', 'TX'],
+    ['1 Elm St, Smallville, KS', 'KS'],
     ['1 Elm St, Portland, CA', null],
   ])('%s names %s', (text, place) => {
     expect(missedPlace(text)).toBe(place);
@@ -26,6 +26,7 @@ describe('missedPlace', () => {
       '100 Main St, NY',
       '6000 Hollywood Blvd, Hollywood, CA',
       '1 Elm St, Smallville, CA',
+      '1 Elm St, Smallville, TX',
     ])
       expect(missedPlace(text), text).toBeNull();
   });

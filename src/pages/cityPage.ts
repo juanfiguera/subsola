@@ -79,7 +79,7 @@ const sourcesSection = (region: Region) => {
   return `<section class="block" aria-labelledby="sources-title">
         <h2 id="sources-title">Sources</h2>
         <ul class="sources">${keys.map(sourceItem).join('')}</ul>
-        <p class="note">The map also draws hydrants, inlets, street lights and signals, and streets and buildings, from the city's open data. Every card on the map names the record it came from.</p>
+        <p class="note">${escapeHtml(facts.alsoDraws ?? "The map also draws hydrants, inlets, street lights and signals, and streets and buildings, from the city's open data.")} Every card on the map names the record it came from.</p>
       </section>`;
 };
 
