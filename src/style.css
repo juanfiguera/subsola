@@ -479,6 +479,12 @@ svg {
   background: var(--panel-2);
 }
 
+/* The GitHub mark is a filled shape, not a stroked line like the help icon. */
+.github-link svg {
+  fill: currentColor;
+  stroke: none;
+}
+
 /* What you're looking at: a panel under the top bar, over the card. */
 .explainer {
   position: fixed;
@@ -2298,6 +2304,11 @@ svg {
     background: var(--panel);
     box-shadow: var(--shadow);
     color: var(--ink);
+  }
+
+  /* No room down the edge for it; the links at the foot of the card carry GitHub instead. */
+  .help-button.github-link {
+    display: none;
   }
 
   .city-button {

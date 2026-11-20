@@ -10,6 +10,8 @@ export const SITE_NAME = 'Subsola';
 export const OPERATOR = 'Central Park Labs, LLC';
 /** Forwarded by Cloudflare Email Routing, so no one's own address goes on the site. */
 export const CONTACT_EMAIL = 'hello@subsola.com';
+/** Subsola is open source (AGPL); index.html links here too, in the top bar. */
+export const REPO_URL = 'https://github.com/juanfiguera/subsola';
 /**
  * Cloudflare's email obfuscation would swap the address for a link only its own script can decode,
  * and the /mcp page's nonce-only CSP blocks that script, so these comments turn it off.

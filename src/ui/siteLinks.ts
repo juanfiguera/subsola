@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL } from '../site';
+import { CONTACT_EMAIL, REPO_URL } from '../site';
 import { SOURCES } from '../sources/catalog';
 
 /**
@@ -12,6 +12,7 @@ export const siteLinks = (where: 'corner' | 'card') => `
     <a href="/insights">Insights</a>
     <a href="/mcp" data-mcp-link="${where === 'corner' ? 'site links' : 'card links'}">${where === 'corner' ? 'MCP' : 'Use with AI assistants'}</a>
     <a href="/credits">Credits</a>
+    <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>
     <a href="/privacy">Privacy</a>
     <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>
   </nav>`;
