@@ -43,12 +43,22 @@ const soqlUrl = (spec: DatasetSpec, params: Record<string, string>) => {
 const fetchJson = async (
   url: string,
   requestHeaders = headers,
+  form?: string,
 ): Promise<{ text: string; body: unknown }> => {
   for (let attempt = 0; ; attempt++) {
     const delay = RETRY_DELAYS_MS[attempt];
     let reason: string;
     try {
-      const res = await fetch(url, { headers: requestHeaders });
+      const res = await fetch(
+        url,
+        form
+          ? {
+              method: 'POST',
+              headers: { ...requestHeaders, 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: form,
+            }
+          : { headers: requestHeaders },
+      );
       if (res.ok) {
         const text = await res.text();
         return { text, body: JSON.parse(text) as unknown };
@@ -92,14 +102,20 @@ const arcgisUrl = (
     ...params,
   })}`;
 
+const LONG_URL = 1800;
+
 /**
  * An ArcGIS query's answer. A busy server answers 200 with a 5xx error in the body ("Wait timeout
  * for the request exceeded"), which is retried like an HTTP 5xx.
  */
 const fetchArcgis = async (url: string): Promise<Record<string, unknown>> => {
+  // Dallas's server turns away a query string past about 2,000 characters, which the columns its
+  // portal works out run past; a long query goes as a form instead.
+  const [path, query] = url.split('?') as [string, string | undefined];
+  const form = url.length > LONG_URL ? query : undefined;
   for (let attempt = 0; ; attempt++) {
     // Not NYC Open Data, so no app token goes along.
-    const body = (await fetchJson(url, {})).body as Record<string, unknown>;
+    const body = (await fetchJson(form ? path : url, {}, form)).body as Record<string, unknown>;
     const code = (body.error as { code?: number } | undefined)?.code ?? 0;
     const delay = RETRY_DELAYS_MS[attempt];
     if (code < 500 || delay === undefined) return body;
