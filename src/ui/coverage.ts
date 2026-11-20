@@ -2,8 +2,8 @@ import { REGIONS, cityNames, type Region } from '../regions';
 import { escapeHtml } from './dom';
 
 /**
- * What the card says when a search lands nowhere Subsola can show: an address outside the eight
- * cities, or one inside a city that the records don't reach yet. Worded like the MCP server's
+ * What the card says when a search lands nowhere Subsola can show: an address outside the cities
+ * it covers, or one inside a city that the records don't reach yet. Worded like the MCP server's
  * misses (server/mcp/misses.ts): what went wrong, what Subsola covers, and how to ask again,
  * so a person never stares at an empty street wondering if it's clear.
  */

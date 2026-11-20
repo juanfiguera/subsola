@@ -1,5 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CHI, DC, DEN, LA, NYC, SD, SEA, SF, geocodeAnywhere, lotName, regionAt } from './regions';
+import {
+  CHI,
+  DAL,
+  DC,
+  DEN,
+  LA,
+  NYC,
+  SD,
+  SEA,
+  SF,
+  geocodeAnywhere,
+  lotName,
+  regionAt,
+} from './regions';
 
 describe('regions', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -13,6 +26,7 @@ describe('regions', () => {
     expect(regionAt([-122.3305, 47.604])).toBe(SEA);
     expect(regionAt([-104.9903, 39.7392])).toBe(DEN);
     expect(regionAt([-87.63, 41.88])).toBe(CHI);
+    expect(regionAt([-96.797, 32.776])).toBe(DAL);
     expect(regionAt([-90.2, 38.63])).toBeNull();
   });
 
@@ -49,8 +63,9 @@ describe('regions', () => {
     vi.spyOn(SEA, 'geocode').mockRejectedValue(new Error('No Seattle address'));
     vi.spyOn(DEN, 'geocode').mockRejectedValue(new Error('No Denver address'));
     vi.spyOn(CHI, 'geocode').mockRejectedValue(new Error('No Chicago address'));
+    vi.spyOn(DAL, 'geocode').mockRejectedValue(new Error('No Dallas address'));
     await expect(geocodeAnywhere('1 Main St')).rejects.toThrow(
-      'New York City, Washington, DC, San Francisco, Los Angeles, San Diego, Seattle, Denver, or Chicago',
+      'New York City, Washington, DC, San Francisco, Los Angeles, San Diego, Seattle, Denver, Chicago, or Dallas',
     );
   });
 
@@ -75,6 +90,14 @@ describe('regions', () => {
     expect((await geocodeAnywhere('1060 W Addison St, Chicago, IL 60613')).region).toBe(CHI);
     expect(nyc).not.toHaveBeenCalled();
     expect(lotName('anything', CHI)).toBeNull();
+  });
+
+  it('asks Dallas first for an address that names it, and names no lot', async () => {
+    const nyc = vi.spyOn(NYC, 'geocode');
+    vi.spyOn(DAL, 'geocode').mockResolvedValue(found([-96.7958, 32.7771]));
+    expect((await geocodeAnywhere('1500 Marilla St, Dallas, TX 75201')).region).toBe(DAL);
+    expect(nyc).not.toHaveBeenCalled();
+    expect(lotName('service 12', DAL)).toBeNull();
   });
 
   it('asks San Diego first for an address that names it', async () => {

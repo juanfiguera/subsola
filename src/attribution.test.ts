@@ -25,6 +25,10 @@ describe('city credits', () => {
       /^This site provides applications using data that has been modified/,
     );
     expect(CHICAGO_DISCLAIMER).toMatch(/being used at one's own risk\.$/);
+    // Dallas sets no license, so the city is credited as publisher and FEMA's buildings by theirs.
+    expect(CITY_CREDITS.dal.text).toContain('City of Dallas');
+    expect(CITY_CREDITS.dal.text).toContain('USA Structures');
+    expect(CITY_CREDITS.dal.text).toContain('CC BY 4.0');
   });
 
   it('cover every city, each with the OpenStreetMap credit in its one line', () => {

@@ -355,6 +355,69 @@ export const CHI_DEPTH_STANDARDS: DepthStandards = {
   steam: UNKNOWN_SHALLOW,
 };
 
+const DAL_DESIGN_MANUAL =
+  'https://dallas.gov/departments/waterutilities/DCH%20Documents/pdf/Water_and_Wastewater_Procedures_and_Design_Manual_October_2015.pdf';
+// The city's rules for any line under a street it cuts; the 2003 edition is the newest online.
+const DAL_CUT_MANUAL =
+  'https://www.dallascityhall.com/departments/sustainabledevelopment/DCH%20documents/pdf/CutManualOct2003.pdf';
+
+export const DAL_DEPTH_STANDARDS: DepthStandards = {
+  // Texas adopts the federal gas rules as they stand (16 TAC §8.1), and Atmos publishes no depth.
+  gas: SF_DEPTH_STANDARDS.gas,
+  water: {
+    shallowestFt: 4,
+    deepestFt: 7,
+    basis: 'city-standard',
+    summary:
+      'Dallas Water Utilities lays mains 12 in and smaller with at least 4 ft of cover under a paved street and 6 ft in an alley or unpaved ground, and larger mains deeper, up to 7 ft. Anything under 3 ft needs a special review. Older mains may differ.',
+    source: {
+      name: 'DWU Water and Wastewater Procedures and Design Manual (2015), Table 2.5.2',
+      url: DAL_DESIGN_MANUAL,
+    },
+  },
+  sewer: {
+    shallowestFt: 2,
+    // At the mains' 4 ft street minimum they'd sit level with the water mains; 6 ft is the
+    // minimum in alleys and unpaved ground, where much of Dallas's sewer runs. Digs still count
+    // from the laterals' 2 ft.
+    drawnFt: 6,
+    deepestFt: 20,
+    basis: 'city-standard',
+    summary:
+      'Dallas Water Utilities gives sewer mains the same minimum cover as water mains, 4 ft under a paved street and 6 ft in an alley, and house laterals at least 2 ft. Mains go as deep as they must to serve every house, and the city publishes no map of them. Storm drains need only 2 ft of cover.',
+    source: {
+      name: 'DWU Design Manual (2015), Table 4.5.2 and §4.12.4; Dallas Drainage Design Manual (2019), §3.6.2',
+      url: DAL_DESIGN_MANUAL,
+    },
+  },
+  electric: {
+    shallowestFt: 1,
+    // Oncor's own trench standard for primary cable.
+    drawnFt: 2.5,
+    deepestFt: 6,
+    basis: 'city-standard',
+    summary:
+      "Dallas's street cut rules put any utility line at least 12 in below the pavement's base and bores at least 24 in below the surface. Oncor's design specs lay primary conduit at least 30 in deep and secondary at least 24 in. Older cable may be shallower.",
+    source: {
+      name: 'Dallas Pavement Cut and Repair Standards Manual (2003), Part 1 §II.3.a and §III.3.b; Oncor DDS-2, Detail Sheet 2',
+      url: DAL_CUT_MANUAL,
+    },
+  },
+  telecom: {
+    shallowestFt: 1,
+    drawnFt: 2,
+    deepestFt: 6,
+    basis: 'city-standard',
+    summary:
+      "Dallas's street cut rules put any utility line at least 12 in below the pavement's base and bores at least 24 in below the surface. The city sets no telecom depth of its own, so treat the top 6 ft as possible.",
+    source: {
+      name: 'Dallas Pavement Cut and Repair Standards Manual (2003), Part 1 §II.3.a and §III.3.b',
+      url: DAL_CUT_MANUAL,
+    },
+  },
+  steam: UNKNOWN_SHALLOW,
+};
+
 export const drawnDepthFt = (standard: DepthStandard) => standard.drawnFt ?? standard.shallowestFt;
 
 let current: DepthStandards = NYC_DEPTH_STANDARDS;

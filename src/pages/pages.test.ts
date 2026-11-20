@@ -19,6 +19,7 @@ describe('city slugs', () => {
       'seattle',
       'denver',
       'chicago',
+      'dallas',
     ]);
   });
 

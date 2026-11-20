@@ -79,7 +79,7 @@ export const sdServiceSide = (
 };
 
 // The city's own call on the whole line, which the EPA asks for.
-const WHOLE_LINE: Record<string, ServiceMaterial> = {
+export const WHOLE_LINE: Record<string, ServiceMaterial> = {
   Lead: 'lead',
   'Galvanized Requiring Replacement': 'galvanized',
   'Non-Lead': 'non-lead',

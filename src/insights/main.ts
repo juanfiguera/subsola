@@ -238,7 +238,7 @@ const drawLead = (insights: Insights) => {
 
 const drawMethods = (insights: Insights) => {
   byId('years-covered').replaceChildren(
-    ...(['nyc', 'dc', 'sf', 'sea', 'den', 'chi', 'la', 'sd'] as const).flatMap((city) => {
+    ...(['nyc', 'dc', 'sf', 'sea', 'den', 'chi', 'dal', 'la', 'sd'] as const).flatMap((city) => {
       const years = yearsCovered(insights, city);
       return years ? [h('li', {}, `${CITY_LABELS[city]}: ${years[0]} to ${years[1]}`)] : [];
     }),

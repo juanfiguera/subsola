@@ -15,13 +15,14 @@ export const CITY_LABELS: Record<CityKey, string> = {
   sea: 'Seattle',
   den: 'Denver',
   chi: 'Chicago',
+  dal: 'Dallas',
 };
 
 /**
  * The cities whose permits name one block each. LA and San Diego file one permit per job, often
  * on a whole street, so their repeat-dig figures would measure filing, not digging.
  */
-export const BLOCK_CITIES: CityKey[] = ['nyc', 'dc', 'sf', 'sea', 'den', 'chi'];
+export const BLOCK_CITIES: CityKey[] = ['nyc', 'dc', 'sf', 'sea', 'den', 'chi', 'dal'];
 
 const numberFormat = new Intl.NumberFormat('en-US');
 
@@ -194,6 +195,7 @@ const MOST_DUG: [CityKey, number][] = [
   ['sea', 2],
   ['den', 2],
   ['chi', 2],
+  ['dal', 2],
 ];
 
 export const mostDugBlocks = (insights: Insights): DugBlock[] =>
@@ -316,7 +318,7 @@ export interface LeadRow {
   summary: LeadSummary;
 }
 
-const LEAD_CITIES = ['nyc', 'dc', 'sd', 'sea', 'den'] as const;
+const LEAD_CITIES = ['nyc', 'dc', 'sd', 'sea', 'den', 'dal'] as const;
 
 /** A city whose inventory didn't download tonight has no rows, and is left out until it does. */
 export const leadRows = (insights: Insights): LeadRow[] =>

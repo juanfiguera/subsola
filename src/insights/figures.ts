@@ -55,9 +55,9 @@ export const pageFigures = (insights: Insights): Record<string, string> => {
   };
   const systems = pipeSystems(insights);
   const lead = new Map(leadRows(insights).map((row) => [row.city, row.summary]));
-  const leadCount = (city: CityKey, field: 'lead' | 'total') => {
-    const summary = lead.get(city);
-    return summary ? formatInt(summary[field]) : NA;
+  const leadCount = (city: CityKey, field: 'lead' | 'galvanized' | 'total') => {
+    const value = lead.get(city)?.[field];
+    return value == null ? NA : formatInt(value);
   };
   const [nycFirst, nycLast] = yearsCovered(insights, 'nyc') ?? [NA, NA];
 
@@ -87,6 +87,9 @@ export const pageFigures = (insights: Insights): Record<string, string> => {
     'den-total': leadCount('den', 'total'),
     'den-lead': leadCount('den', 'lead'),
     ...materialFigures(systems, 'denSewers', 'den-sewer'),
+    'dal-total': leadCount('dal', 'total'),
+    'dal-lead': leadCount('dal', 'lead'),
+    'dal-galvanized': leadCount('dal', 'galvanized'),
     'built-date': formatDate(insights.cellsBuiltAt),
   };
 };

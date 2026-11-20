@@ -721,7 +721,9 @@ const serviceCardBody = (line: ServiceLine, permits: ConnectionPermit[]) => {
       ? "Drawn straight from where SPU maps its tap on the main to the meter, at the main's depth. The actual line may bend and typically rises toward the meter."
       : lot.source === 'sdServiceLines'
         ? "Drawn straight from the nearest water main to where the inventory places this address, at the main's depth. The actual line may bend and typically rises toward the building; the meter, where the city's side ends, is not placed."
-        : "Drawn straight from the nearest water main to the lot line, at the main's depth. The actual line may bend and typically rises toward the building.";
+        : lot.source === 'dalServiceLines'
+          ? "Drawn straight from the nearest water main on record to where the inventory places this address, at the main's depth. Dallas Water Utilities publishes no map of its mains, so that main is placed from excavation permits, and the meter, where its side ends, is not placed."
+          : "Drawn straight from the nearest water main to the lot line, at the main's depth. The actual line may bend and typically rises toward the building.";
     return `
     ${backButton}
     <span class="hood" style="--hood:${UTILITY_STYLES.water.color}">Water service</span>

@@ -17,6 +17,7 @@ const PERMIT_SOURCES: Record<City, SourceKey[]> = {
   sea: ['seaPermits'],
   den: ['denPermits'],
   chi: ['chiPermits'],
+  dal: ['dalPermits'],
 };
 
 // The lead service line inventories leadServiceInsights counts, so the page can credit them too.
@@ -26,6 +27,7 @@ const SERVICE_SOURCES: Partial<Record<City, SourceKey>> = {
   sd: 'sdServiceLines',
   sea: 'seaServiceLines',
   den: 'denServiceLines',
+  dal: 'dalServiceLines',
 };
 
 const PIPE_SOURCES: SourceKey[] = [

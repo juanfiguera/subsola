@@ -30,6 +30,9 @@ const SD_REACH_M = 45;
 // and three in four within 26 m. Its mains are placed from permits, so a street can have none
 // drawn; past this, the nearest one is on the street behind the lot, about 38 m deep.
 const DEN_REACH_M = 32;
+// Dallas Water Utilities' points sit a little deeper: half more than 27 m from the centerline,
+// three in four within 31 m (a sample of 400, 2026-11-19), with mains placed from permits too.
+const DAL_REACH_M = 36;
 // Seattle maps where each service leaves the main. The main drawn there is SPU's own, from the
 // same map, so the tap sits on it; past this, that main isn't loaded or isn't a distribution main.
 const TAP_SNAP_M = 10;
@@ -154,7 +157,9 @@ export const buildServices = (
         ? SD_REACH_M
         : lot.source === 'denServiceLines'
           ? DEN_REACH_M
-          : MAX_REACH_M;
+          : lot.source === 'dalServiceLines'
+            ? DAL_REACH_M
+            : MAX_REACH_M;
     return (nyc ? (['water', 'sewer'] as const) : (['water'] as const)).flatMap(
       (utility): ServiceLine[] => {
         const nearest = mains[utility]

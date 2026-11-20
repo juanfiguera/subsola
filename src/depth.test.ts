@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHI_DEPTH_STANDARDS,
+  DAL_DEPTH_STANDARDS,
   DC_DEPTH_STANDARDS,
   NYC_DEPTH_STANDARDS,
   depthStandards,
@@ -19,6 +20,9 @@ describe('depth standards', () => {
     ...Object.entries(DC_DEPTH_STANDARDS).map(
       ([utility, standard]) => [`DC ${utility}`, standard] as const,
     ),
+    ...Object.entries(DAL_DEPTH_STANDARDS).map(
+      ([utility, standard]) => [`Dallas ${utility}`, standard] as const,
+    ),
   ])('%s is a sane range within the chart', (_, standard) => {
     expect(standard.shallowestFt).toBeGreaterThan(0);
     expect(standard.shallowestFt).toBeLessThan(standard.deepestFt);
@@ -29,6 +33,7 @@ describe('depth standards', () => {
   it.each([
     ['NYC', NYC_DEPTH_STANDARDS],
     ['DC', DC_DEPTH_STANDARDS],
+    ['Dallas', DAL_DEPTH_STANDARDS],
   ] as const)('draws %s sewers clear below the water mains', (_, standards) => {
     expect(drawnDepthFt(standards.sewer!) - drawnDepthFt(standards.water!)).toBeGreaterThanOrEqual(
       1.5,
@@ -39,6 +44,7 @@ describe('depth standards', () => {
     for (const standard of [
       ...Object.values(NYC_DEPTH_STANDARDS),
       ...Object.values(DC_DEPTH_STANDARDS),
+      ...Object.values(DAL_DEPTH_STANDARDS),
     ]) {
       if (standard.basis === 'unknown') expect(standard.source).toBeNull();
       else expect(standard.source?.url).toMatch(/^https:\/\//);
@@ -52,6 +58,14 @@ describe('Chicago water', () => {
     expect([water.shallowestFt, drawnDepthFt(water), water.deepestFt]).toEqual([3, 5, 6]);
     expect(water.summary).toContain('54 in and larger have only about 3 ft of cover');
     expect(water.source?.url).toContain('CDWM_WaterSection_Standard_Notes_Info.pdf');
+  });
+});
+
+describe('Dallas water', () => {
+  it("counts from DWU's 4 ft street minimum and cites its design manual", () => {
+    const water = DAL_DEPTH_STANDARDS.water!;
+    expect([water.shallowestFt, drawnDepthFt(water), water.deepestFt]).toEqual([4, 4, 7]);
+    expect(water.source?.name).toContain('Table 2.5.2');
   });
 });
 

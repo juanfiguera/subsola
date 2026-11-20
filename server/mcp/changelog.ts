@@ -13,6 +13,13 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '1.4.0',
+    date: '2026-11-19',
+    changes: [
+      "Dallas joins the cities covered: right of way permits, with the utility from the city's own pick list, and Dallas Water Utilities' service line inventory. Dallas publishes no pipe maps, so every line there is placed from permits.",
+    ],
+  },
+  {
+    version: '1.4.0',
     date: '2026-11-15',
     changes: [
       "Every answer carries credits: the credit the city's publishers ask for (Open Data DC's CC BY 4.0, Denver's CC BY 3.0, SanGIS's derived-data wording, Chicago's required disclaimer) and OpenStreetMap's, as a credits field and a \"Data credits\" line. All of them are at https://subsola.com/credits.",

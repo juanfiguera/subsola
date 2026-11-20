@@ -42,6 +42,7 @@ const SOURCE_DATASETS: Record<City, string[]> = {
   sea: ['seaPermits'],
   den: ['denPermits'],
   chi: ['chiPermits'],
+  dal: ['dalPermits'],
 };
 
 const BUILT = 'utility permits as the nightly build classified and placed them (data/cells)';

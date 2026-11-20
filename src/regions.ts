@@ -8,6 +8,7 @@ import {
   SEA_DEPTH_STANDARDS,
   DEN_DEPTH_STANDARDS,
   CHI_DEPTH_STANDARDS,
+  DAL_DEPTH_STANDARDS,
   type DepthStandards,
 } from './depth';
 import { geocode, reverseGeocode, type GeocodedAddress } from './sources/geocode';
@@ -22,13 +23,14 @@ const sdGeocoder = () => import('./sources/sdGeocode');
 const seaGeocoder = () => import('./sources/seaGeocode');
 const denGeocoder = () => import('./sources/denGeocode');
 const chiGeocoder = () => import('./sources/chiGeocode');
+const dalGeocoder = () => import('./sources/dalGeocode');
 
 /**
  * The cities Subsola maps. Everything drawn comes from the same cell bundles; what differs by
  * city is who answers an address, whose aerial photo sits under the street, whose depth rules
  * apply, and where to call before digging.
  */
-export type RegionId = 'nyc' | 'dc' | 'sf' | 'la' | 'sd' | 'sea' | 'den' | 'chi';
+export type RegionId = 'nyc' | 'dc' | 'sf' | 'la' | 'sd' | 'sea' | 'den' | 'chi' | 'dal';
 
 export interface Region {
   id: RegionId;
@@ -264,7 +266,36 @@ export const CHI: Region = {
   beta: 'Chicago publishes no water, sewer or other pipe maps and no hydrants or catch basins, so every line is placed from street opening permits alone.',
 };
 
-export const REGIONS: Region[] = [NYC, DC, SF, LA, SD, SEA, DEN, CHI];
+export const DAL: Region = {
+  id: 'dal',
+  name: 'Dallas',
+  short: 'DAL',
+  // The city with a little margin: Lake Ray Hubbard on the east, Mountain Creek Lake on the west.
+  // It takes in Highland Park, University Park and other towns that aren't Dallas; the address
+  // points know only the city's own.
+  bounds: [-97.01, 32.61, -96.46, 33.03],
+  depths: DAL_DEPTH_STANDARDS,
+  geocode: async (text, signal) => (await dalGeocoder()).geocodeDal(text, signal),
+  reverseGeocode: async (lngLat, signal) => (await dalGeocoder()).reverseGeocodeDal(lngLat, signal),
+  // NAIP, public domain. The city's sharper photos state no open license.
+  photoServer:
+    'https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage',
+  photoCredit: 'USGS and USDA, National Agriculture Imagery Program',
+  markout: {
+    center: 'Texas811',
+    url: 'https://www.texas811.org/',
+    // Tex. Util. Code §251.151(a): at least 48 hours before, not counting Saturdays, Sundays and
+    // legal holidays, and no more than 14 days ahead.
+    notice: 'two business days (48 hours)',
+    law: 'Texas law',
+  },
+  privateOwners: 'Atmos Energy, Oncor, AT&T and Spectrum',
+  says: /dallas|\b75[23]\d\d\b/i,
+  // Four years of permits, and no pipe maps, manholes or inlets are public.
+  beta: 'Dallas publishes street permits only from late 2021 on and no water, sewer or other pipe maps, so every line is placed from a few years of permits.',
+};
+
+export const REGIONS: Region[] = [NYC, DC, SF, LA, SD, SEA, DEN, CHI, DAL];
 
 export const regionAt = ([lng, lat]: Position): Region | null =>
   REGIONS.find(
@@ -287,8 +318,9 @@ export const lotName = (bbl: string | null, region: Region) => {
     const [parcel] = bbl.split('#');
     return /^(meter|service) /.test(bbl) || !parcel ? null : `Parcel ${parcel}`;
   }
-  // Denver Water names no parcel, and Chicago has no lot records here at all.
-  if (region.id === 'den' || region.id === 'chi') return null;
+  // Denver Water and Dallas Water Utilities name no parcel, and Chicago has no lot records here
+  // at all.
+  if (region.id === 'den' || region.id === 'chi' || region.id === 'dal') return null;
   const { block, lot } = splitBbl(bbl);
   return `Tax block ${Number(block)}, lot ${Number(lot)}`;
 };

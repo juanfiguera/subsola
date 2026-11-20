@@ -84,6 +84,22 @@ export const SEA_SERVICE_NOTE =
 export const SEA_NO_SERVICE =
   "Seattle Public Utilities' map has no active water service under this address that Subsola could draw. It maps about 178,000, none of them lead.";
 
+export const DAL_SERVICE_SUMMARY: Record<ServiceMaterial, string> = {
+  lead: "Dallas Water Utilities' service line inventory lists lead on this water service line.",
+  galvanized:
+    "Dallas Water Utilities' service line inventory lists galvanized pipe on this water service line that needs replacing, because it may have sat downstream of lead.",
+  'non-lead':
+    "Dallas Water Utilities' service line inventory lists this water service line as not lead.",
+  unknown:
+    "Dallas Water Utilities' service line inventory has not yet determined the material of all of this water service line.",
+};
+
+export const DAL_SERVICE_NOTE =
+  "The public side runs from the main to the meter and is Dallas Water Utilities'; the private side runs on into the building and is the owner's. Suspected means DWU read the material off its standard drawings or the building's age and has no record of the pipe itself. Most private sides are not yet known.";
+
+export const DAL_NO_SERVICE =
+  "Dallas Water Utilities' service line inventory has no entry for this address that Subsola could draw. It lists about 326,000 services, none of them lead and 22 galvanized lines to replace.";
+
 /**
  * Denver Water's four categories, each for the whole line from the main to the building. It
  * names no pipe material and doesn't split the line into its own part and the owner's.
@@ -123,6 +139,9 @@ export const CHI_NO_SERVICE =
 
 export const CHI_NO_HOUSE_SEWER =
   "Chicago doesn't publish its house drains. The building's owner owns the drain all the way to the city sewer in the street.";
+
+export const DAL_NO_HOUSE_SEWER =
+  "Dallas doesn't publish its house sewers. Dallas Water Utilities' design manual gives house laterals at least 2 ft of cover.";
 
 /** Denver Water's summary and facts for a line. */
 export const denServiceText = (lot: ServiceLot) => ({
@@ -203,11 +222,20 @@ export const sidedServiceText = (lot: ServiceLot & Required<Pick<ServiceLot, 'si
           note: SD_SERVICE_NOTE,
           facts: dcServiceFacts(lot.sides),
         }
-      : {
-          summary: DC_SERVICE_SUMMARY[lot.material],
-          note: DC_SERVICE_NOTE,
-          facts: dcServiceFacts(lot.sides),
-        };
+      : lot.source === 'dalServiceLines'
+        ? {
+            summary: DAL_SERVICE_SUMMARY[lot.material],
+            note: DAL_SERVICE_NOTE,
+            facts: [
+              ...dcServiceFacts(lot.sides),
+              ['Building built', lot.builtYear ? String(lot.builtYear) : 'Not recorded'],
+            ] as [string, string][],
+          }
+        : {
+            summary: DC_SERVICE_SUMMARY[lot.material],
+            note: DC_SERVICE_NOTE,
+            facts: dcServiceFacts(lot.sides),
+          };
 
 /** What a water service line is, in one sentence, wherever a count or a card names one. */
 export const SERVICE_LINE_MEANING =

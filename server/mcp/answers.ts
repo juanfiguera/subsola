@@ -24,6 +24,8 @@ import { sharedViewSearch } from '../../src/share';
 import { ownerName, prettyAddress, titleCase } from '../../src/ui/dom';
 import {
   CHI_NO_HOUSE_SEWER,
+  DAL_NO_HOUSE_SEWER,
+  DAL_NO_SERVICE,
   CHI_NO_SERVICE,
   DEN_NO_SERVICE,
   denServiceText,
@@ -338,9 +340,9 @@ const leadServiceLine = (
       detail: [summary, ...facts.map(([fact, text]) => `${fact}: ${text}.`), note].join(' '),
     };
   }
-  // DC Water and San Diego record the city's side and the owner's side apart, and SPU its two
-  // pieces of the line.
-  if (region.id === 'dc' || region.id === 'sd' || region.id === 'sea') {
+  // DC Water, San Diego and Dallas record the city's side and the owner's side apart, and SPU
+  // its two pieces of the line.
+  if (region.id === 'dc' || region.id === 'sd' || region.id === 'sea' || region.id === 'dal') {
     if (!lot?.sides)
       return {
         published: true,
@@ -351,7 +353,9 @@ const leadServiceLine = (
             ? "DC Water's service line inventory has no entry for this lot."
             : region.id === 'sd'
               ? "The city's service line inventory has no entry for this address. It lists about 281,000 services with a location, and no lead ones."
-              : SEA_NO_SERVICE,
+              : region.id === 'dal'
+                ? DAL_NO_SERVICE
+                : SEA_NO_SERVICE,
       };
     const { summary, facts } = sidedServiceText({ ...lot, sides: lot.sides });
     return {
@@ -439,6 +443,8 @@ const houseSewer = (report: LotReport, region: Region): WhatsUnder['houseSewer']
       };
     case 'chi':
       return { status: 'Not published', detail: CHI_NO_HOUSE_SEWER };
+    case 'dal':
+      return { status: 'Not published', detail: DAL_NO_HOUSE_SEWER };
   }
 };
 

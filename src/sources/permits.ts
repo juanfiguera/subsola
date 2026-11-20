@@ -39,7 +39,8 @@ export type PermitDataset =
   | 'sdPermits'
   | 'seaPermits'
   | 'denPermits'
-  | 'chiPermits';
+  | 'chiPermits'
+  | 'dalPermits';
 
 const TELECOM_COMPANIES =
   /VERIZON|EMPIRE CITY SUBWAY|TIME WARNER|CHARTER|SPECTRUM|CABLEVISION|ALTICE|RCN|LIGHTOWER|CROWN CASTLE|ZAYO|EXTENET|MOBILITIE|FIBERTECH|AT&T|T-MOBILE|NY SMSA|LIGHTPATH|NEXTG|CITYBRIDGE|ASTOUND/;
@@ -132,11 +133,12 @@ export interface PermitGroupProperties {
 /**
  * NYC permit types that don't cut the street: opening a manhole during a holiday embargo (a fifth
  * of all NYC utility permits), storing material, steam stacks and pay phones on the sidewalk.
- * Chicago's restorations repave a street another permit opened. They still show the utility is
- * there, so a block with nothing else keeps them, but they never count as digs.
+ * Chicago's restorations repave a street another permit opened, as do a Dallas utility's own
+ * paving permits, and Dallas's sewer camera checks for gas bores open nothing. They still show
+ * the utility is there, so a block with nothing else keeps them, but they never count as digs.
  */
 export const NOT_OPENING =
-  /MANHOLE EMBARGO|STORAGE OF MATERIAL|STEAM STACKS|PUBLIC PAY TELEPHONE|^Restoration only/;
+  /MANHOLE EMBARGO|STORAGE OF MATERIAL|STEAM STACKS|PUBLIC PAY TELEPHONE|^Restoration only|^Paving after a utility dig|^Sewer camera check/;
 
 const describeStreet = (row: PermitRow) =>
   [row.onstreetname, [row.fromstreetname, row.tostreetname].filter(Boolean).join(' and ')]

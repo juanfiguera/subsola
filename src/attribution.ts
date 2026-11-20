@@ -66,6 +66,15 @@ export const CITY_CREDITS: Record<RegionId, Credit> = {
     text: `${CHICAGO_DISCLAIMER} Addresses from Cook County GIS.`,
     links: [{ label: 'www.cityofchicago.org', url: 'https://www.cityofchicago.org/' }],
   },
+  // The city's layers set no license and name no wording, so the city is credited as publisher.
+  // Buildings are FEMA's USA Structures, CC BY 4.0.
+  dal: {
+    text: `Records from the City of Dallas (Dallas Open Data and the city's GIS services: Transportation and Public Works, Dallas Water Utilities and Development Services), provided as is, modified by Subsola. Buildings: USA Structures, FEMA and Oak Ridge National Laboratory, CC BY 4.0 (${CC_BY_4}).`,
+    links: [
+      { label: 'Dallas Open Data', url: 'https://www.dallasopendata.com/' },
+      { label: 'CC BY 4.0', url: CC_BY_4 },
+    ],
+  },
 };
 
 export const OSM_CREDIT: Credit = {

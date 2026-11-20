@@ -29,6 +29,7 @@ import { SD_DATASETS } from './sd/datasets';
 import { SEA_DATASETS } from './sea/datasets';
 import { DEN_DATASETS } from './den/datasets';
 import { CHI_DATASETS } from './chi/datasets';
+import { DAL_DATASETS } from './dal/datasets';
 
 export interface DatasetSpec {
   name: SourceKey;
@@ -123,6 +124,7 @@ export const CITY_DATASETS: Record<RegionId, DatasetSpec[]> = {
   sea: SEA_DATASETS,
   den: DEN_DATASETS,
   chi: CHI_DATASETS,
+  dal: DAL_DATASETS,
 };
 
 /** Every dataset the build reads, every city's. */

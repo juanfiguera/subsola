@@ -23,10 +23,11 @@ export const PERMITS_SINCE: Partial<Record<RegionId, string>> = {
   la: '2000-02-18',
   sd: '2003-08-21',
   sea: '1999-01-01',
-  // Not yet in insights.json: Denver's real records start in 2020 (docs/regions/den.md), and
-  // Chicago's public way openings in 1991.
+  // Not yet in insights.json: Denver's real records start in 2020 (docs/regions/den.md),
+  // Chicago's public way openings in 1991, and Dallas's right of way permits in November 2021.
   den: '2020-01-01',
   chi: '1991-01-01',
+  dal: '2021-11-17',
 };
 
 /** "Since 1990", or null for a city with no date on file. */
@@ -111,5 +112,10 @@ export const COVERAGE: Partial<Record<RegionId, CityCoverage>> = {
     permits: ['chiPermits'],
     pipes: [],
     serviceLines: { none: 'Not published' },
+  },
+  dal: {
+    permits: ['dalPermits'],
+    pipes: [],
+    serviceLines: 'dalServiceLines',
   },
 };
