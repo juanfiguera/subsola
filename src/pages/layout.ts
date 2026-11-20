@@ -1,5 +1,5 @@
 import { escapeHtml } from '../ui/dom';
-import { CONTACT_LINK, SHARE_IMAGE, SHARE_IMAGE_ALT, SITE_NAME, SITE_URL } from '../site';
+import { CONTACT_NAV, SHARE_IMAGE, SHARE_IMAGE_ALT, SITE_NAME, SITE_URL } from '../site';
 
 /**
  * The frame every generated page shares: head tags for search and link previews, the top bar,
@@ -82,7 +82,7 @@ export const pageFoot = () => `<footer class="page-foot">
         ]
           .map(({ href, label }) => `<a href="${href}">${label}</a>`)
           .join('\n        ')}
-        ${CONTACT_LINK}
+        ${CONTACT_NAV}
       </footer>`;
 
 export const page = (head: PageHead, main: string) => `<!doctype html>

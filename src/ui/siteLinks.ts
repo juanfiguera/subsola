@@ -1,8 +1,8 @@
-import { CONTACT_EMAIL, REPO_URL } from '../site';
+import { CONTACT_NAV, REPO_URL } from '../site';
 import { SOURCES } from '../sources/catalog';
 
 /**
- * About, the other pages and the contact address, in one quiet row: in the map's bottom corner on
+ * About, the other pages and a contact link, in one quiet row: in the map's bottom corner on
  * a wide screen, and at the foot of the card on a phone, where the corner is taken by the sheet.
  * About opens the About card; the rest are plain links.
  */
@@ -14,7 +14,7 @@ export const siteLinks = (where: 'corner' | 'card') => `
     <a href="/credits">Credits</a>
     <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>
     <a href="/privacy">Privacy</a>
-    <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>
+    ${CONTACT_NAV}
   </nav>`;
 
 /**

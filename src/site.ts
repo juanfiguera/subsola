@@ -17,6 +17,8 @@ export const REPO_URL = 'https://github.com/juanfiguera/subsola';
  * and the /mcp page's nonce-only CSP blocks that script, so these comments turn it off.
  */
 export const CONTACT_LINK = `<!--email_off--><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a><!--/email_off-->`;
+/** The same address in a row of links, where a word reads better than the address itself. */
+export const CONTACT_NAV = `<!--email_off--><a href="mailto:${CONTACT_EMAIL}" title="${CONTACT_EMAIL}">Contact</a><!--/email_off-->`;
 export const SHARE_IMAGE = `${SITE_URL}/og.png`;
 export const SHARE_IMAGE_ALT =
   'A street cut open to show water, sewer, gas, electric and telecom lines below it.';
