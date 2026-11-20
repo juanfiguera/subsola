@@ -12,7 +12,7 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '1.4.0',
+    version: '1.5.0',
     date: '2026-11-19',
     changes: [
       "Dallas joins the cities covered: right of way permits, with the utility from the city's own pick list, and Dallas Water Utilities' service line inventory. Dallas publishes no pipe maps, so every line there is placed from permits.",
