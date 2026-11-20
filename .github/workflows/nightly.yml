@@ -113,6 +113,21 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      # A dated copy of Boston's and Cambridge's permits each night, so history builds up before
+      # either city is on the map (docs/archive.md). It writes only to the private bucket named by
+      # R2_ARCHIVE_BUCKET, never the public cells bucket, and skips with a warning until that
+      # secret exists. Like Toronto's, it runs after a failed map step and never fails the night.
+      - run: pnpm archive-snapshots
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 20
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ARCHIVE_BUCKET: ${{ secrets.R2_ARCHIVE_BUCKET }}
+          SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:

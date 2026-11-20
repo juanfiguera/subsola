@@ -17,6 +17,7 @@
     "download-osm": "tsx pipeline/osm.ts",
     "insights": "tsx pipeline/insights.ts",
     "archive-toronto": "tsx --env-file-if-exists=.env.r2 pipeline/archive/toronto.ts",
+    "archive-snapshots": "tsx --env-file-if-exists=.env.r2 pipeline/archive/snapshots.ts",
     "models": "blender -b -P models/hydrant.py -- public/models && blender -b -P models/signal.py -- public/models"
   },
   "author": "",
