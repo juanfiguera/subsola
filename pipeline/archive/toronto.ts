@@ -6,11 +6,8 @@
  *   pnpm archive-toronto                  reads R2_* from .env.r2 locally, or from the environment in CI
  *   pnpm archive-toronto --out <dir>      reads and writes <dir> instead of R2, for trying it locally
  */
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { AwsClient } from 'aws4fetch';
 import { z } from 'zod';
-import { ARCHIVE_PREFIX, parseListing } from '../r2';
+import { ARCHIVE_PREFIX } from '../r2';
 import {
   decodeArchive,
   describeArchive,
@@ -20,6 +17,7 @@ import {
   type ArchivedRow,
 } from './merge';
 import { sourceRowSchema, toPermitRow, type PermitRow } from './permits';
+import { folderStore, outFolder, r2Store, retrying } from './store';
 
 const CKAN = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 const PACKAGE = 'utility-cut-permits';
@@ -31,7 +29,6 @@ const RETIRED_RESOURCE_ID = 'ebdec599-4522-4473-b276-fa07d8638248';
 // datastore_search allows 32,000; smaller pages keep each request short on a busy portal.
 const PAGE_ROWS = 10_000;
 const REQUEST_TIMEOUT_MS = 120_000;
-const RETRY_DELAYS_MS = [5_000, 30_000, 120_000];
 
 const PREFIX = `${ARCHIVE_PREFIX}toronto/`;
 const ARCHIVE_KEY = `${PREFIX}utility-cut-permits.jsonl.gz`;
@@ -41,27 +38,6 @@ const CACHE = 'public, max-age=3600';
 
 const LICENCE = 'Open Government Licence – Toronto';
 const ATTRIBUTION = `Contains information licensed under the ${LICENCE}`;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/** Network errors, timeouts and 5xx are retried; anything else is a real answer and isn't. */
-const retrying = async (label: string, attempt: () => Promise<Response>) => {
-  for (let tries = 0; ; tries++) {
-    const delay = RETRY_DELAYS_MS[tries];
-    let reason: string;
-    try {
-      const res = await attempt();
-      if (res.ok || (res.status < 500 && res.status !== 429)) return res;
-      reason = `HTTP ${res.status}`;
-    } catch (error) {
-      if (!(error instanceof TypeError) && !(error instanceof DOMException)) throw error;
-      reason = error.message;
-    }
-    if (delay === undefined) throw new Error(`Gave up on ${label} (${reason})`);
-    console.warn(`  retrying ${label} in ${delay / 1000}s after ${reason}`);
-    await sleep(delay);
-  }
-};
 
 const ckanResponseSchema = z.object({ success: z.literal(true), result: z.unknown() });
 
@@ -105,15 +81,6 @@ const fetchResource = async (resourceId: string): Promise<PermitRow[]> => {
   return rows;
 };
 
-/** Where the archive lives: R2 in the nightly, a folder when trying it out. */
-interface Store {
-  /** The object's bytes, or null when there is no such object. */
-  read: (key: string) => Promise<Uint8Array | null>;
-  write: (key: string, bytes: Uint8Array, contentType: string) => Promise<void>;
-  list: (prefix: string) => Promise<string[]>;
-  remove: (key: string) => Promise<void>;
-}
-
 const envSchema = z.object({
   R2_ACCOUNT_ID: z.string().min(1),
   R2_ACCESS_KEY_ID: z.string().min(1),
@@ -121,72 +88,10 @@ const envSchema = z.object({
   R2_BUCKET: z.string().min(1).default('backfill-cells'),
 });
 
-const r2Store = (env: z.infer<typeof envSchema>): Store => {
-  const client = new AwsClient({
-    accessKeyId: env.R2_ACCESS_KEY_ID,
-    secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-    service: 's3',
-    region: 'auto',
-  });
-  const bucketUrl = `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET}`;
-  const send = async (url: string, init: RequestInit = {}) => {
-    const res = await retrying(`R2 ${init.method ?? 'GET'}`, () => client.fetch(url, init));
-    if (!res.ok && res.status !== 404)
-      throw new Error(`R2 ${init.method ?? 'GET'} ${url}: HTTP ${res.status}`);
-    return res;
-  };
-  return {
-    read: async (key) => {
-      const res = await send(`${bucketUrl}/${key}`);
-      return res.status === 404 ? null : new Uint8Array(await res.arrayBuffer());
-    },
-    write: async (key, bytes, contentType) => {
-      await send(`${bucketUrl}/${key}`, {
-        method: 'PUT',
-        body: new Uint8Array(bytes),
-        headers: { 'Content-Type': contentType, 'Cache-Control': CACHE },
-      });
-    },
-    list: async (prefix) => {
-      const keys: string[] = [];
-      for (let token: string | undefined, first = true; first || token; first = false) {
-        const query = new URLSearchParams({ 'list-type': '2', prefix });
-        if (token) query.set('continuation-token', token);
-        const page = parseListing(await (await send(`${bucketUrl}?${query}`)).text());
-        keys.push(...page.objects.map(({ key }) => key));
-        token = page.next;
-      }
-      return keys;
-    },
-    remove: async (key) => {
-      await send(`${bucketUrl}/${key}`, { method: 'DELETE' });
-    },
-  };
+const bucketStore = () => {
+  const env = envSchema.parse(process.env);
+  return r2Store(env, env.R2_BUCKET, CACHE);
 };
-
-const folderStore = (root: string): Store => ({
-  read: async (key) => {
-    try {
-      return await readFile(join(root, key));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
-      throw error;
-    }
-  },
-  write: async (key, bytes) => {
-    await mkdir(dirname(join(root, key)), { recursive: true });
-    await writeFile(join(root, key), bytes);
-  },
-  list: async (prefix) => {
-    try {
-      return (await readdir(join(root, prefix))).map((name) => `${prefix}${name}`);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
-      throw error;
-    }
-  },
-  remove: (key) => rm(join(root, key), { force: true }),
-});
 
 const retiredSnapshot = async (): Promise<{ rows: PermitRow[]; seenOn: string } | null> => {
   try {
@@ -207,10 +112,8 @@ const retiredSnapshot = async (): Promise<{ rows: PermitRow[]; seenOn: string } 
 };
 
 const main = async () => {
-  const outIndex = process.argv.indexOf('--out');
-  const out = outIndex === -1 ? undefined : process.argv[outIndex + 1];
-  if (outIndex !== -1 && !out) throw new Error('--out needs a folder');
-  const store = out ? folderStore(out) : r2Store(envSchema.parse(process.env));
+  const out = outFolder(process.argv);
+  const store = out ? folderStore(out) : bucketStore();
   const today = new Date().toISOString().slice(0, 10);
 
   const pkg = await ckan(
