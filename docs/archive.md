@@ -2,8 +2,8 @@
 
 Some cities only publish a rolling window of their records. Anything that drops out of the window
 before Subsola covers the city is gone, so a few sources are archived every night ahead of any
-map. Toronto's archive is merged night into night and sits in the public cells bucket; Boston's
-and Cambridge's are kept as whole nightly snapshots in a private bucket.
+map. Toronto's archive is merged night into night; Boston's and Cambridge's are kept as whole
+nightly snapshots. All of it sits in a private bucket and nothing in it is served.
 
 ## Toronto utility cut permits
 
@@ -20,11 +20,14 @@ with more than 30 months of history.
   "Contains information licensed under the Open Government Licence – Toronto".
 - **Script:** `pnpm archive-toronto` (`pipeline/archive/toronto.ts`), run by the nightly after the
   cells go up. The step is `continue-on-error` and runs even when an earlier step failed, so the
-  map and the archive never hold each other back. It needs only the R2 secrets the upload uses.
+  map and the archive never hold each other back. It writes to the private bucket named by
+  `R2_ARCHIVE_BUCKET` (see [Where it is](#where-it-is)), with the R2 credentials the upload uses.
 
 ### Where it is
 
-In the R2 bucket, so publicly at `https://data.subsola.com/archive/toronto/...`:
+In the private archive bucket, not the cells bucket, so nothing here is public. Until November
+2026 it sat in the cells bucket at `data.subsola.com/archive/toronto/`; it was copied across byte
+for byte on 2026-11-21.
 
 | Key                                             | What                                                      |
 | ----------------------------------------------- | --------------------------------------------------------- |
@@ -36,9 +39,8 @@ The archive was about 103,000 permits and 3.2 MB in November 2026. Snapshots are
 newest is a week old and the newest eight are kept, about 26 MB in all. They are there to roll back
 a bad merge: copy one over `utility-cut-permits.jsonl.gz`.
 
-The map never reads `archive/`, and `pnpm upload-cells` never removes anything under it
-(`ARCHIVE_PREFIX` in `pipeline/r2.ts`), though it removes every other object the cell build didn't
-make.
+`pnpm upload-cells` still never removes anything under `archive/` in the cells bucket
+(`ARCHIVE_PREFIX` in `pipeline/r2.ts`), a guard from when the archive lived there.
 
 ### How a night merges
 
@@ -107,7 +109,8 @@ pnpm archive-toronto --out /tmp/archive   # fetches the live source, reads and w
 ```
 
 `--out` never touches R2 and needs no credentials. Run it twice to see a merge into an existing
-archive and a snapshot. Without `--out` it writes to the real bucket, which is the nightly's job.
+archive and a snapshot. Without `--out` it writes to the private bucket, which is the nightly's
+job, and does nothing (with a warning) while `R2_ARCHIVE_BUCKET` is unset.
 
 ## Boston and Cambridge permits (private snapshots)
 
@@ -132,12 +135,13 @@ the MCP server or the site.
 
 ### Where it is
 
-In a separate R2 bucket named by the `R2_ARCHIVE_BUCKET` secret, never the cells bucket.
+In the same private bucket as Toronto's, named by the `R2_ARCHIVE_BUCKET` secret, never the cells bucket.
 data.subsola.com serves the whole cells bucket to anyone, `archive/` included, so a prefix there
 would not be private. The archive bucket must have no custom domain and no r2.dev address. The
 script refuses to write when `R2_ARCHIVE_BUCKET` names the cells bucket, and writes nothing (with a
-warning) while the secret is unset. It uses the same R2 credentials as the upload, so the token
-needs access to the archive bucket too.
+warning) while the secret is unset (`privateBucketStore` in `pipeline/archive/store.ts`, shared
+with Toronto's script). It uses the same R2 credentials as the upload, so the token needs access
+to the archive bucket too.
 
 | Key                                                          | What                                             |
 | ------------------------------------------------------------ | ------------------------------------------------ |

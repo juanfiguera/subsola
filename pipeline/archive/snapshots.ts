@@ -9,21 +9,10 @@
  * It writes only to R2_ARCHIVE_BUCKET, never to the cells bucket, which data.subsola.com serves to
  * anyone. Without R2_ARCHIVE_BUCKET it writes nothing.
  */
-import { z } from 'zod';
 import { BOSTON_FIELDS, BOSTON_LAYERS, fetchBostonLayer, type BostonLayer } from './boston';
 import { CAMBRIDGE_DATASET, CAMBRIDGE_FIELDS, fetchCambridge } from './cambridge';
 import { encodeSnapshot, snapshotKey, sortRows, withheldCounts } from './snapshotFiles';
-import { folderStore, outFolder, r2Store, type Store } from './store';
-
-const PUBLIC_BUCKET_DEFAULT = 'backfill-cells';
-
-const envSchema = z.object({
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET: z.string().min(1).default(PUBLIC_BUCKET_DEFAULT),
-  R2_ARCHIVE_BUCKET: z.string().min(1),
-});
+import { folderStore, outFolder, privateBucketStore, type Store } from './store';
 
 interface Source {
   city: string;
@@ -105,18 +94,7 @@ const snapshotOne = async (store: Store, source: Source, today: string) => {
 const chooseStore = (): Store | null => {
   const out = outFolder(process.argv);
   if (out) return folderStore(out);
-  // Checked before the credentials: an unset secret in CI arrives as an empty string.
-  if (!process.env.R2_ARCHIVE_BUCKET?.trim()) {
-    console.log('::warning::R2_ARCHIVE_BUCKET is not set; no Boston or Cambridge snapshot taken');
-    return null;
-  }
-  const env = envSchema.parse(process.env);
-  const bucket = env.R2_ARCHIVE_BUCKET.trim();
-  // The cells bucket is public through data.subsola.com, so writing there would publish the
-  // snapshots. Refused outright rather than trusting a prefix to stay unserved.
-  if (bucket === env.R2_BUCKET || bucket === PUBLIC_BUCKET_DEFAULT)
-    throw new Error(`R2_ARCHIVE_BUCKET is the public cells bucket (${bucket}); refusing to write`);
-  return r2Store(env, bucket);
+  return privateBucketStore(process.env, 'no Boston or Cambridge snapshot taken');
 };
 
 const main = async () => {

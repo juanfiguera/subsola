@@ -1,5 +1,5 @@
 /**
- * Keeps a growing archive of Toronto's utility cut permits in R2. Toronto publishes a rolling window
+ * Keeps a growing archive of Toronto's utility cut permits in the private archive bucket. Toronto publishes a rolling window
  * of about 30 months and drops the oldest rows each week, so each night's copy is merged into what
  * the archive already holds rather than replacing it. See docs/archive.md.
  *
@@ -17,7 +17,7 @@ import {
   type ArchivedRow,
 } from './merge';
 import { sourceRowSchema, toPermitRow, type PermitRow } from './permits';
-import { folderStore, outFolder, r2Store, retrying } from './store';
+import { folderStore, outFolder, privateBucketStore, retrying } from './store';
 
 const CKAN = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 const PACKAGE = 'utility-cut-permits';
@@ -34,7 +34,6 @@ const PREFIX = `${ARCHIVE_PREFIX}toronto/`;
 const ARCHIVE_KEY = `${PREFIX}utility-cut-permits.jsonl.gz`;
 const META_KEY = `${PREFIX}meta.json`;
 const SNAPSHOT_PREFIX = `${PREFIX}snapshots/`;
-const CACHE = 'public, max-age=3600';
 
 const LICENCE = 'Open Government Licence – Toronto';
 const ATTRIBUTION = `Contains information licensed under the ${LICENCE}`;
@@ -81,18 +80,6 @@ const fetchResource = async (resourceId: string): Promise<PermitRow[]> => {
   return rows;
 };
 
-const envSchema = z.object({
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET: z.string().min(1).default('backfill-cells'),
-});
-
-const bucketStore = () => {
-  const env = envSchema.parse(process.env);
-  return r2Store(env, env.R2_BUCKET, CACHE);
-};
-
 const retiredSnapshot = async (): Promise<{ rows: PermitRow[]; seenOn: string } | null> => {
   try {
     const resource = await ckan(
@@ -113,7 +100,8 @@ const retiredSnapshot = async (): Promise<{ rows: PermitRow[]; seenOn: string } 
 
 const main = async () => {
   const out = outFolder(process.argv);
-  const store = out ? folderStore(out) : bucketStore();
+  const store = out ? folderStore(out) : privateBucketStore(process.env, 'no Toronto archive run');
+  if (!store) return;
   const today = new Date().toISOString().slice(0, 10);
 
   const pkg = await ckan(

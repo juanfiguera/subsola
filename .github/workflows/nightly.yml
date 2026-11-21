@@ -103,7 +103,8 @@ jobs:
       # Toronto's permits, archived for a city that isn't on the map yet (docs/archive.md). Toronto
       # publishes a rolling 30 months and drops the oldest rows weekly, so the archive matters more
       # than any one night: it runs even after a failed map step, and a Toronto outage or a bad
-      # archive run never fails the map's night.
+      # archive run never fails the map's night. It writes to the private bucket, like the
+      # snapshots below.
       - run: pnpm archive-toronto
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -113,6 +114,7 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ARCHIVE_BUCKET: ${{ secrets.R2_ARCHIVE_BUCKET }}
       # A dated copy of Boston's and Cambridge's permits each night, so history builds up before
       # either city is on the map (docs/archive.md). It writes only to the private bucket named by
       # R2_ARCHIVE_BUCKET, never the public cells bucket, and skips with a warning until that

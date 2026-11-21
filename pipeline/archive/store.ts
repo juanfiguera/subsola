@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { AwsClient } from 'aws4fetch';
+import { z } from 'zod';
 import { parseListing } from '../r2';
 
 const RETRY_DELAYS_MS = [5_000, 30_000, 120_000];
@@ -118,4 +119,35 @@ export const outFolder = (argv: readonly string[]) => {
   const folder = argv[index + 1];
   if (!folder) throw new Error('--out needs a folder');
   return folder;
+};
+
+const PUBLIC_BUCKET_DEFAULT = 'backfill-cells';
+
+const privateBucketEnv = z.object({
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET: z.string().min(1).default(PUBLIC_BUCKET_DEFAULT),
+  R2_ARCHIVE_BUCKET: z.string().min(1),
+});
+
+/**
+ * The private archive bucket named by R2_ARCHIVE_BUCKET, or null (with a warning saying what was
+ * skipped) while it is unset. The cells bucket is public through data.subsola.com, so naming it is
+ * refused outright rather than trusting a prefix there to stay unserved.
+ */
+export const privateBucketStore = (
+  env: Record<string, string | undefined>,
+  skipped: string,
+): Store | null => {
+  // Checked before the credentials: an unset secret in CI arrives as an empty string.
+  if (!env.R2_ARCHIVE_BUCKET?.trim()) {
+    console.log(`::warning::R2_ARCHIVE_BUCKET is not set; ${skipped}`);
+    return null;
+  }
+  const parsed = privateBucketEnv.parse(env);
+  const bucket = parsed.R2_ARCHIVE_BUCKET.trim();
+  if (bucket === parsed.R2_BUCKET || bucket === PUBLIC_BUCKET_DEFAULT)
+    throw new Error(`R2_ARCHIVE_BUCKET is the public cells bucket (${bucket}); refusing to write`);
+  return r2Store(parsed, bucket);
 };
