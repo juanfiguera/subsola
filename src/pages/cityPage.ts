@@ -153,7 +153,7 @@ export const cityPage = (region: Region, figures: CityFigures | undefined, style
       <nav class="block" aria-labelledby="cities-title">
         <h2 id="cities-title">Other cities</h2>
         <ul class="city-list">${otherCities(region)}</ul>
-        <p>How often each city digs up its streets is on the <a href="/insights">insights page</a>. To ask about an address from Claude or another AI assistant, <a href="/mcp">add Subsola's MCP server</a>.</p>
+        <p>How often each city digs up its streets is on the <a href="/insights">insights page</a>. To ask about an address from any AI assistant, <a href="/mcp">add Subsola's MCP server</a>.</p>
       </nav>`,
   );
 };

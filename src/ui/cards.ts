@@ -245,7 +245,7 @@ export const homeCard = ({
   return `${heading}
     ${digButton}
     <button class="pill report-cta" data-action="report">View lot report</button>
-    <a class="ai-link" href="/mcp" data-mcp-link="address card">${CHAT_ICON}Ask Claude or ChatGPT about this address</a>
+    <a class="ai-link" href="/mcp" data-mcp-link="address card">${CHAT_ICON}Ask your AI assistant about this address</a>
     ${liveSection(active)}
     <section class="card-section">
       <h2>Expected depths</h2>

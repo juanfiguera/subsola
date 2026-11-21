@@ -116,7 +116,7 @@ const hero = (cities: number) => {
   <header class="hero">
     <p class="kicker">MCP server · version ${SERVER_VERSION}</p>
     <h1>Subsola for AI assistants</h1>
-    <p class="lede">Ask Claude, ChatGPT or any MCP client what public records say is under a street, and who's been digging it up.</p>
+    <p class="lede">Ask your AI assistant what public records say is under a street, and who's been digging it up. It works with Claude, ChatGPT, Cursor and any other MCP client.</p>
     <div class="endpoint">
       <span class="endpoint-label">Server URL</span>
       <code id="endpoint">${MCP_URL}</code>
@@ -398,7 +398,7 @@ const help = (cities: string) => {
 export const docsPage = (nonce: string) => {
   copyCount = 0;
   const cities = cityNames('and');
-  const description = `Subsola's MCP server lets Claude, ChatGPT and other AI assistants look up what public records say is under a street in ${cities}.`;
+  const description = `Subsola's MCP server lets any AI assistant, such as Claude, ChatGPT or Cursor, look up what public records say is under a street in ${cities}.`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -413,7 +413,7 @@ export const docsPage = (nonce: string) => {
 <meta property="og:site_name" content="Subsola">
 <meta property="og:url" content="${MCP_URL}">
 <meta property="og:title" content="Use Subsola with AI assistants">
-<meta property="og:description" content="${escapeHtml(`Ask Claude or any MCP client what's under a street in ${cities}.`)}">
+<meta property="og:description" content="${escapeHtml(`Ask any AI assistant what's under a street in ${cities}.`)}">
 <meta property="og:image" content="https://subsola.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
