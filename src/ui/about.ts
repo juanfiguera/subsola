@@ -141,7 +141,7 @@ export const aboutCard = (statuses: Map<SourceKey, SourceStatus>, region: Region
   <ul class="about-chips" aria-label="At a glance">
     <li>${ICONS.pin}${REGIONS.length} cities</li>
     <li>${ICONS.clock}Rebuilt nightly</li>
-    <li>${ICONS.key}No sign-in</li>
+    <li>${ICONS.key}Free, no account</li>
   </ul>
   <div class="about-warn">
     <span class="about-icon">${ICONS.warn}</span>
