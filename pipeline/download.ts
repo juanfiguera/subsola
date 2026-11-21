@@ -14,7 +14,7 @@ import { csvRowMatches, csvRows } from './csv';
 import { CITY_DATASETS, DATASETS, type DatasetSpec } from './datasets';
 import { onlyCity } from './city';
 import { isPaused } from '../src/sources/catalog';
-import { dataDir } from './paths';
+import { dataDir, LAST_GOOD_MAX_DAYS, lastGoodDir } from './paths';
 
 const BASE_URL = 'https://data.cityofnewyork.us/resource';
 // Six at once measured about 6,000 permit rows a second without throttling.
@@ -353,12 +353,6 @@ const downloadCsv = async (url: string, specs: DatasetSpec[]) => {
     console.log(`${spec.name}: ${rows.toLocaleString()} rows in ${pages} pages`);
   }
 };
-
-// The last complete download of each optional dataset, kept between nightly runs (see
-// nightly.yml), so a server that turns us away for a night costs a day's freshness, not the layer.
-const lastGoodDir = (name: string) => join(dataDir, 'last-good', name);
-// Older than this, a layer is better left out than shown as if current.
-const LAST_GOOD_MAX_DAYS = 30;
 
 const keepAsLastGood = async (spec: DatasetSpec) => {
   const dir = lastGoodDir(spec.name);

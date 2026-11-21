@@ -59,6 +59,9 @@ jobs:
       - run: pnpm download || pnpm download || (sleep 600 && pnpm download)
         env:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+      # Before the caches are saved, so tonight's points become the last good copy. A Geofabrik
+      # failure falls back to that copy (pipeline/osm.ts) instead of stopping every city.
+      - run: pnpm download-osm
       # Saved even when the download fails, so the pages a night did get aren't fetched again.
       - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         if: always()
@@ -83,7 +86,6 @@ jobs:
             gh cache list --repo "$GITHUB_REPOSITORY" --key "$prefix" --limit 100 --sort created_at --order desc --json id --jq '.[1:][].id' |
               xargs -r -n1 gh cache delete --repo "$GITHUB_REPOSITORY"
           done
-      - run: pnpm download-osm
       # Logs what's left, so the next time the build nears the runner's disk it shows here first.
       - run: pnpm build-cells && df -h /
       # The figures for subsola.com/insights; upload-cells publishes data/insights.json with the
