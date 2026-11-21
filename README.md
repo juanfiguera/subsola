@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/juanfiguera/subsola/actions/workflows/deploy.yml"><img alt="deploy status" src="https://img.shields.io/github/actions/workflow/status/juanfiguera/subsola/deploy.yml?branch=main&style=flat-square&label=deploy&labelColor=1b2230&color=e6e9ef"></a>
   <a href="LICENSE"><img alt="license AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-e6e9ef?style=flat-square&labelColor=1b2230"></a>
-  <a href="#try-it-in-your-browser"><img alt="8 US cities" src="https://img.shields.io/badge/cities-8_US-e6e9ef?style=flat-square&labelColor=1b2230"></a>
+  <a href="#try-it-in-your-browser"><img alt="9 US cities" src="https://img.shields.io/badge/cities-9_US-e6e9ef?style=flat-square&labelColor=1b2230"></a>
   <a href="#ask-your-ai-assistant"><img alt="MCP server" src="https://img.shields.io/badge/MCP-subsola.com%2Fmcp-e6e9ef?style=flat-square&labelColor=1b2230"></a>
   <a href="#run-your-own-copy"><img alt="self-host with Docker" src="https://img.shields.io/badge/self--host-docker_compose_up-e6e9ef?style=flat-square&labelColor=1b2230"></a>
 </p>
@@ -63,6 +63,10 @@ straight to one of these:
 A few things to try once you're there: drag to move and right-drag to tilt, tap any line for
 where it came from, press **Check a location** to drill down from a spot, and open the **lot
 report** for a page you can print or save as a PDF.
+
+<p align="center">
+  <img src=".github/assets/cities.gif" alt="Subsola on a phone in dark mode, cutting through all nine cities in five seconds: New York, San Francisco, Chicago, Dallas, Los Angeles, Washington, Seattle, San Diego and Denver, each with its utility lines labeled by type and depth." width="280">
+</p>
 
 ## Ask your AI assistant
 
