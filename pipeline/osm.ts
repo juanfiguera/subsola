@@ -17,7 +17,10 @@ import { promisify } from 'node:util';
 import { OSM_FILTERS } from '../src/sources/assets';
 import { dataDir, osmPointsPath } from './paths';
 
-const EXTRACT_URL = 'https://download.geofabrik.de/north-america/us/new-york-latest.osm.pbf';
+// Geofabrik moved each US state into its own folder in November 2026; the old flat URL now
+// redirects to a 404.
+const EXTRACT_URL =
+  'https://download.geofabrik.de/north-america/us/new-york/new-york-latest.osm.pbf';
 // The five boroughs with a little margin; the build keeps only points in cells that have city data.
 const NYC_BBOX = '-74.27,40.49,-73.69,40.92';
 
