@@ -77,6 +77,7 @@ export const topBar = () => `<a class="skip" href="#main">Skip to the page</a>
 export const pageFoot = () => `<footer class="page-foot">
         ${[
           ...SITE_LINKS,
+          { href: '/faq', label: 'Questions' },
           { href: '/credits', label: 'Data credits' },
           { href: '/privacy', label: 'Privacy' },
         ]

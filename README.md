@@ -20,6 +20,7 @@
   <a href="#run-your-own-copy">Run your own</a> &middot;
   <a href="#what-youll-see">What you'll see</a> &middot;
   <a href="#cities-and-where-the-data-comes-from">Cities</a> &middot;
+  <a href="#questions">Questions</a> &middot;
   <a href="#hack-on-it">Hack on it</a>
 </p>
 
@@ -208,6 +209,24 @@ Subsola is careful to tell you how much to trust each line. Here's the short ver
 - **No line doesn't mean no pipe.** A line nobody has dug up since records began won't show, and
   gas, electric and telecom companies keep their routes private.
 - **Records lag a little.** They're rebuilt every night, and every answer says how fresh they are.
+
+## Questions
+
+**Is it safe to put this online?** Subsola shows only what cities, counties and utilities already
+publish, in the form they publish it. It has no access to utilities' private records. Where a
+publisher's terms don't allow reuse, the layer is paused and the map links to the publisher's own
+site. Lines drawn from standards are general rules, not anyone's equipment.
+
+**Is it free?** Yes: the map, lot reports and MCP server, with no account and no ads. Subsola
+doesn't sell data. Paid tools for teams may come later, on top of the free map.
+
+**Why isn't my city here?** A city needs to publish where its streets have been dug up, at least,
+and most don't yet. Ask for yours at [hello@subsola.com](mailto:hello@subsola.com).
+
+**I publish some of this data.** Email [hello@subsola.com](mailto:hello@subsola.com) to change a
+credit, or to pause a layer while we talk.
+
+More at [subsola.com/faq](https://subsola.com/faq).
 
 ## Cities and where the data comes from
 

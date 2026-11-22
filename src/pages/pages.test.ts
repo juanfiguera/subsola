@@ -5,6 +5,7 @@ import { cityPage, cityPath } from './cityPage';
 import { jsonLdScript } from './layout';
 import { notFoundPage, robotsTxt, sitemapPaths, sitemapXml } from './siteFiles';
 import { pageFiles } from './build';
+import { faqPage } from './faq';
 
 const CSS = 'assets/pages-abc123.css';
 
@@ -30,6 +31,7 @@ describe('city slugs', () => {
       '/mcp',
       '/privacy',
       '/credits',
+      '/faq',
       '/api',
       '/og',
       '/fonts',
@@ -148,6 +150,7 @@ describe('site files', () => {
       '/mcp',
       '/privacy',
       '/credits',
+      '/faq',
       ...REGIONS.map((region) => `/${citySlug(region)}`),
     ]);
     const xml = sitemapXml(['/', '/a&b']);
@@ -176,9 +179,35 @@ describe('site files', () => {
         '404.html',
         'privacy.html',
         'credits.html',
+        'faq.html',
         'robots.txt',
         'sitemap.xml',
       ].sort(),
     );
+  });
+});
+
+describe('FAQ page', () => {
+  const html = faqPage(CSS);
+
+  it('says plainly that Subsola is not a utility locate and points to 811', () => {
+    expect(html).toContain('research, not a utility locate');
+    expect(html).toContain('Call 811');
+  });
+
+  it('carries every question in FAQPage structured data, as plain text', () => {
+    const json = JSON.parse(
+      html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)![1]!,
+    ) as { '@type': string; mainEntity: { name: string; acceptedAnswer: { text: string } }[] };
+    expect(json['@type']).toBe('FAQPage');
+    const headings = [...html.matchAll(/<h3 id="[^"]+" class="faq-q">(.*?)<\/h3>/g)].map(
+      (m) => m[1],
+    );
+    expect(json.mainEntity.map((q) => q.name)).toEqual(headings);
+    for (const q of json.mainEntity) expect(q.acceptedAnswer.text).not.toMatch(/[<>]/);
+  });
+
+  it('lists every covered city', () => {
+    for (const region of REGIONS) expect(html).toContain(region.name);
   });
 });
