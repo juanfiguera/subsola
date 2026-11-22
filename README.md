@@ -65,7 +65,7 @@ where it came from, press **Check a location** to drill down from a spot, and op
 report** for a page you can print or save as a PDF.
 
 <p align="center">
-  <img src=".github/assets/cities.gif" alt="Subsola on a phone in dark mode, cutting through all nine cities in five seconds: New York, San Francisco, Chicago, Dallas, Los Angeles, Washington, Seattle, San Diego and Denver, each with its utility lines labeled by type and depth." width="280">
+  <img src=".github/assets/demo.gif" alt="A 26-second tour of Subsola: typing 33 Union Square West in New York, the colored utility lines under the street with their depths, the view from below the street, a gas line's permit history, then San Francisco, Chicago and Dallas, and a lot report for the address." width="100%">
 </p>
 
 ## Ask your AI assistant
