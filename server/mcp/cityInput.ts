@@ -28,6 +28,7 @@ const ALIASES: Record<RegionId, string[]> = {
   den: ['Denver'],
   chi: ['Chicago'],
   dal: ['Dallas'],
+  sj: ['San Jose', 'San José', 'San Jose CA'],
 };
 
 /** Lower case, punctuation dropped, spaces collapsed: "Washington, D.C." to "washington dc". */

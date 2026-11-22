@@ -16,6 +16,8 @@ export interface Credit {
 
 const CC_BY_4 = 'https://creativecommons.org/licenses/by/4.0/';
 const CC_BY_3 = 'https://creativecommons.org/licenses/by/3.0/';
+// San Jose's open data portal lists its GIS layers under this, with no version.
+const CC_BY_OD = 'https://opendefinition.org/licenses/cc-by/';
 
 /** Chicago's terms ask for this, word for word, wherever an app using its data can be reached. */
 export const CHICAGO_DISCLAIMER =
@@ -73,6 +75,15 @@ export const CITY_CREDITS: Record<RegionId, Credit> = {
     links: [
       { label: 'Dallas Open Data', url: 'https://www.dallasopendata.com/' },
       { label: 'CC BY 4.0', url: CC_BY_4 },
+    ],
+  },
+  // The open data layers are CC BY with no wording asked for; the permit layer isn't in the
+  // catalog and states no license, so the city is credited as its publisher.
+  sj: {
+    text: `Records from the City of San Jose: its open data (Public Works and Transportation), Creative Commons Attribution (${CC_BY_OD}), and Public Works' utility permits, provided as is; modified by Subsola. Buildings from the County of Santa Clara, provided as is.`,
+    links: [
+      { label: 'San Jose open data', url: 'https://data.sanjoseca.gov/' },
+      { label: 'Creative Commons Attribution', url: CC_BY_OD },
     ],
   },
 };

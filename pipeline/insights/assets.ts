@@ -56,6 +56,13 @@ const ASSETS: Record<City, Record<string, string[]>> = {
   chi: {},
   // Dallas publishes no hydrants, inlets or manholes; its lights and signal cabinets aren't built.
   dal: {},
+  // San Jose Water's and Great Oaks Water's hydrants aren't open data.
+  sj: {
+    catchBasins: ['sjInlets'],
+    lights: ['sjLights'],
+    signals: ['sjSignals'],
+    sewerManholes: ['sjSewerManholes'],
+  },
 };
 
 export const assetInsights = async (streetMiles: Record<City, Figure<number>>) => {

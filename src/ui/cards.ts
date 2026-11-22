@@ -479,6 +479,29 @@ const mainCardBody = (main: SurveyedMain) => {
         ? 'No inlet or cleanout with a recorded rim sits at either end, so it is drawn at the usual depth of the city’s sewers.'
         : 'Depth from the invert recorded at its ends and the rim of the inlet or cleanout there, less the pipe’s own height.'
     } Route, size, material and year from ${sourceLink(source.name, source.url)}, ${escapeHtml(source.publisher)}, as published by SanGIS.</p>`;
+  if (main.source === 'sjStormDrains')
+    return `
+    ${backButton}
+    <span class="hood" style="--hood:${style.color}">Storm drain</span>
+    <h1 class="card-title">${escapeHtml([size, main.material?.toLowerCase()].filter(Boolean).join(' ') || 'Storm drain')}</h1>
+    ${confidenceTag('surveyed')}
+    <p class="hero-line">A storm drain, which carries rain and street runoff to the Guadalupe River, Coyote Creek and the bay without treatment. San Jose keeps it apart from the sanitary sewers. Drawn on the route the city maps for it.</p>
+    ${factList([
+      ['Size', size ?? 'Not recorded'],
+      ['Material', main.material ?? 'Not recorded'],
+      ['Installed', year],
+      [
+        'Depth',
+        main.depthFt === null
+          ? 'Not measured here'
+          : `About ${formatFeet(main.depthFt)} to the top of the pipe`,
+      ],
+    ])}
+    <p class="fine">${
+      main.depthFt === null
+        ? 'No manhole or inlet with a recorded height sits at either end, so it is drawn at the usual depth of the city’s sewers.'
+        : 'Depth from the invert recorded at its ends and the lid of the manhole or inlet there, less the pipe’s own height. Where a lid has no surveyed height, the city’s terrain model stands in, so treat it as within a foot or so.'
+    } Route, size, material and year from ${sourceLink(source.name, source.url)}, ${escapeHtml(source.publisher)}.</p>`;
   if (main.source === 'denStormDrains')
     return `
     ${backButton}
@@ -534,7 +557,9 @@ const mainCardBody = (main: SurveyedMain) => {
         ? 'The manholes at its ends have no recorded depth, so it is drawn at the usual depth for the city.'
         : main.source === 'denSewers'
           ? 'Depth from the invert recorded at its ends and the ground at the manholes there, less the pipe’s own height. The city reads most of those grounds from a terrain model, so treat it as within a foot or so.'
-          : 'Depth from the rim and invert recorded at the manholes at its ends, less the pipe’s own height.'
+          : main.source === 'sjSewers'
+            ? 'Depth from the invert recorded at its ends and the lid of the manhole there, less the pipe’s own height. Where a lid has no surveyed height, the city’s terrain model stands in, so treat it as within a foot or so.'
+            : 'Depth from the rim and invert recorded at the manholes at its ends, less the pipe’s own height.'
     } Route, size, material and year from ${sourceLink(source.name, source.url)}, ${escapeHtml(source.publisher)}.</p>`;
   }
   if (isRecycled(main))

@@ -198,6 +198,32 @@ const DAL_LICENSE = 'City of Dallas open data; no license stated, provided as is
 const dalLayer = (layer: string, name: string, publisher: string, confidence: Confidence) =>
   cityLayer(`${DAL_AGOL}/${layer}`, name, publisher, confidence, DAL_LICENSE);
 
+const SJ_GIS = 'https://geo.sanjoseca.gov/server/rest/services';
+// The utility permits aren't in the city's open data catalog and their map service states no
+// license; the city's open data layers are CC BY.
+const SJ_PERMIT_LICENSE = 'City of San Jose map service; no license stated, provided as is';
+const SJ_OPEN_LICENSE = 'City of San Jose open data, CC BY';
+
+/** A City of San Jose open data layer (CC BY); `id` is its full query URL. */
+const sjLayer = (layer: number, name: string, publisher: string, confidence: Confidence) =>
+  cityLayer(
+    `${SJ_GIS}/OPN/OPN_OpenDataService/MapServer/${layer}`,
+    name,
+    publisher,
+    confidence,
+    SJ_OPEN_LICENSE,
+  );
+
+/** One of the city's utility permit layers; `id` is its full query URL. */
+const sjPermitLayer = (layer: number, name: string) =>
+  cityLayer(
+    `${SJ_GIS}/PLN/PLN_PermitsAndComplaints/MapServer/${layer}`,
+    name,
+    'City of San Jose Public Works',
+    'block-level',
+    SJ_PERMIT_LICENSE,
+  );
+
 const SF_SEWERS = 'https://gis.sf.gov/svc/rest/services/boe/SEWER_ASSETS_ALL_STATUS/FeatureServer';
 const SF_AGOL = 'https://services.arcgis.com/Zs2aNLFN00jrS4gG/arcgis/rest/services';
 
@@ -737,6 +763,45 @@ export const SOURCES = {
     'Dallas Water Utilities',
     'lot-level',
   ),
+  // Utility excavation permits, filed by street segment, intersection or parcel. Only the permit
+  // number, the work type, the dates, the site and the description the build classifies are asked
+  // for; the staff and editor fields and the notes stay on the server (pipeline/sj/datasets.ts).
+  sjPermits: sjPermitLayer(16, 'Utility permits (streets)'),
+  sjPermitPoints: sjPermitLayer(15, 'Utility permits (intersections)'),
+  sjPermitParcels: sjPermitLayer(17, 'Utility permits (parcels)'),
+  sjStreets: sjLayer(60, 'Streets', 'City of San Jose', 'context'),
+  sjSewers: sjLayer(312, 'Sanitary gravity mains', 'City of San Jose Public Works', 'surveyed'),
+  sjSewerManholes: sjLayer(308, 'Sanitary manholes', 'City of San Jose Public Works', 'surveyed'),
+  sjStormDrains: sjLayer(300, 'Storm gravity mains', 'City of San Jose Public Works', 'surveyed'),
+  sjStormManholes: sjLayer(296, 'Storm manholes', 'City of San Jose Public Works', 'surveyed'),
+  sjInlets: sjLayer(295, 'Storm inlets', 'City of San Jose Public Works', 'surveyed'),
+  sjLights: sjLayer(427, 'Streetlight poles', 'City of San Jose Transportation', 'surveyed'),
+  sjSignals: sjLayer(
+    506,
+    'City owned traffic signals',
+    'City of San Jose Transportation',
+    'surveyed',
+  ),
+  // The county's lidar footprints, since the city publishes none of its own.
+  sjBuildings: {
+    id: 'https://maps.santaclaracounty.gov/server/rest/services/opendata/SCCGISHUB/MapServer/40',
+    name: 'Buildings Footprints 2D',
+    publisher: 'County of Santa Clara',
+    url: 'https://maps.santaclaracounty.gov/server/rest/services/opendata/SCCGISHUB/MapServer/40',
+    confidence: 'context',
+    license: 'County of Santa Clara GIS data; no use limitations stated, provided as is',
+  },
+  // San Jose Water's inventory for the EPA's lead rule. Paused (PAUSED_SOURCES): the company's
+  // website terms bar reproducing or republishing its content.
+  sjServiceLines: {
+    id: 'https://services5.arcgis.com/ixApgzWW1LUCWXMY/arcgis/rest/services/Service_Line_Material_Inventory_view/FeatureServer/2',
+    name: 'Service line material inventory',
+    publisher: 'San Jose Water',
+    url: 'https://www.sjwater.com/service-line-inventory/',
+    confidence: 'lot-level',
+    license:
+      'San Jose Water website terms of use; no reproduction or republishing without permission',
+  },
   conEdStructures: {
     id: 'con-ed-structures',
     name: 'Network structures (hosting capacity map)',
@@ -785,6 +850,10 @@ export const PAUSED_SOURCES: Partial<Record<SourceKey, { owner: string; lookup: 
   },
   sdLights: { owner: 'the City of San Diego', lookup: 'https://www.sandiego.gov/' },
   sdSignals: { owner: 'the City of San Diego', lookup: 'https://www.sandiego.gov/' },
+  sjServiceLines: {
+    owner: 'San Jose Water',
+    lookup: 'https://www.sjwater.com/service-line-inventory/',
+  },
 };
 
 export const isPaused = (key: SourceKey | undefined): boolean =>

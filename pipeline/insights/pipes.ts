@@ -68,6 +68,10 @@ const SOURCE_FILTER: Record<string, string> = {
     'Denver public sanitary sewers in service, less stubouts; depth from manhole ground less invert, less pipe height',
   denStormDrains:
     'Denver public storm pipes and culverts in service; depth from storm manhole ground less invert, less pipe height',
+  sjSewers:
+    'San Jose sanitary gravity mains as built; depth from manhole rim (or terrain ground) less invert, less pipe height',
+  sjStormDrains:
+    'San Jose storm gravity mains as built; depth from storm manhole or inlet rim (or terrain ground) less invert, less pipe height',
 };
 
 /** The value below which `quantile` of the total weight falls. */

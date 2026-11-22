@@ -341,7 +341,18 @@ describe('handleMcp methods', () => {
       expect(city.type).toBe('string');
       expect(city.description).toContain('"la" for Los Angeles');
       expect(city.description).toContain('full name');
-      expect(city.examples).toEqual(['nyc', 'dc', 'sf', 'la', 'sd', 'sea', 'den', 'chi', 'dal']);
+      expect(city.examples).toEqual([
+        'nyc',
+        'dc',
+        'sf',
+        'la',
+        'sd',
+        'sea',
+        'den',
+        'chi',
+        'dal',
+        'sj',
+      ]);
     }
   });
 

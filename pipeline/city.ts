@@ -2,7 +2,7 @@ import { REGIONS, type RegionId } from '../src/regions';
 
 /**
  * CITY=sea limits download and build-cells to one city, for a self-hosted copy that doesn't need
- * all nine (see README, "Self-hosting"). Unset, every city is built, as the nightly does.
+ * all ten (see README, "Self-hosting"). Unset, every city is built, as the nightly does.
  */
 const asked = process.env.CITY?.trim().toLowerCase() || undefined;
 if (asked && !REGIONS.some((region) => region.id === asked))

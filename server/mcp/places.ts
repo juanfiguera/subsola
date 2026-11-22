@@ -16,6 +16,7 @@ const STATE_OF: Record<RegionId, string> = {
   den: 'CO',
   chi: 'IL',
   dal: 'TX',
+  sj: 'CA',
 };
 
 const STATES: Record<string, string> = {
@@ -83,6 +84,7 @@ const ZIP_PREFIXES: Record<RegionId, RegExp> = {
   den: /^802/,
   chi: /^60[67]/,
   dal: /^75[23]/,
+  sj: /^951/,
 };
 
 /** The two-letter code when a comma-separated part is only a state: "NY", "N.Y.", "California". */

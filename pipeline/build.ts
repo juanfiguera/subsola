@@ -44,6 +44,7 @@ import { buildSea } from './sea/build';
 import { buildDen } from './den/build';
 import { buildChi } from './chi/build';
 import { buildDal } from './dal/build';
+import { buildSj } from './sj/build';
 import { dataDir, osmPointsPath } from './paths';
 import { loadStormAreas } from './ms4';
 import { OSM_KEPT_TAGS } from '../src/sources/assets';
@@ -265,6 +266,7 @@ const main = async () => {
     ['den', buildDen],
     ['chi', buildChi],
     ['dal', buildDal],
+    ['sj', buildSj],
   ] as const;
   for (const [city, build] of cityBuilds) if (buildsCity(city)) groupCount += await build(tools);
 

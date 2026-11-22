@@ -38,6 +38,17 @@ describe('coverage', () => {
     expect(dallas).toContain('Texas811');
   });
 
+  it('reads right in the matrix, San Jose included', () => {
+    const html = docsPage('nonce');
+    const sanJose = /<tr><th scope="row">San Jose<\/th>(.*?)<\/tr>/.exec(html)?.[1] ?? '';
+    expect(sanJose).toContain('Since 2019');
+    expect(sanJose).toContain('Sewer');
+    expect(sanJose).toContain('Storm');
+    // San Jose Water's inventory is held back for its terms.
+    expect(sanJose).toContain('Paused, asking for permission');
+    expect(sanJose).toContain('USA North 811');
+  });
+
   it('reads right in the matrix, Chicago included', () => {
     const html = docsPage('nonce');
     const row = (name: string) =>

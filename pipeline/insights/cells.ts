@@ -65,6 +65,8 @@ const MAIN_CITY: Record<BuiltMainRow['source'] & string, City> = {
   seaElectricLines: 'sea',
   denSewers: 'den',
   denStormDrains: 'den',
+  sjSewers: 'sj',
+  sjStormDrains: 'sj',
 };
 
 /**

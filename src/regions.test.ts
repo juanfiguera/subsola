@@ -9,6 +9,7 @@ import {
   SD,
   SEA,
   SF,
+  SJ,
   geocodeAnywhere,
   lotName,
   regionAt,
@@ -27,6 +28,7 @@ describe('regions', () => {
     expect(regionAt([-104.9903, 39.7392])).toBe(DEN);
     expect(regionAt([-87.63, 41.88])).toBe(CHI);
     expect(regionAt([-96.797, 32.776])).toBe(DAL);
+    expect(regionAt([-121.8859, 37.3375])).toBe(SJ);
     expect(regionAt([-90.2, 38.63])).toBeNull();
   });
 
@@ -64,8 +66,9 @@ describe('regions', () => {
     vi.spyOn(DEN, 'geocode').mockRejectedValue(new Error('No Denver address'));
     vi.spyOn(CHI, 'geocode').mockRejectedValue(new Error('No Chicago address'));
     vi.spyOn(DAL, 'geocode').mockRejectedValue(new Error('No Dallas address'));
+    vi.spyOn(SJ, 'geocode').mockRejectedValue(new Error('No San Jose address'));
     await expect(geocodeAnywhere('1 Main St')).rejects.toThrow(
-      'New York City, Washington, DC, San Francisco, Los Angeles, San Diego, Seattle, Denver, Chicago, or Dallas',
+      'New York City, Washington, DC, San Francisco, Los Angeles, San Diego, Seattle, Denver, Chicago, Dallas, or San Jose',
     );
   });
 
@@ -98,6 +101,21 @@ describe('regions', () => {
     expect((await geocodeAnywhere('1500 Marilla St, Dallas, TX 75201')).region).toBe(DAL);
     expect(nyc).not.toHaveBeenCalled();
     expect(lotName('service 12', DAL)).toBeNull();
+  });
+
+  it('asks San Jose first for an address that names it, and names no lot', async () => {
+    const nyc = vi.spyOn(NYC, 'geocode');
+    vi.spyOn(SJ, 'geocode').mockResolvedValue(found([-121.8859, 37.3375]));
+    expect((await geocodeAnywhere('200 E Santa Clara St, San Jose, CA 95113')).region).toBe(SJ);
+    expect(nyc).not.toHaveBeenCalled();
+    expect(lotName('anything', SJ)).toBeNull();
+  });
+
+  it("asks San Francisco, not San Jose, first for San Francisco's San Jose Avenue", async () => {
+    expect(SJ.says?.test('1500 San Jose Ave, San Francisco')).toBe(false);
+    expect(SJ.says?.test('1500 Lincoln Ave, San José')).toBe(true);
+    expect(SJ.says?.test('1500 Lincoln Ave 95125')).toBe(true);
+    expect(SJ.says?.test('1 Market St 94105')).toBe(false);
   });
 
   it('asks San Diego first for an address that names it', async () => {

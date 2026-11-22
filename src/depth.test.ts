@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CHI_DEPTH_STANDARDS,
   DAL_DEPTH_STANDARDS,
+  SJ_DEPTH_STANDARDS,
   DC_DEPTH_STANDARDS,
   NYC_DEPTH_STANDARDS,
   depthStandards,
@@ -22,6 +23,9 @@ describe('depth standards', () => {
     ),
     ...Object.entries(DAL_DEPTH_STANDARDS).map(
       ([utility, standard]) => [`Dallas ${utility}`, standard] as const,
+    ),
+    ...Object.entries(SJ_DEPTH_STANDARDS).map(
+      ([utility, standard]) => [`San Jose ${utility}`, standard] as const,
     ),
   ])('%s is a sane range within the chart', (_, standard) => {
     expect(standard.shallowestFt).toBeGreaterThan(0);
@@ -45,6 +49,7 @@ describe('depth standards', () => {
       ...Object.values(NYC_DEPTH_STANDARDS),
       ...Object.values(DC_DEPTH_STANDARDS),
       ...Object.values(DAL_DEPTH_STANDARDS),
+      ...Object.values(SJ_DEPTH_STANDARDS),
     ]) {
       if (standard.basis === 'unknown') expect(standard.source).toBeNull();
       else expect(standard.source?.url).toMatch(/^https:\/\//);
@@ -66,6 +71,20 @@ describe('Dallas water', () => {
     const water = DAL_DEPTH_STANDARDS.water!;
     expect([water.shallowestFt, drawnDepthFt(water), water.deepestFt]).toEqual([4, 4, 7]);
     expect(water.source?.name).toContain('Table 2.5.2');
+  });
+});
+
+describe('San Jose water', () => {
+  it("counts from the city's 36 in main cover and cites its standard specifications", () => {
+    const water = SJ_DEPTH_STANDARDS.water!;
+    expect([water.shallowestFt, drawnDepthFt(water), water.deepestFt]).toEqual([2, 3, 5]);
+    expect(water.source?.name).toContain('Section 101');
+  });
+
+  it('draws the measured sewers below the water mains', () => {
+    expect(
+      drawnDepthFt(SJ_DEPTH_STANDARDS.sewer!) - drawnDepthFt(SJ_DEPTH_STANDARDS.water!),
+    ).toBeGreaterThanOrEqual(1.5);
   });
 });
 

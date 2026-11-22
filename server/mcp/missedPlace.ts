@@ -25,7 +25,7 @@ Mesa:AZ;Miami:FL;Milwaukee:WI;Minneapolis:MN;Nashville:TN;New Haven:CT;New Orlea
 Newark:NJ,DE;Norfolk:VA;Oak Park:IL;Oakland:CA;Oklahoma City:OK;Omaha:NE;Orlando:FL;
 Pasadena:CA,TX;Philadelphia:PA;Phoenix:AZ;Pittsburgh:PA;Portland:OR,ME;Providence:RI;Provo:UT;
 Raleigh:NC;Redmond:WA;Reno:NV;Richmond:VA,CA;Riverside:CA;Rochester:NY,MN;Sacramento:CA;
-Salt Lake City:UT;San Antonio:TX;San Jose:CA;Santa Ana:CA;Santa Monica:CA;Savannah:GA;
+Salt Lake City:UT;San Antonio:TX;Santa Ana:CA;Santa Monica:CA;Savannah:GA;
 Scottsdale:AZ;Silver Spring:MD;Somerville:MA;Spokane:WA;Springfield:IL,MA,MO;St Louis:MO;
 St Paul:MN;St Petersburg:FL;Stamford:CT;Syracuse:NY;Tacoma:WA;Tampa:FL;Tempe:AZ;Toledo:OH;
 Tucson:AZ;Tulsa:OK;Virginia Beach:VA;West Hollywood:CA;Wichita:KS;Worcester:MA;Yonkers:NY

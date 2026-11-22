@@ -6,7 +6,7 @@ import { z } from 'zod';
  * else in the file passes through unread.
  */
 
-export const CITY_KEYS = ['nyc', 'dc', 'sf', 'la', 'sd', 'sea', 'den', 'chi', 'dal'] as const;
+export const CITY_KEYS = ['nyc', 'dc', 'sf', 'la', 'sd', 'sea', 'den', 'chi', 'dal', 'sj'] as const;
 export type CityKey = (typeof CITY_KEYS)[number];
 
 const sourceSchema = z.object({ datasets: z.array(z.string()), filter: z.string() });
@@ -76,8 +76,9 @@ const licenseSchema = z.object({
 });
 
 /**
- * One entry per city. Denver's, Chicago's and Dallas's are optional: a file from before they
- * joined has none of their figures, and the page leaves them out until the nightly writes them.
+ * One entry per city. Denver's, Chicago's, Dallas's and San Jose's are optional: a file from
+ * before they joined has none of their figures, and the page leaves them out until the nightly
+ * writes them.
  */
 const perCity = <T extends z.ZodType>(schema: T) =>
   z.object({
@@ -90,6 +91,7 @@ const perCity = <T extends z.ZodType>(schema: T) =>
     den: schema.optional(),
     chi: schema.optional(),
     dal: schema.optional(),
+    sj: schema.optional(),
   });
 
 export const insightsSchema = z.object({

@@ -282,6 +282,27 @@ const NEIGHBORHOODS: [string, KnownPlace][] = [
     'fair park',
     'west end',
   ),
+  ...inCity(
+    'sj',
+    'willow glen',
+    'rose garden',
+    'naglee park',
+    'almaden valley',
+    'cambrian',
+    'evergreen',
+    'berryessa',
+    'alum rock',
+    'alviso',
+    'blossom valley',
+    'silver creek',
+    'santana row',
+    'little saigon',
+    'edenvale',
+    'north san jose',
+    'east san jose',
+    'west san jose',
+    'south san jose',
+  ),
   // More than one covered city has one.
   ['capitol hill', { regions: ['dc', 'sea', 'den'] }],
   ['georgetown', { regions: ['dc', 'sea'] }],
@@ -289,6 +310,7 @@ const NEIGHBORHOODS: [string, KnownPlace][] = [
   ['south park', { regions: ['sd', 'sea'] }],
   ['sunnyside', { regions: ['nyc', 'den'] }],
   ['mission', { regions: ['sf'] }],
+  ['japantown', { regions: ['sf', 'sj'] }],
 ];
 
 const placeKey = (text: string) =>
