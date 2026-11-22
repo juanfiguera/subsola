@@ -70,4 +70,5 @@ be read the pages go out without those figures.
 `Region.beta` holds the reason a city's records are too thin to stand with the others; the city
 pages print it and label the city in every list. The bar: street permits that reach back less
 than about five years, or permits as the only source. Denver (permits read cleanly from 2020,
-and Denver Water publishes no mains), Chicago (permits only) and Dallas (permits only, from late 2021) carry one.
+and Denver Water publishes no mains), Chicago (permits only), Dallas (permits only, from late 2021)
+and San Jose (permits from 2019, and its water companies publish no mains) carry one.
