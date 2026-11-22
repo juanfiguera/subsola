@@ -218,7 +218,7 @@ publisher's terms don't allow reuse, the layer is paused and the map links to th
 site. Lines drawn from standards are general rules, not anyone's equipment.
 
 **Is it free?** Yes: the map, lot reports and MCP server, with no account and no ads. Subsola
-doesn't sell data. Paid tools for teams may come later, on top of the free map.
+doesn't sell data. Paid tools might come later if there's interest.
 
 **Why isn't my city here?** A city needs to publish where its streets have been dug up, at least,
 and most don't yet. Ask for yours at [hello@subsola.com](mailto:hello@subsola.com).

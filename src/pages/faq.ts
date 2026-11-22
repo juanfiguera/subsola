@@ -93,7 +93,7 @@ const groups = (): Group[] => [
       {
         id: 'free',
         q: 'Is it really free?',
-        a: `Yes. The map, the lot reports and the server for AI assistants are free, with no account and no ads, and ${SITE_NAME} doesn't sell data. Paid tools for teams may come later, on top of the free map.`,
+        a: `Yes. The map, the lot reports and the server for AI assistants are free, with no account and no ads, and ${SITE_NAME} doesn't sell data. Paid tools might come later if there's interest.`,
       },
       {
         id: 'who',
