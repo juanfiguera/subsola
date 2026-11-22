@@ -383,6 +383,8 @@ Issues and pull requests are welcome, from a typo to a new city. A few pointers:
   its depth rules in `src/depth.ts`, its region in `src/regions.ts`, and a write-up in
   `docs/regions/`. Check its data terms first and add its credit to `src/attribution.ts`.
 - **Before a pull request,** run `pnpm typecheck`, `pnpm lint` and `pnpm test`.
+- **Your first pull request** asks you to agree to the [contributor license agreement](CLA.md)
+  by replying with one sentence. You keep the copyright in your work.
 - **Publishers:** if you'd like your data credited differently, email
   [hello@subsola.com](mailto:hello@subsola.com).
 
@@ -390,7 +392,8 @@ Issues and pull requests are welcome, from a typo to a new city. A few pointers:
 
 Subsola is free software under the [GNU Affero General Public License v3.0](LICENSE). Use it,
 change it and share it; if you run a changed version for others over a network, offer them its
-source too. The Subsola name and logo are not covered by this license (see [NOTICE](NOTICE)).
+source too. The Subsola name and logo are not covered by this license: run your own copy under
+any name, but a public copy needs a name of its own. See [TRADEMARKS.md](TRADEMARKS.md).
 
 The public records it reads belong to their publishers and carry their own terms, listed above.
 

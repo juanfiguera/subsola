@@ -1,7 +1,7 @@
 name: Deploy
 
 # Publishes the app to Cloudflare Pages on every push to main, reading the citywide cells from
-# the R2 bucket. Only the built static page is published; the repo stays private.
+# the R2 bucket. Only the built static page is published.
 on:
   push:
     branches: [main]
