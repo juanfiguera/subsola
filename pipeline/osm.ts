@@ -1,9 +1,10 @@
 /**
  * OpenStreetMap's manholes, street lamps and traffic signals for the five boroughs, from
- * Geofabrik's daily New York extract. The app never asks OpenStreetMap's volunteer-run Overpass
- * servers, whose usage policy rules out commercial use. Writes data/raw/osm/points.geojsonseq
- * for build-cells. A night Geofabrik fails, the last good points are used instead, for up to
- * LAST_GOOD_MAX_DAYS, so one outside server can't stop every city's rebuild.
+ * Geofabrik's daily New York extract, or BBBike's weekly one when Geofabrik can't be reached. The
+ * app never asks OpenStreetMap's volunteer-run Overpass servers, whose usage policy rules out
+ * commercial use. Writes data/raw/osm/points.geojsonseq for build-cells. A night neither extract
+ * downloads, the last good points are used instead, for up to LAST_GOOD_MAX_DAYS, so outside
+ * servers can't stop every city's rebuild.
  *
  *   pnpm download-osm      needs osmium (brew install osmium-tool, apt install osmium-tool)
  */
@@ -18,10 +19,16 @@ import { promisify } from 'node:util';
 import { OSM_FILTERS } from '../src/sources/assets';
 import { dataDir, LAST_GOOD_MAX_DAYS, lastGoodDir, osmPointsPath } from './paths';
 
-// Geofabrik moved each US state into its own folder in November 2026; the old flat URL now
-// redirects to a 404.
-const EXTRACT_URL =
-  'https://download.geofabrik.de/north-america/us/new-york/new-york-latest.osm.pbf';
+// Geofabrik's daily New York State extract comes first. It moved each US state into its own
+// folder in November 2026, and in the same week refused connections from GitHub's runners, so
+// BBBike's weekly New York City extract (which covers NYC_BBOX) stands in when it can't be reached.
+const EXTRACTS = [
+  {
+    name: 'Geofabrik',
+    url: 'https://download.geofabrik.de/north-america/us/new-york/new-york-latest.osm.pbf',
+  },
+  { name: 'BBBike', url: 'https://download.bbbike.org/osm/bbbike/NewYork/NewYork.osm.pbf' },
+];
 // The five boroughs with a little margin; the build keeps only points in cells that have city data.
 const NYC_BBOX = '-74.27,40.49,-73.69,40.92';
 
@@ -32,17 +39,17 @@ const lastGood = lastGoodDir('osm');
 const lastGoodPoints = join(lastGood, 'points.geojsonseq');
 const lastGoodSavedAt = join(lastGood, 'saved-at');
 
-/** Geofabrik rebuilds the extract once a day; a copy at least that new isn't fetched again. */
-const downloadExtract = async () => {
-  const head = await fetch(EXTRACT_URL, { method: 'HEAD' });
-  if (!head.ok) throw new Error(`Geofabrik HEAD returned ${head.status}`);
+/** A copy at least as new as the one published isn't fetched again. */
+const downloadExtract = async ({ name, url }: (typeof EXTRACTS)[number]) => {
+  const head = await fetch(url, { method: 'HEAD' });
+  if (!head.ok) throw new Error(`${name} HEAD returned ${head.status}`);
   const published = new Date(head.headers.get('last-modified') ?? 0);
   if (existsSync(extractPath) && (await stat(extractPath)).mtime >= published) {
     console.log(`Extract from ${published.toISOString()} already here`);
     return;
   }
-  const res = await fetch(EXTRACT_URL);
-  if (!res.ok || !res.body) throw new Error(`Geofabrik returned ${res.status}`);
+  const res = await fetch(url);
+  if (!res.ok || !res.body) throw new Error(`${name} returned ${res.status}`);
   const expected = Number(res.headers.get('content-length'));
   const partPath = `${extractPath}.part`;
   await pipeline(Readable.fromWeb(res.body as NodeReadableStream), createWriteStream(partPath));
@@ -50,14 +57,31 @@ const downloadExtract = async () => {
   if (expected && size !== expected)
     throw new Error(`Extract cut off at ${size} of ${expected} bytes`);
   await rename(partPath, extractPath);
-  console.log(`Downloaded ${(size / 1e6).toFixed(0)} MB, published ${published.toISOString()}`);
+  console.log(
+    `Downloaded ${(size / 1e6).toFixed(0)} MB from ${name}, published ${published.toISOString()}`,
+  );
+};
+
+/** The first extract that downloads; throws the last error when none does. */
+const downloadAnyExtract = async () => {
+  let lastError: unknown;
+  for (const extract of EXTRACTS) {
+    try {
+      await downloadExtract(extract);
+      return;
+    } catch (error) {
+      console.warn(`${extract.name} failed: ${(error as Error).message}`);
+      lastError = error;
+    }
+  }
+  throw lastError;
 };
 
 const cutPoints = async () => {
-  await downloadExtract();
+  await downloadAnyExtract();
   const filtered = join(osmDir, 'filtered.osm.pbf');
   const clipped = join(osmDir, 'nyc.osm.pbf');
-  // Tags first: it shrinks the state to a few hundred thousand nodes, so the clip is quick.
+  // Tags first: it shrinks the extract to a few hundred thousand nodes, so the clip is quick.
   await run('osmium', ['tags-filter', extractPath, ...OSM_FILTERS, '-o', filtered, '--overwrite']);
   await run('osmium', ['extract', '-b', NYC_BBOX, filtered, '-o', clipped, '--overwrite']);
   await run('osmium', [
