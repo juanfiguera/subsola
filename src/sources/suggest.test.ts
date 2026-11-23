@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CHI, DAL, DC, LA, NYC, SEA, SJ, SF, type Region } from '../regions';
-import { citiesToAsk, mergeSuggestions, suggestAddresses, type CitySuggestion } from './suggest';
+import {
+  citiesToAsk,
+  mergeSuggestions,
+  streetPart,
+  suggestAddresses,
+  type CitySuggestion,
+} from './suggest';
 
 const ids = (regions: Region[]) => regions.map((region) => region.id);
 
@@ -41,6 +47,14 @@ describe('citiesToAsk', () => {
   it('keeps San Francisco’s San Jose Avenue in San Francisco', () => {
     expect(ids(citiesToAsk('100 San Jose Ave', SF))).toEqual(['sf', 'nyc']);
     expect(ids(citiesToAsk('200 E Santa Clara, San Jose', NYC))).toEqual(['sj']);
+  });
+});
+
+describe('streetPart', () => {
+  it('sends only the street to the lookup once the city after the comma has chosen it', () => {
+    expect(streetPart('200 N Spr, Los Angeles')).toBe('200 N Spr');
+    expect(streetPart('800 F St NW, DC 20004')).toBe('800 F St NW');
+    expect(streetPart('233 broad')).toBe('233 broad');
   });
 });
 

@@ -59,6 +59,16 @@ export const mergeSuggestions = (lists: CitySuggestion[][], limit: number): City
 };
 
 /**
+ * What's typed before the first comma. The rest names the city, which has already picked whose
+ * lookup to ask, and LA's and King County's suggest find nothing for a half-typed street with
+ * the city after it ("200 N Spr, Los Angeles"), though they find the street alone.
+ */
+export const streetPart = (text: string) => {
+  const comma = text.indexOf(',');
+  return comma >= 0 ? text.slice(0, comma).trim() : text;
+};
+
+/**
  * Suggestions for what's typed so far, from the cities `citiesToAsk` picks, in parallel. A city
  * that fails just has no rows: type-ahead is a help, never in the way. What was typed is never
  * logged.
@@ -70,10 +80,11 @@ export const suggestAddresses = async (
   limit: number = SUGGESTION_LIMIT,
 ): Promise<CitySuggestion[]> => {
   const regions = citiesToAsk(text, current);
+  const street = streetPart(text);
   const lists = await Promise.all(
     regions.map(async (region) => {
       try {
-        const rows = await region.suggest(text, limit, signal);
+        const rows = await region.suggest(street, limit, signal);
         return rows.map((row) => ({ ...row, region }));
       } catch (error) {
         if (!signal?.aborted)
