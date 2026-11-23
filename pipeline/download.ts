@@ -14,6 +14,7 @@ import { csvRowMatches, csvRows } from './csv';
 import { CITY_DATASETS, DATASETS, type DatasetSpec } from './datasets';
 import { onlyCity } from './city';
 import { keepsLastGood } from './lastGood';
+import { sharedService, takeTurn } from './hostTurns';
 import { isPaused } from '../src/sources/catalog';
 import { dataDir, LAST_GOOD_MAX_DAYS, lastGoodDir } from './paths';
 
@@ -116,7 +117,10 @@ const fetchArcgis = async (url: string): Promise<Record<string, unknown>> => {
   const form = url.length > LONG_URL ? query : undefined;
   for (let attempt = 0; ; attempt++) {
     // Not NYC Open Data, so no app token goes along.
-    const body = (await fetchJson(form ? path : url, {}, form)).body as Record<string, unknown>;
+    const body = (await takeTurn(url, () => fetchJson(form ? path : url, {}, form))).body as Record<
+      string,
+      unknown
+    >;
     const code = (body.error as { code?: number } | undefined)?.code ?? 0;
     const delay = RETRY_DELAYS_MS[attempt];
     if (code < 500 || delay === undefined) return body;
@@ -473,9 +477,26 @@ const main = async () => {
   const started = Date.now();
   let done = 0;
   const failures: string[] = [];
+  // A worker skips past pages for a service that takes one query at a time and is busy, rather
+  // than queue behind it while other cities' pages wait.
+  const busy = new Set<string>();
+  const serviceOf = (task: PageTask) => task.spec.arcgis && sharedService(task.spec.arcgis.layer);
+  const nextTask = async (): Promise<PageTask | undefined> => {
+    while (tasks.length) {
+      const index = tasks.findIndex((task) => {
+        const service = serviceOf(task);
+        return !service || !busy.has(service);
+      });
+      if (index >= 0) return tasks.splice(index, 1)[0];
+      await sleep(100);
+    }
+    return undefined;
+  };
   const worker = async () => {
-    for (let task = tasks.shift(); task; task = tasks.shift()) {
+    for (let task = await nextTask(); task; task = await nextTask()) {
       if (skipped.has(task.spec.name)) continue;
+      const service = serviceOf(task);
+      if (service) busy.add(service);
       try {
         await downloadPage(task);
       } catch (error) {
@@ -487,6 +508,8 @@ const main = async () => {
         console.error(`  ${failures.at(-1)}`);
         if (lastTry && keepsLastGood(task.spec)) broken.set(task.spec.name, String(error));
         continue;
+      } finally {
+        if (service) busy.delete(service);
       }
       done += 1;
       const seconds = Math.round((Date.now() - started) / 1000);
