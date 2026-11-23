@@ -13,6 +13,7 @@ import { Agent, setGlobalDispatcher } from 'undici';
 import { csvRowMatches, csvRows } from './csv';
 import { CITY_DATASETS, DATASETS, type DatasetSpec } from './datasets';
 import { onlyCity } from './city';
+import { keepsLastGood } from './lastGood';
 import { isPaused } from '../src/sources/catalog';
 import { dataDir, LAST_GOOD_MAX_DAYS, lastGoodDir } from './paths';
 
@@ -354,6 +355,10 @@ const downloadCsv = async (url: string, specs: DatasetSpec[]) => {
   }
 };
 
+// The nightly runs the download up to three times; only the last falls back on a required
+// layer's last good copy, so a short outage still gets retried for tonight's data first.
+const lastTry = process.argv.includes('--last-try');
+
 const keepAsLastGood = async (spec: DatasetSpec) => {
   const dir = lastGoodDir(spec.name);
   await rm(dir, { recursive: true, force: true });
@@ -376,7 +381,7 @@ const restoreLastGood = async (spec: DatasetSpec) => {
 };
 
 const main = async () => {
-  const wanted = process.argv.slice(2);
+  const wanted = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
   const unknown = wanted.filter((name) => !DATASETS.some((spec) => spec.name === name));
   if (unknown.length) throw new Error(`Unknown dataset: ${unknown.join(', ')}`);
   const everyone = onlyCity ? CITY_DATASETS[onlyCity] : DATASETS;
@@ -391,6 +396,8 @@ const main = async () => {
 
   const tasks: PageTask[] = [];
   const skipped = new Set<string>();
+  // Required layers that failed tonight, by name, with why.
+  const broken = new Map<string, string>();
   // An optional dataset that fails is left out whole: half a sewer network is worse than none.
   // Its pages are cleared once every download has stopped, so none is still writing into them.
   const skip = (spec: DatasetSpec, error: unknown) => {
@@ -407,8 +414,9 @@ const main = async () => {
       rows = await countRows(spec);
       pages = await countPages(spec, rows);
     } catch (error) {
-      if (!spec.optional) throw error;
-      skip(spec, error);
+      if (spec.optional) skip(spec, error);
+      else if (lastTry && keepsLastGood(spec)) broken.set(spec.name, String(error));
+      else throw error;
       continue;
     }
     const dir = join(dataDir, 'raw', spec.name);
@@ -477,6 +485,7 @@ const main = async () => {
         }
         failures.push(`${task.spec.name} page ${task.page}: ${String(error)}`);
         console.error(`  ${failures.at(-1)}`);
+        if (lastTry && keepsLastGood(task.spec)) broken.set(task.spec.name, String(error));
         continue;
       }
       done += 1;
@@ -513,6 +522,30 @@ const main = async () => {
     } else await keepAsLastGood(spec);
   }
 
+  // A required layer is all or nothing too: tonight's partial pages are swapped for the last
+  // good copy, or the night fails as before.
+  let unrecovered = 0;
+  for (const spec of specs.filter((candidate) => !candidate.optional && keepsLastGood(candidate))) {
+    if (!broken.has(spec.name)) {
+      if (!failures.some((failure) => failure.startsWith(`${spec.name} `)))
+        await keepAsLastGood(spec);
+      continue;
+    }
+    await rm(join(dataDir, 'raw', spec.name), { recursive: true, force: true });
+    if (await restoreLastGood(spec)) {
+      console.log(
+        `::warning::${spec.name} failed tonight (${broken.get(spec.name)}); using its last good copy`,
+      );
+      for (let i = failures.length - 1; i >= 0; i--)
+        if (failures[i]!.startsWith(`${spec.name} `) || failures[i]!.startsWith(`${spec.name}:`))
+          failures.splice(i, 1);
+    } else {
+      console.error(`${spec.name}: failed tonight and has no recent good copy`);
+      unrecovered += 1;
+    }
+  }
+
+  if (unrecovered) process.exitCode = 1;
   if (failures.length) {
     console.error(`${failures.length} pages failed; run again to retry them.`);
     process.exitCode = 1;

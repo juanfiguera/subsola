@@ -56,7 +56,8 @@ jobs:
           restore-keys: last-good-v1-
       # Pages already on disk are kept, so later passes only retry the few a city server dropped.
       # NYC Open Data has stalled on one page for half an hour, so the last pass waits it out first.
-      - run: pnpm download || pnpm download || (sleep 600 && pnpm download)
+      # Only that last pass may swap a failed city layer for its last good copy (pipeline/download.ts).
+      - run: pnpm download || pnpm download || (sleep 600 && pnpm download --last-try)
         env:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
       # Before the caches are saved, so tonight's points become the last good copy. A Geofabrik
