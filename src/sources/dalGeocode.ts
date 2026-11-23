@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { prefixWhere, typedPrefix } from './suggestQuery';
 
 /**
  * Dallas publishes no address locator for the public, but its address points are an open layer
@@ -138,7 +139,7 @@ export const dalAddressWhere = ({ number, direction, name, type }: DalAddressPar
   ].join(' AND ');
 
 /** "N CENTRAL EXPY", as the city's centerline files it. */
-const streetOf = ({ attributes: a }: AddressPoint) =>
+const streetOf = ({ attributes: a }: Pick<AddressPoint, 'attributes'>) =>
   [a.STREETPREDIRECTION, a.NAME, a.STREETTYPE, a.STREETPOSTDIRECTION]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -215,4 +216,49 @@ export const reverseGeocodeDal = async (
   const nearest = [...points].sort((a, b) => squared(a) - squared(b))[0];
   if (!nearest) throw new Error('No Dallas address near that spot');
   return toAddress(nearest);
+};
+
+const rowsSchema = z.object({
+  features: z.array(z.object({ attributes: pointsSchema.shape.features.element.shape.attributes })),
+});
+
+/** Each address once, as "1500 MARILLA ST"; geocodeDal reads that back to the same point. */
+export const parseDalSuggestions = (body: unknown): AddressSuggestion[] =>
+  rowsSchema.parse(body).features.flatMap((row) => {
+    const street = streetOf(row);
+    if (row.attributes.HOUSENUMBER == null || !street) return [];
+    const line = `${row.attributes.HOUSENUMBER} ${street}`;
+    return [{ line, place: 'Dallas', query: line }];
+  });
+
+export const suggestDal = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> => {
+  const typed = typedPrefix(text);
+  if (!typed) return [];
+  const query = new URLSearchParams({
+    where: prefixWhere(
+      typed,
+      {
+        number: 'HOUSENUMBER',
+        direction: 'STREETPREDIRECTION',
+        name: 'NAME',
+        type: 'STREETTYPE',
+        fullName: 'FULLSTREETNAME',
+      },
+      TYPES,
+    ),
+    outFields: FIELDS,
+    // One row per address, not per suite; the point is found again when picked.
+    returnDistinctValues: 'true',
+    returnGeometry: 'false',
+    orderByFields: 'NAME,STREETTYPE,STREETPREDIRECTION',
+    resultRecordCount: String(limit),
+    f: 'json',
+  });
+  const res = await fetch(`${ADDRESSES}?${query}`, { signal });
+  if (!res.ok) throw new Error(`Dallas address points returned ${res.status}`);
+  return parseDalSuggestions(await res.json());
 };

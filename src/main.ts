@@ -123,9 +123,12 @@ import {
   SEA,
   SF,
   geocodeAnywhere,
+  geocodeIn,
   regionAt,
   type Region,
 } from './regions';
+import { suggestAddresses, type CitySuggestion } from './sources/suggest';
+import { attachSuggestions } from './ui/suggestions';
 import { fetchConEdStructures } from './sources/conEd';
 import type { MeshData } from './scene/meshes';
 import {
@@ -1558,7 +1561,9 @@ function showCoverageMiss(miss: CoverageMiss, backTo: string | null, from: Searc
 
 /** Loads the street around an address, or around the address nearest a point on the city map. */
 const loadAddress = async (
-  query: string | [number, number],
+  // Typed text, a point on the city map, or a row picked from the search box's suggestions,
+  // whose city is already known.
+  query: string | [number, number] | CitySuggestion,
   // Where the city map was when it was zoomed in to load this, so the street takes over from it.
   arrival?: { lngLat: [number, number]; zoom: number; bearing: number },
   // From a shared link: where to put the camera and which card to open. Also passed, without an
@@ -1582,6 +1587,8 @@ const loadAddress = async (
   let region: Region;
   try {
     if (typeof query === 'string') ({ address, region } = await geocodeAnywhere(query, signal));
+    else if (!Array.isArray(query))
+      ({ address, region } = await geocodeIn(query.region, query.query, signal, query.magicKey));
     else {
       region = regionAt(query) ?? NYC;
       address = await region.reverseGeocode(query, signal);
@@ -1599,7 +1606,7 @@ const loadAddress = async (
       cityMap.resume();
       return;
     }
-    const text = typeof query === 'string' ? query : '';
+    const text = typeof query === 'string' ? query : Array.isArray(query) ? '' : query.query;
     const outside = coverageCheck && (await coverageCheck).outsideCoverage(text, null);
     if (signal.aborted) return;
     showCoverageMiss(outside ?? { kind: 'not-found', typed: text }, backTo, from);
@@ -2624,6 +2631,19 @@ document.querySelectorAll<HTMLButtonElement>('[data-rotate]').forEach((button) =
     withScene((loaded) => loaded.rotate(Number(button.dataset.rotate))),
   ),
 );
+
+attachSuggestions({
+  form: ui.form,
+  input: ui.input,
+  // The city being looked at: the city map's when it's up, else the loaded street's.
+  ask: (text, signal) => suggestAddresses(text, inCity() ? cityMap.region() : state.region, signal),
+  onPick: (row) => {
+    // Which city, never what was picked: the address stays on the device.
+    trackEvent('suggestion_picked', { city: row.region.id });
+    void loadAddress(row);
+    ui.input.blur();
+  },
+});
 
 ui.form.addEventListener('submit', (event) => {
   event.preventDefault();

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { locatorSuggest, sameAddressKey, uniqueBy, type LocatorSuggestion } from './suggestQuery';
 
 /**
  * LA County's address locator, public, keyless and open to browsers. It knows the whole county,
@@ -48,7 +49,11 @@ const getJson = async (url: string, signal?: AbortSignal): Promise<unknown> => {
   return res.json();
 };
 
-export const geocodeLa = async (text: string, signal?: AbortSignal): Promise<GeocodedAddress> => {
+export const geocodeLa = async (
+  text: string,
+  signal?: AbortSignal,
+  magicKey?: string,
+): Promise<GeocodedAddress> => {
   const query = new URLSearchParams({
     SingleLine: text,
     outSR: '4326',
@@ -56,6 +61,7 @@ export const geocodeLa = async (text: string, signal?: AbortSignal): Promise<Geo
     outFields: 'City,Addr_type,StAddr',
     f: 'json',
   });
+  if (magicKey) query.set('magicKey', magicKey);
   const { candidates } = candidatesSchema.parse(
     await getJson(`${LOCATOR}/findAddressCandidates?${query}`, signal),
   );
@@ -86,3 +92,30 @@ export const reverseGeocodeLa = async (
     throw new Error('No City of Los Angeles address near that spot');
   return toAddress(found.address.Address, found.location.x, found.location.y);
 };
+
+/**
+ * The locator's suggestions as rows, only those in Los Angeles: the county locator also knows Glendale, Santa Monica and the rest, and names a few city neighborhoods (Sherman Oaks) as their own towns, which the geocoder turns away too. Each address can come
+ * twice, spelled out and abbreviated, and shows once.
+ */
+export const parseLaSuggestions = (suggestions: LocatorSuggestion[]): AddressSuggestion[] =>
+  uniqueBy(
+    suggestions
+      .map(({ text, magicKey }) => {
+        const [line = '', city] = text.split(',').map((part) => part.trim());
+        return { line, city, query: text, magicKey };
+      })
+      .filter(({ line, city }) => city === CITY && /^\d/.test(line)),
+    ({ line }) => sameAddressKey(line),
+  ).map(({ line, query, magicKey }) => ({ line, place: 'Los Angeles', query, magicKey }));
+
+export const suggestLa = async (
+  text: string,
+  limit: number,
+  extent: [number, number, number, number],
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> =>
+  // Asks for more than it shows, since towns inside the city's box take some.
+  parseLaSuggestions(await locatorSuggest(LOCATOR, text, { max: limit * 3, extent }, signal)).slice(
+    0,
+    limit,
+  );

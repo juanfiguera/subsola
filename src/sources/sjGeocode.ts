@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { prefixWhere, typedPrefix } from './suggestQuery';
 
 /**
  * San Jose's site address points are an open layer (CC BY) that browsers may query: every
@@ -179,7 +180,7 @@ export const sjMismatch = (parts: SjAddressParts, { attributes: a }: AddressPoin
 };
 
 /** "E SANTA CLARA ST", as the city's centerline files it. */
-const streetOf = ({ attributes: a }: AddressPoint) =>
+const streetOf = ({ attributes: a }: Pick<AddressPoint, 'attributes'>) =>
   [a.St_PreDirAbbr, a.St_PreTyp, a.StreetName, a.St_PosTypUSPS, a.St_PosDir]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -261,4 +262,53 @@ export const reverseGeocodeSj = async (
   const nearest = [...points].sort((a, b) => squared(a) - squared(b))[0];
   if (!nearest) throw new Error('No San Jose address near that spot');
   return toAddress(nearest);
+};
+
+const rowsSchema = z.object({
+  features: z.array(z.object({ attributes: pointsSchema.shape.features.element.shape.attributes })),
+});
+
+/** Each address once, as "200 E SANTA CLARA ST"; geocodeSj reads that back to the same point. */
+export const parseSjSuggestions = (body: unknown): AddressSuggestion[] =>
+  rowsSchema.parse(body).features.flatMap((row) => {
+    const street = streetOf(row);
+    if (row.attributes.Add_Number == null || !street) return [];
+    const line = `${row.attributes.Add_Number} ${street}`;
+    return [{ line, place: 'San Jose', query: line }];
+  });
+
+// The parts of an address only; Status narrows the query but isn't needed back.
+const SUGGEST_FIELDS = 'Add_Number,St_PreDirAbbr,St_PreTyp,StreetName,St_PosTypUSPS,St_PosDir';
+
+export const suggestSj = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> => {
+  const typed = typedPrefix(text);
+  if (!typed) return [];
+  const where = prefixWhere(
+    typed,
+    {
+      number: 'Add_Number',
+      direction: 'St_PreDirAbbr',
+      name: 'StreetName',
+      type: 'St_PosTypUSPS',
+      fullName: 'FullName',
+    },
+    TYPES,
+  );
+  const query = new URLSearchParams({
+    // A retired address isn't one to suggest, though a typed search may still find it.
+    where: `${where} AND Status = 'Active'`,
+    outFields: SUGGEST_FIELDS,
+    returnDistinctValues: 'true',
+    returnGeometry: 'false',
+    orderByFields: 'StreetName,St_PosTypUSPS,St_PreDirAbbr',
+    resultRecordCount: String(limit),
+    f: 'json',
+  });
+  const res = await fetch(`${ADDRESSES}?${query}`, { signal });
+  if (!res.ok) throw new Error(`San Jose address points returned ${res.status}`);
+  return parseSjSuggestions(await res.json());
 };

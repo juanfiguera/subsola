@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { locatorSuggest, type LocatorSuggestion } from './suggestQuery';
 
 /**
  * San Francisco's own locators, public, keyless and open to browsers. The first knows every
@@ -61,23 +62,35 @@ const getJson = async (url: string, signal?: AbortSignal): Promise<unknown> => {
   return res.json();
 };
 
-const firstMatch = async (locator: string, line: string, signal?: AbortSignal) => {
+const firstMatch = async (
+  locator: string,
+  line: string,
+  signal?: AbortSignal,
+  magicKey?: string,
+) => {
   const query = new URLSearchParams({
     SingleLine: line,
     outSR: '4326',
     maxLocations: '1',
     f: 'json',
   });
+  if (magicKey) query.set('magicKey', magicKey);
   const [match] = candidatesSchema.parse(
     await getJson(`${locator}/findAddressCandidates?${query}`, signal),
   ).candidates;
   return match && match.score >= MIN_SCORE ? match : null;
 };
 
-export const geocodeSf = async (text: string, signal?: AbortSignal): Promise<GeocodedAddress> => {
+export const geocodeSf = async (
+  text: string,
+  signal?: AbortSignal,
+  // From the address locator's Suggest, so only that locator can read it.
+  magicKey?: string,
+): Promise<GeocodedAddress> => {
   const line = text.replace(/,?\s*(san francisco|sf)(,?\s*ca(lifornia)?)?(\s+\d{5})?\s*$/i, '');
   const match =
-    (await firstMatch(ADDRESSES, line, signal)) ?? (await firstMatch(STREETS, line, signal));
+    (await firstMatch(ADDRESSES, line, signal, magicKey)) ??
+    (await firstMatch(STREETS, line, signal));
   const street = match && streetAddress(match.address);
   if (!match || !street) throw new Error(`No San Francisco address found for "${text}"`);
   return toAddress(street, match.location.x, match.location.y);
@@ -99,3 +112,20 @@ export const reverseGeocodeSf = async (
   if (!street || !found.location) throw new Error('No San Francisco address near that spot');
   return toAddress(street, found.location.x, found.location.y);
 };
+
+/**
+ * The address locator's suggestions as rows. It knows only San Francisco; a place name without a
+ * house number (a park, a building) isn't an address to load.
+ */
+export const parseSfSuggestions = (suggestions: LocatorSuggestion[]): AddressSuggestion[] =>
+  suggestions.flatMap(({ text, magicKey }) => {
+    const line = streetAddress(text);
+    return line ? [{ line, place: 'San Francisco', query: text, magicKey }] : [];
+  });
+
+export const suggestSf = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> =>
+  parseSfSuggestions(await locatorSuggest(ADDRESSES, text, { max: limit }, signal));
