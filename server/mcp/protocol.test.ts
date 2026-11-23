@@ -195,6 +195,9 @@ describe('handleMcp transport', () => {
     expect(nonce).toBeTruthy();
     expect(policy).not.toContain('unsafe-inline');
     expect(policy).toContain("frame-ancestors 'none'");
+    // Only same-origin connections, for Cloudflare Web Analytics' /cdn-cgi/rum.
+    expect(policy).toContain("connect-src 'self'");
+    expect(policy).not.toMatch(/connect-src[^;]*https?:/);
     const html = await res.text();
     expect(html).toContain(`<script nonce="${nonce}">`);
     expect(html).toContain(`<style nonce="${nonce}">`);

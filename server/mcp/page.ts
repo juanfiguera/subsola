@@ -54,6 +54,9 @@ export const docsPageHeaders = (nonce: string): Record<string, string> => ({
     `style-src 'nonce-${nonce}' https://fonts.googleapis.com`,
     'font-src https://fonts.gstatic.com',
     `script-src 'nonce-${nonce}'`,
+    // Cloudflare Web Analytics, which Cloudflare adds to the page, reports to /cdn-cgi/rum on
+    // this origin; the page itself fetches nothing.
+    "connect-src 'self'",
     "img-src 'self'",
     "base-uri 'none'",
     "form-action 'none'",
