@@ -2,7 +2,7 @@ import { REGIONS } from '../regions';
 import { escapeHtml } from '../ui/dom';
 import { SITE_NAME, SITE_URL } from '../site';
 import { cityLink, cityPath } from './cityPage';
-import { page } from './layout';
+import { page } from './shell';
 
 /**
  * The files a site is expected to have at its root: robots.txt, sitemap.xml and the 404 page.
@@ -36,21 +36,21 @@ Sitemap: ${SITE_URL}/sitemap.xml
 `;
 
 export const notFoundPage = (stylesheet: string) =>
-  page(
-    {
+  page({
+    head: {
       title: `Page not found | ${SITE_NAME}`,
       description: 'There is no page at this address.',
       path: null,
       stylesheet,
     },
-    `<header class="intro">
-        <p class="kicker">404</p>
-        <h1>No page here</h1>
-        <p class="lede">This page doesn't exist. To see what's under a street, open the map and type an address in the search box at the top, like <i>117 West St, New York</i>.</p>
-        <a class="cta" href="/">Open the map</a>
-      </header>
-      <nav class="block" aria-labelledby="cities-title">
+    intro: {
+      label: '404',
+      title: 'No page here',
+      lede: "This page doesn't exist. To see what's under a street, open the map and type an address in the search box at the top, like <i>117 West St, New York</i>.",
+      after: '<a class="cta" href="/">Open the map</a>',
+    },
+    body: `<nav class="block" aria-labelledby="cities-title">
         <h2 id="cities-title">Cities</h2>
         <ul class="city-list">${REGIONS.map(cityLink).join('')}</ul>
       </nav>`,
-  );
+  });

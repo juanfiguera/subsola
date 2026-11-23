@@ -1,7 +1,7 @@
 import { KEEP_SECONDS } from '../../server/mcp/limit';
 import { CALL_KEEP_SECONDS } from '../../server/mcp/callLog';
 import { CONTACT_LINK, OPERATOR, SITE_NAME } from '../site';
-import { page } from './layout';
+import { page } from './shell';
 
 /**
  * subsola.com/privacy: what the site, the feedback form, analytics and the MCP server keep, in
@@ -23,26 +23,26 @@ const section = (id: string, title: string, items: string[]) => `
       </section>`;
 
 export const privacyPage = (stylesheet: string) =>
-  page(
-    {
+  page({
+    head: {
       title: `Privacy | ${SITE_NAME}`,
       description: `What ${SITE_NAME} keeps about you, and what it never stores: the map, the feedback form, analytics and the MCP server.`,
       path: '/privacy',
       stylesheet,
     },
-    `<header class="intro">
-        <p class="kicker">Privacy</p>
-        <h1>What ${SITE_NAME} keeps</h1>
-        <p class="lede">Very little. There are no accounts, and the addresses you look up are never stored by ${SITE_NAME}, unless you send feedback, which includes the page you were on. Here is everything, part by part.</p>
-        <p>${SITE_NAME} is run by ${OPERATOR}, which is responsible for what this page describes.</p>
-      </header>
-      ${section('map', 'The map', [
-        'When you type an address, your browser sends it straight to that city’s own address lookup (the city or county geocoder) to find it. Those services have their own policies.',
-        'As you type, suggestions send what you have typed so far to that city’s address lookup (the city on the map and New York, or a city you name), so it can list matching addresses.',
-        'Map tiles, aerial photos and city open data load from their publishers’ servers, and the street data from Subsola’s own file server. They see the request like any website does.',
-        'A shared link carries the address in the link itself (<code>?q=...</code>). Nobody gets it unless you share the link.',
-        'The map sets no cookies. It keeps two small notes in your browser’s storage: whether you have seen the welcome guide, and how far a page load got, so a load that crashed can be reported on your next visit (stages only, never an address).',
-      ])}
+    intro: {
+      label: 'Privacy',
+      title: `What ${SITE_NAME} keeps`,
+      lede: `Very little. There are no accounts, and the addresses you look up are never stored by ${SITE_NAME}, unless you send feedback, which includes the page you were on. Here is everything, part by part.`,
+      after: `<p class="intro-note">${SITE_NAME} is run by ${OPERATOR}, which is responsible for what this page describes.</p>`,
+    },
+    body: `${section('map', 'The map', [
+      'When you type an address, your browser sends it straight to that city’s own address lookup (the city or county geocoder) to find it. Those services have their own policies.',
+      'As you type, suggestions send what you have typed so far to that city’s address lookup (the city on the map and New York, or a city you name), so it can list matching addresses.',
+      'Map tiles, aerial photos and city open data load from their publishers’ servers, and the street data from Subsola’s own file server. They see the request like any website does.',
+      'A shared link carries the address in the link itself (<code>?q=...</code>). Nobody gets it unless you share the link.',
+      'The map sets no cookies. It keeps two small notes in your browser’s storage: whether you have seen the welcome guide, and how far a page load got, so a load that crashed can be reported on your next visit (stages only, never an address).',
+    ])}
       ${section('analytics', 'Analytics and error reports', [
         'Product analytics run on PostHog, set up to know no one: nothing is stored on your device, there are no profiles or session recordings, and the project discards IP addresses.',
         'Events say what was done and in which city ("address searched", "report opened"), never the address or the spot you looked at. Page addresses are sent without the part that holds the address.',
@@ -71,4 +71,4 @@ export const privacyPage = (stylesheet: string) =>
         <h2 id="contact">Questions</h2>
         <p>Email ${OPERATOR} at ${CONTACT_LINK}, or use the <a href="/?sel=feedback">feedback form</a> on the map.</p>
       </section>`,
-  );
+  });

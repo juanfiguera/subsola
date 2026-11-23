@@ -1,6 +1,6 @@
 import { REGIONS, cityNames } from '../regions';
 import { CONTACT_LINK, OPERATOR, REPO_URL, SITE_NAME } from '../site';
-import { page } from './layout';
+import { page } from './shell';
 
 /**
  * subsola.com/faq: the questions people ask on first sight (is this a locate, how accurate is
@@ -151,22 +151,23 @@ const faqJsonLd = (all: Group[]) => ({
 
 export const faqPage = (stylesheet: string) => {
   const all = groups();
-  return page(
-    {
+  return page({
+    head: {
       title: `Questions | ${SITE_NAME}`,
       description: `How ${SITE_NAME} works, how accurate it is, where its data comes from, and why it's research, not a utility locate.`,
       path: '/faq',
       stylesheet,
       jsonLd: faqJsonLd(all),
     },
-    `<header class="intro">
-        <p class="kicker">Questions</p>
-        <h1>Questions people ask</h1>
-        <p class="lede">What ${SITE_NAME} is, what it isn't, and where its data comes from.</p>
-      </header>
-      ${all
-        .map(
-          (group) => `
+    current: 'faq',
+    intro: {
+      label: 'Questions',
+      title: 'Questions people ask',
+      lede: `What ${SITE_NAME} is, what it isn't, and where its data comes from.`,
+    },
+    body: `${all
+      .map(
+        (group) => `
       <section class="block faq" aria-labelledby="faq-${group.id}">
         <h2 id="faq-${group.id}">${group.title}</h2>
         ${group.questions
@@ -176,11 +177,11 @@ export const faqPage = (stylesheet: string) => {
           )
           .join('\n        ')}
       </section>`,
-        )
-        .join('')}
+      )
+      .join('')}
       <section class="block" aria-labelledby="faq-more">
         <h2 id="faq-more">Something else?</h2>
         <p>Email ${CONTACT_LINK}, or use the <a href="/?sel=feedback">feedback form</a> on the map.</p>
       </section>`,
-  );
+  });
 };

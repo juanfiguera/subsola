@@ -3,7 +3,7 @@ import { REGIONS } from '../regions';
 import { PAUSED_SOURCES, SOURCES, type SourceKey } from '../sources/catalog';
 import { CONTACT_LINK, SITE_NAME } from '../site';
 import { escapeHtml } from '../ui/dom';
-import { page } from './layout';
+import { page } from './shell';
 
 /**
  * subsola.com/credits: whose records each city's map is built from, with the credit each
@@ -20,26 +20,26 @@ const pausedItems = () =>
     .join('');
 
 export const creditsPage = (stylesheet: string) =>
-  page(
-    {
+  page({
+    head: {
       title: `Data credits | ${SITE_NAME}`,
       description: `Whose public records ${SITE_NAME} is built from, city by city, with the credit each publisher asks for.`,
       path: '/credits',
       stylesheet,
     },
-    `<header class="intro">
-        <p class="kicker">Credits</p>
-        <h1>Whose records these are</h1>
-        <p class="lede">${SITE_NAME} is built from public records that cities, counties and utilities publish. Each city's map and answers credit them as their terms ask. ${escapeHtml(NOT_ENDORSED)}</p>
-      </header>
-      ${REGIONS.map(
-        (region) => `
+    intro: {
+      label: 'Credits',
+      title: 'Whose records these are',
+      lede: `${SITE_NAME} is built from public records that cities, counties and utilities publish. Each city's map and answers credit them as their terms ask. ${escapeHtml(NOT_ENDORSED)}`,
+    },
+    body: `${REGIONS.map(
+      (region) => `
       <section class="block" aria-labelledby="credits-${region.id}">
         <h2 id="credits-${region.id}">${escapeHtml(region.name)}</h2>
         <p>${linkCredit(CITY_CREDITS[region.id], escapeHtml, '')}</p>
         <p class="note">Aerial photos: ${escapeHtml(region.photoCredit)}.</p>
       </section>`,
-      ).join('')}
+    ).join('')}
       <section class="block" aria-labelledby="credits-maps">
         <h2 id="credits-maps">Maps</h2>
         <p>${linkCredit(OSM_CREDIT, escapeHtml, '')}</p>
@@ -54,4 +54,4 @@ export const creditsPage = (stylesheet: string) =>
         <h2 id="credits-contact">Corrections</h2>
         <p>If you publish one of these sources and want it credited differently, email ${CONTACT_LINK}.</p>
       </section>`,
-  );
+  });

@@ -64,11 +64,13 @@ or keep their system dark, not a new direction: same model, same APWA colors, sa
   exposes `window.subsolaTheme` (`choice`, `theme`, `set`, `subscribe`) for the toggle.
 - CSS defines each surface's tokens once on `:root` and overrides them under
   `@media screen { :root[data-theme='dark'] }`, so print always gets the light values. There is
-  no CSS-only `prefers-color-scheme` fallback: the boot script always sets `data-theme`, and both
-  pages need JavaScript to show anything anyway, so the tokens stay defined once per surface.
-- `src/ui/themeToggle.ts` is the light/dark switch in the top bar of the map and the insights
-  page. Until it's first clicked the page follows the system setting; a click stores `light` or
-  `dark`.
+  no CSS-only `prefers-color-scheme` fallback: the boot script always sets `data-theme`, so the
+  tokens stay defined once per surface. The pages outside the map share theirs in
+  `src/pages/shell.css`.
+- `src/ui/themeToggle.ts` is the light/dark switch in the map's top bar. The pages outside the map
+  render the same markup from `src/pages/shell.ts` and `public/shell.js` wires it (a same-origin
+  file, so /mcp loads it under its nonce). Until it's first clicked the page follows the system
+  setting; a click stores `light` or `dark`.
 - `src/theme.ts` lets TypeScript read the resolved theme and listen for changes. The 3D scene
   (`src/scene/palette.ts`) and the city map (`src/city/basemapTheme.ts`) recolor live, without
   reloading any data.

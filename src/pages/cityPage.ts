@@ -4,7 +4,7 @@ import { sharedViewSearch } from '../share';
 import { escapeHtml } from '../ui/dom';
 import { SITE_NAME, SITE_URL } from '../site';
 import { CITY_FACTS, type CityFigures } from './cities';
-import { page } from './layout';
+import { page } from './shell';
 
 /**
  * One page per city, at subsola.com/<city-slug>: what the map shows there and where it comes
@@ -119,8 +119,8 @@ export const cityPage = (region: Region, figures: CityFigures | undefined, style
   const asOf = figures?.asOf
     ? `<p class="note">Figures from the records as of ${escapeHtml(figures.asOf)}.</p>`
     : '';
-  return page(
-    {
+  return page({
+    head: {
       title: `${title} | ${SITE_NAME}`,
       description,
       path,
@@ -135,13 +135,13 @@ export const cityPage = (region: Region, figures: CityFigures | undefined, style
         isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: `${SITE_URL}/` },
       },
     },
-    `<header class="intro">
-        ${region.beta ? '<p class="kicker"><span class="tag">Beta</span></p>' : ''}
-        <h1>${escapeHtml(title)}</h1>
-        <p class="lede">Research what's under any ${escapeHtml(region.name)} street before you design, bid or dig: water mains, sewers, gas, electric and telecom lines, drawn in 3D from the city's own public records. Free, with no account.</p>
-        <a class="cta" href="${mapLink(facts?.mapAddress ?? null)}">Open the ${escapeHtml(region.name)} map</a>
-      </header>
-      ${region.beta ? `<p class="beta"><strong>Beta.</strong> ${escapeHtml(region.beta)}</p>` : ''}
+    intro: {
+      label: `City map${region.beta ? ' <span class="tag">Beta</span>' : ''}`,
+      title: escapeHtml(title),
+      lede: `Research what's under any ${escapeHtml(region.name)} street before you design, bid or dig: water mains, sewers, gas, electric and telecom lines, drawn in 3D from the city's own public records. Free, with no account.`,
+      after: `<a class="cta" href="${mapLink(facts?.mapAddress ?? null)}">Open the ${escapeHtml(region.name)} map</a>`,
+    },
+    body: `${region.beta ? `<p class="beta"><strong>Beta.</strong> ${escapeHtml(region.beta)}</p>` : ''}
       ${whereSection(region, figures)}
       ${leadSection(region, figures)}
       <section class="block warn" aria-labelledby="dig-title">
@@ -155,5 +155,5 @@ export const cityPage = (region: Region, figures: CityFigures | undefined, style
         <ul class="city-list">${otherCities(region)}</ul>
         <p>How often each city digs up its streets is on the <a href="/insights">insights page</a>. To ask about an address from any AI assistant, <a href="/mcp">add Subsola's MCP server</a>.</p>
       </nav>`,
-  );
+  });
 };
