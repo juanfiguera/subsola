@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { locatorSuggest, type LocatorSuggestion } from './suggestQuery';
 
 /**
  * The City of San Diego's own address locator, public, keyless and open to browsers. It knows
@@ -8,6 +9,15 @@ import type { GeocodedAddress } from './geocode';
  */
 const LOCATOR =
   'https://webmaps.sandiego.gov/arcgis/rest/services/Locators/StreetAddress/GeocodeServer';
+
+/**
+ * The city's locator above has no Suggest, but the Public Utilities locator beside it on the same
+ * city server does. It knows the whole county by street ranges, each row ending in a town code
+ * ("SD" is the city) and ZIP. Only its words are used: a picked row is found again with the
+ * locator above, so the map lands where a typed search would.
+ */
+const SUGGEST_LOCATOR =
+  'https://webmaps.sandiego.gov/arcgis/rest/services/Locators/PUD_Locator_Suggest/GeocodeServer';
 
 // Below this the locator is guessing at a street, not finding an address.
 const MIN_SCORE = 90;
@@ -97,3 +107,22 @@ export const reverseGeocodeSd = async (
     throw new Error('No City of San Diego address near that spot');
   return toAddress(found.address.Address, found.location.x, found.location.y);
 };
+
+/** "202 C ST, SD, 92101" as a row in the city, asked for again as "202 C ST, 92101". */
+export const parseSdSuggestions = (suggestions: LocatorSuggestion[]): AddressSuggestion[] =>
+  suggestions.flatMap(({ text }) => {
+    const match = /^(\d[^,]*), SD, (\d{5})$/.exec(text.trim());
+    if (!match) return [];
+    const [, line, zip] = match;
+    return [{ line: line!, place: 'San Diego', query: `${line}, ${zip}` }];
+  });
+
+export const suggestSd = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> =>
+  // Asks for more than it shows, since other towns' rows take some.
+  parseSdSuggestions(
+    await locatorSuggest(SUGGEST_LOCATOR, sdQuery(text), { max: limit * 3 }, signal),
+  ).slice(0, limit);

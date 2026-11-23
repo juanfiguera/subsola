@@ -12,7 +12,13 @@ import {
   SJ_DEPTH_STANDARDS,
   type DepthStandards,
 } from './depth';
-import { geocode, reverseGeocode, type GeocodedAddress } from './sources/geocode';
+import {
+  geocode,
+  reverseGeocode,
+  suggestNyc,
+  type AddressSuggestion,
+  type GeocodedAddress,
+} from './sources/geocode';
 import { splitBbl } from './sources/connections';
 
 // New York's geocoder ships with the app, since it answers most visits and a typed address
@@ -43,7 +49,10 @@ export interface Region {
   /** [west, south, east, north] in degrees, a little past the city line. */
   bounds: [number, number, number, number];
   depths: DepthStandards;
-  geocode: (text: string, signal?: AbortSignal) => Promise<GeocodedAddress>;
+  /** `magicKey` comes from this city's own suggestions, where its locator gives one. */
+  geocode: (text: string, signal?: AbortSignal, magicKey?: string) => Promise<GeocodedAddress>;
+  /** Addresses that start with what's typed so far, for the search box (src/sources/suggest.ts). */
+  suggest: (text: string, limit: number, signal?: AbortSignal) => Promise<AddressSuggestion[]>;
   reverseGeocode: (lngLat: [number, number], signal?: AbortSignal) => Promise<GeocodedAddress>;
   /**
    * An ArcGIS endpoint that renders aerial photo for a Web Mercator box: a MapServer's `export`
@@ -83,6 +92,7 @@ export const NYC: Region = {
   depths: NYC_DEPTH_STANDARDS,
   geocode,
   reverseGeocode,
+  suggest: suggestNyc,
   photoServer: 'https://orthos.its.ny.gov/arcgis/rest/services/wms/Latest/MapServer/export',
   photoCredit: 'NYS ITS Geospatial Services',
   markout: {
@@ -100,7 +110,8 @@ export const DC: Region = {
   short: 'DC',
   bounds: [-77.13, 38.78, -76.9, 39.0],
   depths: DC_DEPTH_STANDARDS,
-  geocode: async (text, signal) => (await dcGeocoder()).geocodeDc(text, signal),
+  geocode: async (text, signal, magicKey) => (await dcGeocoder()).geocodeDc(text, signal, magicKey),
+  suggest: async (text, limit, signal) => (await dcGeocoder()).suggestDc(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await dcGeocoder()).reverseGeocodeDc(lngLat, signal),
   // March 2025, 3 in per pixel, CC BY 4.0.
   photoServer:
@@ -124,7 +135,8 @@ export const SF: Region = {
   short: 'SF',
   bounds: [-122.52, 37.7, -122.35, 37.84],
   depths: SF_DEPTH_STANDARDS,
-  geocode: async (text, signal) => (await sfGeocoder()).geocodeSf(text, signal),
+  geocode: async (text, signal, magicKey) => (await sfGeocoder()).geocodeSf(text, signal, magicKey),
+  suggest: async (text, limit, signal) => (await sfGeocoder()).suggestSf(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await sfGeocoder()).reverseGeocodeSf(lngLat, signal),
   photoServer: '',
   // 2025, 8 cm per pixel.
@@ -149,7 +161,10 @@ export const LA: Region = {
   // LA; the geocoder keeps to the city itself.
   bounds: [-118.67, 33.7, -118.15, 34.34],
   depths: LA_DEPTH_STANDARDS,
-  geocode: async (text, signal) => (await laGeocoder()).geocodeLa(text, signal),
+  geocode: async (text, signal, magicKey) => (await laGeocoder()).geocodeLa(text, signal, magicKey),
+  // The county locator, kept to the city's box.
+  suggest: async (text, limit, signal) =>
+    (await laGeocoder()).suggestLa(text, limit, LA.bounds, signal),
   reverseGeocode: async (lngLat, signal) => (await laGeocoder()).reverseGeocodeLa(lngLat, signal),
   // NAIP 2022, 60 cm per pixel, public domain. LA County's sharper imagery states no license.
   photoServer:
@@ -174,6 +189,7 @@ export const SD: Region = {
   bounds: [-117.29, 32.53, -116.9, 33.12],
   depths: SD_DEPTH_STANDARDS,
   geocode: async (text, signal) => (await sdGeocoder()).geocodeSd(text, signal),
+  suggest: async (text, limit, signal) => (await sdGeocoder()).suggestSd(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await sdGeocoder()).reverseGeocodeSd(lngLat, signal),
   // NAIP 2022, 60 cm per pixel, public domain; the city publishes no newer open imagery.
   photoServer:
@@ -195,7 +211,11 @@ export const SEA: Region = {
   short: 'SEA',
   bounds: [-122.44, 47.48, -122.22, 47.74],
   depths: SEA_DEPTH_STANDARDS,
-  geocode: async (text, signal) => (await seaGeocoder()).geocodeSea(text, signal),
+  geocode: async (text, signal, magicKey) =>
+    (await seaGeocoder()).geocodeSea(text, signal, magicKey),
+  // The county locator, kept to the city's box.
+  suggest: async (text, limit, signal) =>
+    (await seaGeocoder()).suggestSea(text, limit, SEA.bounds, signal),
   reverseGeocode: async (lngLat, signal) => (await seaGeocoder()).reverseGeocodeSea(lngLat, signal),
   // NAIP, public domain. The city's and King County's 2025 photos are EagleView's, with no open
   // license stated.
@@ -221,6 +241,7 @@ export const DEN: Region = {
   bounds: [-105.11, 39.61, -104.6, 39.92],
   depths: DEN_DEPTH_STANDARDS,
   geocode: async (text, signal) => (await denGeocoder()).geocodeDen(text, signal),
+  suggest: async (text, limit, signal) => (await denGeocoder()).suggestDen(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await denGeocoder()).reverseGeocodeDen(lngLat, signal),
   // NAIP, public domain. The city's and DRCOG's sharper photos state no open license.
   photoServer:
@@ -248,6 +269,7 @@ export const CHI: Region = {
   bounds: [-87.95, 41.64, -87.52, 42.03],
   depths: CHI_DEPTH_STANDARDS,
   geocode: async (text, signal) => (await chiGeocoder()).geocodeChi(text, signal),
+  suggest: async (text, limit, signal) => (await chiGeocoder()).suggestChi(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await chiGeocoder()).reverseGeocodeChi(lngLat, signal),
   // NAIP, public domain. Cook County's sharper photos state no open license.
   photoServer:
@@ -278,6 +300,7 @@ export const DAL: Region = {
   bounds: [-97.01, 32.61, -96.46, 33.03],
   depths: DAL_DEPTH_STANDARDS,
   geocode: async (text, signal) => (await dalGeocoder()).geocodeDal(text, signal),
+  suggest: async (text, limit, signal) => (await dalGeocoder()).suggestDal(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await dalGeocoder()).reverseGeocodeDal(lngLat, signal),
   // NAIP, public domain. The city's sharper photos state no open license.
   photoServer:
@@ -307,6 +330,7 @@ export const SJ: Region = {
   bounds: [-122.05, 37.12, -121.58, 37.47],
   depths: SJ_DEPTH_STANDARDS,
   geocode: async (text, signal) => (await sjGeocoder()).geocodeSj(text, signal),
+  suggest: async (text, limit, signal) => (await sjGeocoder()).suggestSj(text, limit, signal),
   reverseGeocode: async (lngLat, signal) => (await sjGeocoder()).reverseGeocodeSj(lngLat, signal),
   // NAIP, public domain. The city's and the county's sharper photos state no open license.
   photoServer:
@@ -397,4 +421,21 @@ export const geocodeAnywhere = async (
     }
   }
   throw new Error(`Couldn't find "${text}" in ${cityNames('or')}.`);
+};
+
+/**
+ * Finds an address in a city already known, such as a suggestion picked from the search box: no
+ * guessing which city, and the locator's `magicKey` where it gave one.
+ */
+export const geocodeIn = async (
+  region: Region,
+  text: string,
+  signal?: AbortSignal,
+  magicKey?: string,
+): Promise<{ address: GeocodedAddress; region: Region }> => {
+  const address = await region.geocode(text, signal, magicKey);
+  // The same check as geocodeAnywhere's: a county locator can still answer from the next town.
+  if (regionAt(address.lngLat) !== region)
+    throw new Error(`"${address.label}" is outside ${region.name}`);
+  return { address, region };
 };

@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
 import { soqlString, withinCircle } from './socrata';
+import { soqlPrefix, streetGuesses, typedPrefix, uniqueBy, type TypedPrefix } from './suggestQuery';
 
 /**
  * Chicago publishes no address locator, but Cook County's address points are public domain on
@@ -129,8 +130,9 @@ export const chiAddressWhere = ({ number, direction, name, type }: ChiAddressPar
 // The centerline writes Dr. King's street shorter than the county does.
 const centerlineName = (name: string) => (name === KING ? 'DR MARTIN LUTHER KING JR' : name);
 
-const toAddress = (point: AddressPoint): GeocodedAddress => {
-  const street = [
+/** "S WACKER DR", as the city's centerline files it. */
+const streetOf = (point: Omit<AddressPoint, 'the_geom'>) =>
+  [
     point.lst_predir,
     point.st_name && centerlineName(point.st_name),
     point.lst_type,
@@ -139,6 +141,9 @@ const toAddress = (point: AddressPoint): GeocodedAddress => {
     .filter(Boolean)
     .join(' ')
     .toUpperCase();
+
+const toAddress = (point: AddressPoint): GeocodedAddress => {
+  const street = streetOf(point);
   // The county files in capitals; people write "1060 W Addison St" and "63rd".
   const spoken = street
     .toLowerCase()
@@ -194,4 +199,59 @@ export const reverseGeocodeChi = async (
   const nearest = points.filter(unitless).sort((a, b) => squared(a) - squared(b))[0];
   if (!nearest) throw new Error('No Chicago address near that spot');
   return toAddress(nearest);
+};
+
+/** The SoQL for addresses in the city with this number on a street starting with what's typed. */
+export const chiPrefixWhere = ({ number, direction, street }: TypedPrefix) => {
+  const { prefix, named } = streetGuesses(street, TYPES);
+  const tests = [soqlPrefix('st_name', prefix)];
+  if (named)
+    tests.push(
+      `(st_name = ${soqlString(named.name)} AND lst_type IN (${named.abbreviations
+        .map(soqlString)
+        .join(',')}))`,
+    );
+  return [
+    `addrnocom = ${soqlString(String(number))}`,
+    `geocode_muni = '${CHI_BOROUGH}'`,
+    ...(direction ? [`lst_predir = ${soqlString(direction)}`] : []),
+    `(${tests.join(' OR ')})`,
+  ].join(' AND ');
+};
+
+// The parts of an address only, never the unit, so a building's units come back as one row.
+const SUGGEST_FIELDS = 'addrnocom,lst_predir,st_name,lst_type,st_posdir';
+
+const rowSchema = pointSchema.omit({ the_geom: true, subaddcom: true });
+
+/** Each address once, as "233 S WACKER DR"; geocodeChi reads that back to the same point. */
+export const parseChiSuggestions = (body: unknown): AddressSuggestion[] =>
+  uniqueBy(
+    z
+      .array(rowSchema)
+      .parse(body)
+      .flatMap((row) => {
+        const street = streetOf(row);
+        return row.addrnocom && street ? [`${row.addrnocom} ${street}`] : [];
+      }),
+    (line) => line,
+  ).map((line) => ({ line, place: 'Chicago', query: line }));
+
+export const suggestChi = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> => {
+  const typed = typedPrefix(text);
+  if (!typed) return [];
+  const query = new URLSearchParams({
+    $select: SUGGEST_FIELDS,
+    $where: chiPrefixWhere(typed),
+    $group: SUGGEST_FIELDS,
+    $order: 'st_name,lst_type,lst_predir',
+    $limit: String(limit),
+  });
+  const res = await fetch(`${ADDRESSES}?${query}`, { signal });
+  if (!res.ok) throw new Error(`Cook County address points returned ${res.status}`);
+  return parseChiSuggestions(await res.json());
 };

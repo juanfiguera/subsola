@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { prefixWhere, typedPrefix } from './suggestQuery';
 
 /**
  * Denver publishes no address locator, but its address points are an open layer that browsers
@@ -122,7 +123,7 @@ export const denAddressWhere = ({ number, direction, name, type }: DenAddressPar
 
 // Denver writes "N" before every north-side address on a north-south street, which nobody says
 // and Denver Water's inventory leaves out: "1437 N Bannock St" is 1437 Bannock St.
-const spoken = ({ attributes: a }: AddressPoint) =>
+const spoken = ({ attributes: a }: Pick<AddressPoint, 'attributes'>) =>
   [a.ADDRESS_NUMBER, a.PREDIRECTIONAL === 'N' ? null : a.PREDIRECTIONAL, a.STREET_NAME, a.POSTTYPE]
     .filter(Boolean)
     .join(' ');
@@ -198,4 +199,49 @@ export const reverseGeocodeDen = async (
   const nearest = points.filter(unitless).sort((a, b) => squared(a) - squared(b))[0];
   if (!nearest) throw new Error('No Denver address near that spot');
   return toAddress(nearest);
+};
+
+const rowsSchema = z.object({
+  features: z.array(z.object({ attributes: pointsSchema.shape.features.element.shape.attributes })),
+});
+
+/** Each address once, as people say it ("1437 Bannock St"); geocodeDen reads that back. */
+export const parseDenSuggestions = (body: unknown): AddressSuggestion[] =>
+  rowsSchema.parse(body).features.flatMap((row) => {
+    if (row.attributes.ADDRESS_NUMBER == null || !row.attributes.STREET_NAME) return [];
+    const line = spoken(row);
+    return [{ line, place: 'Denver', query: line }];
+  });
+
+// Only the parts of an address, never the building or unit, so each address comes once.
+const SUGGEST_FIELDS = 'ADDRESS_NUMBER,PREDIRECTIONAL,STREET_NAME,POSTTYPE';
+
+export const suggestDen = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> => {
+  const typed = typedPrefix(text);
+  if (!typed) return [];
+  const query = new URLSearchParams({
+    where: prefixWhere(
+      typed,
+      {
+        number: 'ADDRESS_NUMBER',
+        direction: 'PREDIRECTIONAL',
+        name: 'STREET_NAME',
+        type: 'POSTTYPE',
+      },
+      TYPES,
+    ),
+    outFields: SUGGEST_FIELDS,
+    returnDistinctValues: 'true',
+    returnGeometry: 'false',
+    orderByFields: 'STREET_NAME,POSTTYPE,PREDIRECTIONAL',
+    resultRecordCount: String(limit),
+    f: 'json',
+  });
+  const res = await fetch(`${ADDRESSES}?${query}`, { signal });
+  if (!res.ok) throw new Error(`Denver address points returned ${res.status}`);
+  return parseDenSuggestions(await res.json());
 };

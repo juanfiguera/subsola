@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { streetsAgree } from './streets';
+import { uniqueBy } from './suggestQuery';
 
 const featureSchema = z.object({
   geometry: z.object({ coordinates: z.tuple([z.number(), z.number()]) }),
@@ -20,6 +21,18 @@ export interface GeocodedAddress {
   street: string | undefined;
   borough: string;
   bbl: string | undefined;
+}
+
+/** One row of the search box's type-ahead, from a city's own address lookup. */
+export interface AddressSuggestion {
+  /** The street address as the city spells it: "233 BROADWAY", "200 North Spring Street". */
+  line: string;
+  /** Where it is, for the muted end of the row: "Manhattan", "Dallas". */
+  place: string;
+  /** What to hand that city's geocoder to load exactly this address. */
+  query: string;
+  /** The locator's key for this row, which makes finding it again exact. */
+  magicKey?: string;
 }
 
 const GEOSEARCH = 'https://geosearch.planninglabs.nyc/v2';
@@ -74,3 +87,47 @@ export const reverseGeocode = (
     'near that spot',
     signal,
   );
+
+const autocompleteSchema = z.object({
+  features: z.array(
+    z.object({
+      geometry: z.object({ coordinates: z.tuple([z.number(), z.number()]) }),
+      properties: z.object({
+        name: z.string().optional(),
+        housenumber: z.string().optional(),
+        borough: z.string().optional(),
+      }),
+    }),
+  ),
+});
+
+/**
+ * GeoSearch's type-ahead. It answers with each address under every alias PAD knows ("233
+ * BROADWAY" and "233 B'WAY" at one spot), so a spot shows once, as its first name.
+ */
+export const parseNycSuggestions = (body: unknown): AddressSuggestion[] =>
+  uniqueBy(
+    autocompleteSchema
+      .parse(body)
+      .features.filter(({ properties: p }) => p.housenumber && p.name && p.borough),
+    ({ geometry, properties }) => `${properties.housenumber}|${geometry.coordinates.join(',')}`,
+  ).map(({ properties: p }) => ({
+    line: p.name!,
+    place: p.borough!,
+    // The borough keeps GeoSearch on this one; "233 Broadway" alone could be Brooklyn's.
+    query: `${p.name}, ${p.borough}`,
+  }));
+
+export const suggestNyc = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> => {
+  // Asks for extra, since aliases of one address take several rows.
+  const res = await fetch(
+    `${GEOSEARCH}/autocomplete?size=${limit * 2}&text=${encodeURIComponent(text)}`,
+    { signal },
+  );
+  if (!res.ok) throw new Error(`GeoSearch autocomplete returned ${res.status}`);
+  return parseNycSuggestions(await res.json()).slice(0, limit);
+};

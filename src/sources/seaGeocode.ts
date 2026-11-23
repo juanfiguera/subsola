@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { locatorSuggest, sameAddressKey, uniqueBy, type LocatorSuggestion } from './suggestQuery';
 
 /**
  * King County's address point locator, public, keyless and open to browsers. It knows the whole
@@ -50,7 +51,11 @@ const getJson = async (url: string, signal?: AbortSignal): Promise<unknown> => {
   return res.json();
 };
 
-export const geocodeSea = async (text: string, signal?: AbortSignal): Promise<GeocodedAddress> => {
+export const geocodeSea = async (
+  text: string,
+  signal?: AbortSignal,
+  magicKey?: string,
+): Promise<GeocodedAddress> => {
   const query = new URLSearchParams({
     SingleLine: text,
     outSR: '4326',
@@ -58,6 +63,7 @@ export const geocodeSea = async (text: string, signal?: AbortSignal): Promise<Ge
     outFields: 'City,StAddr',
     f: 'json',
   });
+  if (magicKey) query.set('magicKey', magicKey);
   const { candidates } = candidatesSchema.parse(
     await getJson(`${LOCATOR}/findAddressCandidates?${query}`, signal),
   );
@@ -83,3 +89,29 @@ export const reverseGeocodeSea = async (
     throw new Error('No Seattle address near that spot');
   return toAddress(found.address.Address, found.location.x, found.location.y);
 };
+
+/**
+ * The locator's suggestions as rows, only those in Seattle: the county locator also knows Kirkland, Renton and the rest. Each address can come
+ * twice, spelled out and abbreviated, and shows once.
+ */
+export const parseSeaSuggestions = (suggestions: LocatorSuggestion[]): AddressSuggestion[] =>
+  uniqueBy(
+    suggestions
+      .map(({ text, magicKey }) => {
+        const [line = '', city] = text.split(',').map((part) => part.trim());
+        return { line, city, query: text, magicKey };
+      })
+      .filter(({ line, city }) => city === CITY && /^\d/.test(line)),
+    ({ line }) => sameAddressKey(line),
+  ).map(({ line, query, magicKey }) => ({ line, place: 'Seattle', query, magicKey }));
+
+export const suggestSea = async (
+  text: string,
+  limit: number,
+  extent: [number, number, number, number],
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> =>
+  // Asks for more than it shows, since towns inside the city's box take some.
+  parseSeaSuggestions(
+    await locatorSuggest(LOCATOR, text, { max: limit * 3, extent }, signal),
+  ).slice(0, limit);

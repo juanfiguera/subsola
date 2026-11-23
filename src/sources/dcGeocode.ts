@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { GeocodedAddress } from './geocode';
+import type { AddressSuggestion, GeocodedAddress } from './geocode';
+import { locatorSuggest, type LocatorSuggestion } from './suggestQuery';
 import { pause } from './pause';
 
 /**
@@ -60,13 +61,22 @@ const getJson = async (url: string, signal?: AbortSignal): Promise<unknown> => {
   }
 };
 
-export const geocodeDc = async (text: string, signal?: AbortSignal): Promise<GeocodedAddress> => {
+// The locator files no city, so "Washington, DC" and a ZIP only cost it score.
+const withoutCity = (text: string) =>
+  text.replace(/,?\s*(washington,?\s*)?d\.?c\.?(\s+\d{5})?\s*$/i, '');
+
+export const geocodeDc = async (
+  text: string,
+  signal?: AbortSignal,
+  magicKey?: string,
+): Promise<GeocodedAddress> => {
   const query = new URLSearchParams({
-    SingleLine: text.replace(/,?\s*(washington,?\s*)?d\.?c\.?(\s+\d{5})?\s*$/i, ''),
+    SingleLine: withoutCity(text),
     outSR: '4326',
     maxLocations: '1',
     f: 'json',
   });
+  if (magicKey) query.set('magicKey', magicKey);
   const [match] = candidatesSchema.parse(
     await getJson(`${LOCATOR}/findAddressCandidates?${query}`, signal),
   ).candidates;
@@ -91,3 +101,19 @@ export const reverseGeocodeDc = async (
   if (!found.address || !found.location) throw new Error('No DC address near that spot');
   return toAddress(found.address.Match_addr, found.location.x, found.location.y);
 };
+
+/** The locator's suggestions as rows: it knows only DC, so every one is in the city. */
+export const parseDcSuggestions = (suggestions: LocatorSuggestion[]): AddressSuggestion[] =>
+  suggestions.map(({ text, magicKey }) => ({
+    line: text,
+    place: 'Washington, DC',
+    query: text,
+    magicKey,
+  }));
+
+export const suggestDc = async (
+  text: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<AddressSuggestion[]> =>
+  parseDcSuggestions(await locatorSuggest(LOCATOR, withoutCity(text), { max: limit }, signal));
