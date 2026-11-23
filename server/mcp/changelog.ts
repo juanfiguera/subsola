@@ -12,6 +12,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.6.0',
+    date: '2026-11-22',
+    changes: [
+      "San Jose joins the cities covered: the city's utility permits, with the utility read from the permit number's letter and its description, and the city's sanitary sewers and storm drains at their recorded depths. San Jose Water's service line inventory is paused while Subsola asks for permission, so the lead status there links to the company's own map.",
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-11-19',
     changes: [

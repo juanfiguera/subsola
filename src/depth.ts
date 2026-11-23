@@ -418,6 +418,47 @@ export const DAL_DEPTH_STANDARDS: DepthStandards = {
   steam: UNKNOWN_SHALLOW,
 };
 
+// The city's own rules for water pipe in its streets, written for the San Jose Municipal Water
+// System. San Jose Water and Great Oaks Water, the private companies that serve most of the city,
+// publish no depth standard. sanjoseca.gov turns away scripted downloads; the Internet Archive
+// keeps a copy (read from its November 2021 one).
+const SJ_WATER_SPECS =
+  'https://www.sanjoseca.gov/home/showpublisheddocument/37025/636791801083770000';
+
+export const SJ_DEPTH_STANDARDS: DepthStandards = {
+  // California's gas rules are the federal ones (CPUC General Order 112-F), and PG&E publishes no
+  // depth of its own.
+  gas: SF_DEPTH_STANDARDS.gas,
+  water: {
+    shallowestFt: 2,
+    // Mains 8 in and smaller, most of the grid; the 24 in minimum is for service lines.
+    drawnFt: 3,
+    deepestFt: 5,
+    basis: 'city-standard',
+    summary:
+      "San Jose's standard specifications lay water mains 8 in and smaller with at least 36 in of cover and larger mains 42 in, and service lines at least 24 in below the gutter. San Jose Water and Great Oaks Water, which serve most of the city, publish no standard of their own, and older mains may differ.",
+    source: {
+      name: 'City of San Jose Standard Specifications, Section 101 (Pipe and Fittings), 101-3.01 and 101-3.08',
+      url: SJ_WATER_SPECS,
+    },
+  },
+  sewer: {
+    shallowestFt: 4,
+    drawnFt: 8,
+    deepestFt: 15,
+    basis: 'measured',
+    summary:
+      'San Jose records the invert at the ends of most of its sanitary sewers and storm drains and the lid of most manholes, so each pipe is drawn at its own depth. Of the sanitary manholes that record both, half measure 8 ft or more from the lid to the bottom of the pipe, and nine in ten more than 4 ft 4 in.',
+    source: {
+      name: 'City of San Jose sanitary gravity mains and manholes',
+      url: 'https://geo.sanjoseca.gov/server/rest/services/OPN/OPN_OpenDataService/MapServer/312',
+    },
+  },
+  electric: SF_DEPTH_STANDARDS.electric,
+  telecom: SF_DEPTH_STANDARDS.telecom,
+  steam: UNKNOWN_SHALLOW,
+};
+
 export const drawnDepthFt = (standard: DepthStandard) => standard.drawnFt ?? standard.shallowestFt;
 
 let current: DepthStandards = NYC_DEPTH_STANDARDS;

@@ -45,9 +45,9 @@ const main = async () => {
     models: modelIdeas(digs, mains),
     caveats: [
       'Permit counts are permits the build placed on the map; a few percent the build could not place are left out (see data/stats.json).',
-      'A permit is permission to open the street, not proof it was opened, and cities file differently: NYC one per block and phase, Seattle one row per block a permit reaches, Denver one row per stretch of street a permit closes, Chicago one row per address range a permit opens, Dallas one per permit, LA and San Diego one per job.',
+      'A permit is permission to open the street, not proof it was opened, and cities file differently: NYC one per block and phase, Seattle one row per block a permit reaches, Denver one row per stretch of street a permit closes, Chicago one row per address range a permit opens, Dallas one per permit, San Jose one row per street segment a permit names, LA and San Diego one per job.',
       'Each city covers different years; compare cities only over the shared window in permitRates.',
-      'Pipe figures cover only what each city maps: NYC, Chicago and Dallas publish no mains; DC only water; San Francisco, LA and Denver only sewers and storm drains; San Diego and Seattle both.',
+      'Pipe figures cover only what each city maps: NYC, Chicago and Dallas publish no mains; DC only water; San Francisco, LA, Denver and San Jose only sewers and storm drains; San Diego and Seattle both.',
       'Install years and depths are as recorded; placeholder values can set the oldest and deepest figures.',
     ],
   };

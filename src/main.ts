@@ -114,6 +114,7 @@ import { parseGlbMeshes } from './scene/glb';
 import {
   CHI,
   DAL,
+  SJ,
   DEN,
   LA,
   NYC,
@@ -573,7 +574,7 @@ const renderCard = ({ missed = false } = {}) => {
       loading: !state.permitsLoaded,
       failed: state.permitsFailed,
       hydrants:
-        state.region === CHI || state.region === DAL
+        state.region === CHI || state.region === DAL || state.region === SJ
           ? null
           : state.assets.filter((a) => a.properties.kind === 'hydrant' && nearPlace(a.geometry))
               .length,
@@ -2087,6 +2088,7 @@ const markBuiltStatuses = () => {
   if (state.region === DEN) return markBuiltDenStatuses();
   if (state.region === CHI) return markBuiltChiStatuses();
   if (state.region === DAL) return markBuiltDalStatuses();
+  if (state.region === SJ) return markBuiltSjStatuses();
   if (state.region !== NYC) return markBuiltDcStatuses();
   const ground = state.groundData;
   const records = state.permitGroups.flatMap((group) => group.properties.permits);
@@ -2294,6 +2296,29 @@ const markBuiltDalStatuses = () => {
     dalStreets: state.streets.length,
     dalBuildings: state.groundData?.buildings.features.length ?? 0,
     dalServiceLines: state.serviceLots.length,
+  };
+  for (const [key, count] of Object.entries(counts))
+    setStatus(key as SourceKey, { state: 'ok', count });
+};
+
+/** San Jose's sources card: permits, the ground, sewers, storm drains and street assets. */
+const markBuiltSjStatuses = () => {
+  const records = state.permitGroups.flatMap((group) => group.properties.permits).length;
+  const fromSource = (key: SourceKey) =>
+    state.assets.filter((asset) => asset.properties.sourceKey === key).length;
+  const counts: Partial<Record<SourceKey, number>> = {
+    sjPermits: records,
+    sjPermitPoints: records,
+    sjPermitParcels: records,
+    sjStreets: state.streets.length,
+    sjBuildings: state.groundData?.buildings.features.length ?? 0,
+    sjSewers: state.mains.filter((main) => main.source === 'sjSewers').length,
+    sjStormDrains: state.mains.filter((main) => main.source === 'sjStormDrains').length,
+    sjSewerManholes: fromSource('sjSewerManholes'),
+    sjStormManholes: fromSource('sjStormManholes'),
+    sjInlets: fromSource('sjInlets'),
+    sjLights: fromSource('sjLights'),
+    sjSignals: fromSource('sjSignals'),
   };
   for (const [key, count] of Object.entries(counts))
     setStatus(key as SourceKey, { state: 'ok', count });

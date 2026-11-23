@@ -61,6 +61,8 @@ export const builtMainRowSchema = z.object({
       'seaElectricLines',
       'denSewers',
       'denStormDrains',
+      'sjSewers',
+      'sjStormDrains',
     ])
     .default('dcMains'),
   the_geom: multiLineSchema,
@@ -85,7 +87,7 @@ const MATERIALS: Record<string, string> = {
 export const isRecycled = (main: { use: string | null } | undefined) => main?.use === 'recycled';
 
 /**
- * A city's storm drains as their own network (San Diego's, Los Angeles's, Denver's): named storm
+ * A city's storm drains as their own network (San Diego's, Los Angeles's, Denver's, San Jose's): named storm
  * drains, not sewers, and fed only by inlets. NYC's storm sewers are part of the sewer map
  * instead.
  */
@@ -93,6 +95,7 @@ const STORM_DRAIN_SOURCES = new Set<SourceKey>([
   'sdStormDrains',
   'laStormDrains',
   'denStormDrains',
+  'sjStormDrains',
 ]);
 export const isStormDrain = (main: { source: SourceKey } | undefined | null) =>
   main ? STORM_DRAIN_SOURCES.has(main.source) : false;

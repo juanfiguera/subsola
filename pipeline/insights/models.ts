@@ -18,6 +18,7 @@ const PERMIT_SOURCES: Record<City, SourceKey[]> = {
   den: ['denPermits'],
   chi: ['chiPermits'],
   dal: ['dalPermits'],
+  sj: ['sjPermits', 'sjPermitPoints', 'sjPermitParcels'],
 };
 
 // The lead service line inventories leadServiceInsights counts, so the page can credit them too.
@@ -43,6 +44,8 @@ const PIPE_SOURCES: SourceKey[] = [
   'seaWaterMains',
   'denSewers',
   'denStormDrains',
+  'sjSewers',
+  'sjStormDrains',
 ];
 
 // Buildings' own sewers: no depth or year is recorded for any of them.

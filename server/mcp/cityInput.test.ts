@@ -35,6 +35,9 @@ describe('cityIdOf', () => {
     ['Chicago', 'chi'],
     ['Dallas', 'dal'],
     ['DAL', 'dal'],
+    ['San Jose', 'sj'],
+    ['San José', 'sj'],
+    ['sj', 'sj'],
     ['CHI', 'chi'],
   ])('reads %j as %s', (text, id) => {
     expect(cityIdOf(text)).toBe(id);

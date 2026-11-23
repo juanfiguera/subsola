@@ -121,6 +121,18 @@ export const CITY_FACTS: Partial<Record<RegionId, CityFacts>> = {
     alsoDraws:
       "The map also draws streets from the city's open data and buildings from FEMA's USA Structures.",
   },
+  sj: {
+    mapAddress: '200 E Santa Clara St, San Jose',
+    permits: ['sjPermits'],
+    mains: ['sjSewers', 'sjStormDrains'],
+    unmapped:
+      'San Jose Water and Great Oaks Water, the private companies that serve most of the city, publish no mains, so water comes from permits, as do gas, electric and telecom lines.',
+    serviceLines: 'sjServiceLines',
+    serviceLineNote:
+      "San Jose Water's inventory gives the company and customer side material for each service it lists.",
+    alsoDraws:
+      "The map also draws manholes, inlets, street lights and signals, and streets, from the city's open data, and buildings from the County of Santa Clara.",
+  },
 };
 
 /**

@@ -57,6 +57,7 @@ describe('paused sources', () => {
         'sdLights',
         'sdServiceLines',
         'sdSignals',
+        'sjServiceLines',
       ].sort(),
     );
     expect(isPaused('sdHydrants')).toBe(false);

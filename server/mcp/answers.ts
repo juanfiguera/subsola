@@ -25,6 +25,7 @@ import { ownerName, prettyAddress, titleCase } from '../../src/ui/dom';
 import {
   CHI_NO_HOUSE_SEWER,
   DAL_NO_HOUSE_SEWER,
+  SJ_NO_HOUSE_SEWER,
   DAL_NO_SERVICE,
   CHI_NO_SERVICE,
   DEN_NO_SERVICE,
@@ -445,6 +446,8 @@ const houseSewer = (report: LotReport, region: Region): WhatsUnder['houseSewer']
       return { status: 'Not published', detail: CHI_NO_HOUSE_SEWER };
     case 'dal':
       return { status: 'Not published', detail: DAL_NO_HOUSE_SEWER };
+    case 'sj':
+      return { status: 'Not published', detail: SJ_NO_HOUSE_SEWER };
   }
 };
 

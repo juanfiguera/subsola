@@ -59,7 +59,7 @@ describe('coverageMessage', () => {
       coverageMessage({ kind: 'unknown-place', typed: '1 Main St, Hoboken', place: 'Hoboken' })
         .text,
     ).toMatch(
-      /^"Hoboken" isn't one of the cities Subsola covers \(New York City, .*, Chicago, and Dallas\)/,
+      /^"Hoboken" isn't one of the cities Subsola covers \(New York City, .*, Chicago, Dallas, and San Jose\)/,
     );
   });
 

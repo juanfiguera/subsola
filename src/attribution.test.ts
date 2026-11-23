@@ -29,6 +29,10 @@ describe('city credits', () => {
     expect(CITY_CREDITS.dal.text).toContain('City of Dallas');
     expect(CITY_CREDITS.dal.text).toContain('USA Structures');
     expect(CITY_CREDITS.dal.text).toContain('CC BY 4.0');
+    // San Jose's open data is CC BY; its permits state no license, and the county's buildings none.
+    expect(CITY_CREDITS.sj.text).toContain('City of San Jose');
+    expect(CITY_CREDITS.sj.text).toContain('Creative Commons Attribution');
+    expect(CITY_CREDITS.sj.text).toContain('County of Santa Clara');
   });
 
   it('cover every city, each with the OpenStreetMap credit in its one line', () => {

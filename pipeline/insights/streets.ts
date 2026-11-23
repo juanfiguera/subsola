@@ -10,6 +10,7 @@ import type { chiStreetSchema } from '../chi/datasets';
 import { chiStreetName, isDrawnChiStreet } from '../chi/streets';
 import type { dalStreetSchema } from '../dal/datasets';
 import { dalStreetName } from '../dal/build';
+import type { sjStreetSchema } from '../sj/datasets';
 import { DRAWN_LAYERS, isActive } from '../sf/build';
 import type { sfStreetSchema } from '../sf/datasets';
 import { readRows } from '../raw';
@@ -49,6 +50,7 @@ export const readStreets = async (): Promise<Streets> => {
     den: 0,
     chi: 0,
     dal: 0,
+    sj: 0,
   };
 
   for await (const row of rowsOf<typeof streetRowSchema>('centerline'))
@@ -131,6 +133,18 @@ export const readStreets = async (): Promise<Streets> => {
       blockNames.set(`dal|${prefix}${row.objectid}`, clean(name, range && `(${range})`));
     }
 
+  // San Jose's centerline names no cross streets either, so a block reads by its address range.
+  for await (const row of rowsOf<typeof sjStreetSchema>('sjStreets')) {
+    const name = row.FULLNAME?.trim();
+    if (!name) continue;
+    total.sj += miles(row.geometry.paths);
+    const numbers = [row.FROMLEFT, row.TOLEFT, row.FROMRIGHT, row.TORIGHT].filter(
+      (number): number is number => number != null && number > 0,
+    );
+    const range = numbers.length ? `${Math.min(...numbers)} to ${Math.max(...numbers)}` : null;
+    blockNames.set(`sj|${row.OBJECTID}`, clean(name, range && `(${range})`));
+  }
+
   const source = (datasets: string[], filter: string) => ({ datasets, filter });
   return {
     blockNames,
@@ -168,6 +182,13 @@ export const readStreets = async (): Promise<Streets> => {
         source(
           ['dalStreets', 'dalMajorStreets'],
           'Dallas street centerlines with a side in the city, less private, unbuilt and freeway segments, trails and walkways',
+        ),
+      ),
+      sj: figure(
+        round(total.sj),
+        source(
+          ['sjStreets'],
+          'San Jose street centerlines with a side in the city, less private streets, freeways, expressways and ramps',
         ),
       ),
     },

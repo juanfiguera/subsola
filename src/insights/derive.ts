@@ -16,13 +16,14 @@ export const CITY_LABELS: Record<CityKey, string> = {
   den: 'Denver',
   chi: 'Chicago',
   dal: 'Dallas',
+  sj: 'San Jose',
 };
 
 /**
  * The cities whose permits name one block each. LA and San Diego file one permit per job, often
  * on a whole street, so their repeat-dig figures would measure filing, not digging.
  */
-export const BLOCK_CITIES: CityKey[] = ['nyc', 'dc', 'sf', 'sea', 'den', 'chi', 'dal'];
+export const BLOCK_CITIES: CityKey[] = ['nyc', 'dc', 'sf', 'sea', 'den', 'chi', 'dal', 'sj'];
 
 const numberFormat = new Intl.NumberFormat('en-US');
 
@@ -196,6 +197,7 @@ const MOST_DUG: [CityKey, number][] = [
   ['den', 2],
   ['chi', 2],
   ['dal', 2],
+  ['sj', 2],
 ];
 
 export const mostDugBlocks = (insights: Insights): DugBlock[] =>
@@ -229,6 +231,12 @@ const SYSTEMS: { key: string; name: string; scope: string }[] = [
     scope: 'Public sanitary sewers; Denver Water publishes no water mains',
   },
   { key: 'denStormDrains', name: 'Denver storm drains', scope: 'Public storm pipes and culverts' },
+  {
+    key: 'sjSewers',
+    name: 'San Jose sanitary sewers',
+    scope: 'City sanitary gravity mains; the water companies publish no water mains',
+  },
+  { key: 'sjStormDrains', name: 'San Jose storm drains', scope: 'City storm gravity mains' },
   { key: 'sfSewerMains', name: 'San Francisco sewers', scope: 'Sewer mains, not side sewers' },
   {
     key: 'dcMains',

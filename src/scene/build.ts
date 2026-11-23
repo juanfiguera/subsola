@@ -341,6 +341,8 @@ const STORM_ONLY_SOURCES = new Set<string>([
   'laInlets',
   'denInlets',
   'denStormManholes',
+  'sjInlets',
+  'sjStormManholes',
 ]);
 
 export const buildAssets = (frame: LocalFrame, assets: AssetFeature[]): ScenePoint[] =>
@@ -351,8 +353,8 @@ export const buildAssets = (frame: LocalFrame, assets: AssetFeature[]): ScenePoi
     position: frame.toLocal(asset.geometry.coordinates),
     depthFt: drawnDepthOf(asset.properties.utility),
     ...(asset.properties.drainage?.storm ? { stormSewer: true as const } : {}),
-    // San Diego, Los Angeles and Denver keep runoff out of their sewers: an inlet drains only to
-    // a storm drain, and LA's and Denver's storm drain structures sit on storm drains.
+    // San Diego, Los Angeles, Denver and San Jose keep runoff out of their sewers: an inlet drains
+    // only to a storm drain, and LA's, Denver's and San Jose's storm structures sit on storm drains.
     ...(STORM_ONLY_SOURCES.has(asset.properties.sourceKey) ? { stormOnly: true as const } : {}),
   }));
 

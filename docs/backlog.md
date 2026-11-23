@@ -2,6 +2,10 @@
 
 Ideas not yet scheduled, newest first.
 
+- **San Jose Water's service line inventory** (added 2026-11-22). Paused for sjwater.com's terms;
+  if SJW allows it, the build step still needs writing (the dataset spec is there). See
+  docs/regions/sj.md.
+
 - **Dallas alleys, street lights and signal cabinets** (added 2026-11-19). Many Dallas utility
   lines run in alleys, which the city publishes (`ALLEYS_SHAPEFILE` on its ArcGIS organization);
   drawing them as blocks would put alley permits where they are instead of on the nearest street.
@@ -25,6 +29,7 @@ Ideas not yet scheduled, newest first.
 
 ## Done
 
+- **Tenth city: San Jose** (done 2026-11-22). See [regions/sj.md](regions/sj.md).
 - **Ninth city: Dallas** (done 2026-11-19). See [regions/dal.md](regions/dal.md).
 - **Seventh and eighth cities: Denver, then Chicago** (done 2026-11-11). See
   [regions/den.md](regions/den.md) and [regions/chi.md](regions/chi.md).

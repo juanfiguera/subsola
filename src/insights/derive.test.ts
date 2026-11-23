@@ -196,6 +196,7 @@ describe('digs', () => {
       'den',
       'chi',
       'dal',
+      'sj',
     ]);
   });
 
@@ -228,6 +229,20 @@ describe('digs', () => {
     expect(reopeningRows(older).map((row) => row.city)).not.toContain('dal');
     expect(leadRows(older).map((row) => row.city)).not.toContain('dal');
     expect(mostDugBlocks(older).map((block) => block.city)).not.toContain('dal');
+  });
+
+  it('reads a file from before San Jose joined, and leaves San Jose out', () => {
+    const withoutSanJose = <T extends object>(byCity: T) =>
+      Object.fromEntries(Object.entries(byCity).filter(([city]) => city !== 'sj'));
+    const current = fixture();
+    const older = insightsSchema.parse({
+      ...current,
+      permits: withoutSanJose(current.permits),
+      cities: withoutSanJose(current.cities),
+      models: { licenses: withoutSanJose(current.models.licenses) },
+    });
+    expect(reopeningRows(older).map((row) => row.city)).not.toContain('sj');
+    expect(mostDugBlocks(older).map((block) => block.city)).not.toContain('sj');
   });
 
   it('reads a file from before Denver joined, and leaves Denver out', () => {

@@ -140,6 +140,9 @@ export const CHI_NO_SERVICE =
 export const CHI_NO_HOUSE_SEWER =
   "Chicago doesn't publish its house drains. The building's owner owns the drain all the way to the city sewer in the street.";
 
+export const SJ_NO_HOUSE_SEWER =
+  "San Jose doesn't publish its house laterals. The property owner is responsible for the whole lateral, from the building to the city sewer and the connection to it.";
+
 export const DAL_NO_HOUSE_SEWER =
   "Dallas doesn't publish its house sewers. Dallas Water Utilities' design manual gives house laterals at least 2 ft of cover.";
 

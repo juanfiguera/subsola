@@ -9,6 +9,7 @@ import {
   DEN_DEPTH_STANDARDS,
   CHI_DEPTH_STANDARDS,
   DAL_DEPTH_STANDARDS,
+  SJ_DEPTH_STANDARDS,
   type DepthStandards,
 } from './depth';
 import { geocode, reverseGeocode, type GeocodedAddress } from './sources/geocode';
@@ -24,13 +25,14 @@ const seaGeocoder = () => import('./sources/seaGeocode');
 const denGeocoder = () => import('./sources/denGeocode');
 const chiGeocoder = () => import('./sources/chiGeocode');
 const dalGeocoder = () => import('./sources/dalGeocode');
+const sjGeocoder = () => import('./sources/sjGeocode');
 
 /**
  * The cities Subsola maps. Everything drawn comes from the same cell bundles; what differs by
  * city is who answers an address, whose aerial photo sits under the street, whose depth rules
  * apply, and where to call before digging.
  */
-export type RegionId = 'nyc' | 'dc' | 'sf' | 'la' | 'sd' | 'sea' | 'den' | 'chi' | 'dal';
+export type RegionId = 'nyc' | 'dc' | 'sf' | 'la' | 'sd' | 'sea' | 'den' | 'chi' | 'dal' | 'sj';
 
 export interface Region {
   id: RegionId;
@@ -295,7 +297,37 @@ export const DAL: Region = {
   beta: 'Dallas publishes street permits only from late 2021 on and no water, sewer or other pipe maps, so every line is placed from a few years of permits.',
 };
 
-export const REGIONS: Region[] = [NYC, DC, SF, LA, SD, SEA, DEN, CHI, DAL];
+export const SJ: Region = {
+  id: 'sj',
+  name: 'San Jose',
+  short: 'SJ',
+  // The city with a little margin, from Alviso on the bay down to Coyote Valley. It takes in
+  // Campbell, the county's islands and other places that aren't San Jose; the address points
+  // know only the city's own.
+  bounds: [-122.05, 37.12, -121.58, 37.47],
+  depths: SJ_DEPTH_STANDARDS,
+  geocode: async (text, signal) => (await sjGeocoder()).geocodeSj(text, signal),
+  reverseGeocode: async (lngLat, signal) => (await sjGeocoder()).reverseGeocodeSj(lngLat, signal),
+  // NAIP, public domain. The city's and the county's sharper photos state no open license.
+  photoServer:
+    'https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage',
+  photoCredit: 'USGS and USDA, National Agriculture Imagery Program',
+  markout: {
+    center: 'USA North 811',
+    url: 'https://usanorth811.org/',
+    // Gov. Code §4216.2(b): not counting the day of the call, and no more than 14 days ahead.
+    notice: 'two working days',
+    law: 'California law',
+  },
+  privateOwners: 'PG&E, San Jose Water, AT&T and Comcast',
+  // San Francisco has a San Jose Avenue; the city's ZIP codes run 95110 to 95139, and 95148.
+  says: /san jos[eé](?! (avenue|ave?)\b)|\b95(1[1-3]\d|148)\b/i,
+  // Like Denver: permits from 2019 on, and the water companies publish no mains, so water, gas,
+  // electric and telecom lines are placed from a few years of permits. The sewers are mapped.
+  beta: 'San Jose publishes street permits only from 2019 on, and its water companies publish no mains, so water, gas, electric and telecom lines are placed from a few years of permits.',
+};
+
+export const REGIONS: Region[] = [NYC, DC, SF, LA, SD, SEA, DEN, CHI, DAL, SJ];
 
 export const regionAt = ([lng, lat]: Position): Region | null =>
   REGIONS.find(
@@ -318,9 +350,10 @@ export const lotName = (bbl: string | null, region: Region) => {
     const [parcel] = bbl.split('#');
     return /^(meter|service) /.test(bbl) || !parcel ? null : `Parcel ${parcel}`;
   }
-  // Denver Water and Dallas Water Utilities name no parcel, and Chicago has no lot records here
-  // at all.
-  if (region.id === 'den' || region.id === 'chi' || region.id === 'dal') return null;
+  // Denver Water and Dallas Water Utilities name no parcel, and Chicago and San Jose have no lot
+  // records here at all.
+  if (region.id === 'den' || region.id === 'chi' || region.id === 'dal' || region.id === 'sj')
+    return null;
   const { block, lot } = splitBbl(bbl);
   return `Tax block ${Number(block)}, lot ${Number(lot)}`;
 };
