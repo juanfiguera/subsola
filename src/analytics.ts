@@ -16,6 +16,7 @@ import { recordVisit } from './visits';
 export type AnalyticsEvent =
   | 'address_searched'
   | 'address_not_found'
+  | 'suggestion_picked'
   | 'street_loaded'
   | 'view_changed'
   | 'layer_toggled'

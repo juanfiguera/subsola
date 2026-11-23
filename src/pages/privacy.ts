@@ -38,6 +38,7 @@ export const privacyPage = (stylesheet: string) =>
       </header>
       ${section('map', 'The map', [
         'When you type an address, your browser sends it straight to that city’s own address lookup (the city or county geocoder) to find it. Those services have their own policies.',
+        'As you type, suggestions send what you have typed so far to that city’s address lookup (the city on the map and New York, or a city you name), so it can list matching addresses.',
         'Map tiles, aerial photos and city open data load from their publishers’ servers, and the street data from Subsola’s own file server. They see the request like any website does.',
         'A shared link carries the address in the link itself (<code>?q=...</code>). Nobody gets it unless you share the link.',
         'The map sets no cookies. It keeps two small notes in your browser’s storage: whether you have seen the welcome guide, and how far a page load got, so a load that crashed can be reported on your next visit (stages only, never an address).',
