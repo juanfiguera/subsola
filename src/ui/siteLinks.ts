@@ -10,7 +10,7 @@ export const siteLinks = (where: 'corner' | 'card') => `
   <nav class="site-links site-links-${where}" aria-label="About Subsola">
     <button class="link" data-action="about">About</button>
     <a href="/insights">Insights</a>
-    <a href="/mcp" data-mcp-link="${where === 'corner' ? 'site links' : 'card links'}">${where === 'corner' ? 'MCP' : 'Use with AI assistants'}</a>
+    <a href="/mcp" data-mcp-link="${where === 'corner' ? 'site links' : 'card links'}">${where === 'corner' ? 'AI assistants' : 'Use with AI assistants'}</a>
     <a href="/faq">FAQ</a>
     <a href="/credits">Credits</a>
     <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>

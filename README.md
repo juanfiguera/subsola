@@ -26,13 +26,13 @@
 
 Hi, and welcome. Subsola gathers what cities and utilities already publish (excavation permits,
 pipe maps, lead service line inventories, hydrants and catch basins) and turns it into a 3D
-street with every utility drawn at its expected depth. Pick an address in New York City,
+street with each utility on record drawn at its expected depth. Pick an address in New York City,
 Washington DC, San Francisco, Los Angeles, San Diego, Seattle, Denver, Chicago, Dallas or San
-Jose, and in a few seconds you'll know which lines run out front, who has dug there and when, and whether the water
-line to the building is lead.
+Jose, and in a few seconds you'll know which lines run out front, who has dug there and when, and,
+where the city publishes it, whether the water line to the building is lead.
 
-It's for anyone about to dig or build: engineers doing site research, contractors scoping a
-trench, buyers checking a property, or the curious. Everything here, the map, the AI assistant
+It's for anyone about to dig or build: engineers doing site research, contractors scoping and
+bidding, utility coordinators, property teams, and anyone curious. Everything here, the map, the AI assistant
 server and the nightly data pipeline, is in this repo and free to run yourself.
 
 <p align="center">
@@ -58,12 +58,12 @@ straight to one of these:
 | San Diego      | [100 W Broadway](https://subsola.com/?q=100%20W%20Broadway%2C%20San%20Diego%2C%20CA)                                   | Sewer and water mains from SanGIS                   |
 | Seattle        | [1420 5th Ave](https://subsola.com/?q=1420%205th%20Ave%2C%20Seattle%2C%20WA)                                           | Water, sewer and electric from the owners' own maps |
 | Denver         | [33 E Bayaud Ave](https://subsola.com/?q=33%20E%20Bayaud%20Ave%2C%20Denver%2C%20CO)                                    | Sewers and storm drains (beta)                      |
-| Chicago        | [233 S Wacker Dr](https://subsola.com/?q=233%20S%20Wacker%20Dr%2C%20Chicago%2C%20IL)                                   | Thirty years of street opening permits (beta)       |
+| Chicago        | [233 S Wacker Dr](https://subsola.com/?q=233%20S%20Wacker%20Dr%2C%20Chicago%2C%20IL)                                   | Street opening permits since 2012 (beta)            |
 | Dallas         | [1500 Marilla St](https://subsola.com/?q=1500%20Marilla%20St%2C%20Dallas%2C%20TX)                                      | Right of way permits and lead line records (beta)   |
 | San Jose       | [1109 Lincoln Ave](https://subsola.com/?q=1109%20Lincoln%20Ave%2C%20San%20Jose%2C%20CA)                                | Sewers and storm drains at measured depths (beta)   |
 
 A few things to try once you're there: drag to move and right-drag to tilt, tap any line for
-where it came from, press **Check a location** to drill down from a spot, and open the **lot
+where it came from, press **Check a location** and tap where you plan to dig to see what may be in the way, and open the **lot
 report** for a page you can print or save as a PDF.
 
 <p align="center">
@@ -122,7 +122,7 @@ What's happening behind the scenes:
 - **`web`** serves the map, the MCP server and those files, on the same Cloudflare runtime that
   runs subsola.com.
 
-**Want a different city?** Set `CITY` to `nyc`, `dc`, `sf`, `la`, `sd`, `sea`, `den`, `chi` or `dal`:
+**Want a different city?** Set `CITY` to `nyc`, `dc`, `sf`, `la`, `sd`, `sea`, `den`, `chi`, `dal` or `sj`:
 
 ```bash
 CITY=sf docker compose up
@@ -196,10 +196,11 @@ More of what the map can do, from crew dig notes to flow direction: [docs/featur
 
 ## Before you dig
 
-Subsola is careful to tell you how much to trust each line. Here's the short version:
+How much to trust each line:
 
-- **It's not a utility locate.** Call 811 at least two working days before you dig. Each city's
-  one-call center is linked on its map and in every answer.
+- **It's not a utility locate.** Call 811 before you dig. Most of these cities require two
+  working days' notice; DC requires four. Each city's one-call center is linked on its map and in
+  every answer.
 - **Positions are approximate unless an owner publishes them.** San Francisco's and Los Angeles's
   sewers, Seattle's water, sewer and electric, San Diego's sewer and water, and Denver's and
   San Jose's sewers follow the owners' maps. Everywhere else, a line means permits show that utility on that block,

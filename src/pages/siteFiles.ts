@@ -46,7 +46,7 @@ export const notFoundPage = (stylesheet: string) =>
     `<header class="intro">
         <p class="kicker">404</p>
         <h1>No page here</h1>
-        <p class="lede">Nothing lives at this address. To see what's under a street, open the map and type an address in the search box at the top, like <i>117 West St, New York</i>.</p>
+        <p class="lede">This page doesn't exist. To see what's under a street, open the map and type an address in the search box at the top, like <i>117 West St, New York</i>.</p>
         <a class="cta" href="/">Open the map</a>
       </header>
       <nav class="block" aria-labelledby="cities-title">

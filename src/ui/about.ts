@@ -137,7 +137,7 @@ const linkRow = (icon: IconName, title: string, line: string, attributes: string
 export const aboutCard = (statuses: Map<SourceKey, SourceStatus>, region: Region) => `
   ${backButton}
   <h1 class="card-title">About Subsola</h1>
-  <p class="hero-line">Utility research for people who plan work in the street: engineers, contractors, utility coordinators and real estate teams. The pipes and cables under the street, mapped from public records.</p>
+  <p class="hero-line">The pipes and cables under the street, mapped from public records. Made for engineers, contractors, utility coordinators and real estate teams who plan work there.</p>
   <ul class="about-chips" aria-label="At a glance">
     <li>${ICONS.pin}${REGIONS.length} cities</li>
     <li>${ICONS.clock}Rebuilt nightly</li>
@@ -156,7 +156,7 @@ export const aboutCard = (statuses: Map<SourceKey, SourceStatus>, region: Region
     <ul class="about-rows">
       ${row('file', 'Site research', 'Which utilities serve a lot, how deep they likely run and who digs there, before the survey.')}
       ${row('crew', 'Scoping a dig', 'What is likely in the way of a trench and at what depth, to plan the work and the locate request.')}
-      ${row('check', 'Due diligence', "A property's water service and house sewer, lead status where the city publishes it, and how often its street gets opened.")}
+      ${row('check', 'Due diligence', "A property's water service and house sewer, lead status where the city publishes it, and how often its street gets opened, in a lot report you can print.")}
       ${row('repeat', 'Coordinating street work', 'Who has permits out front today and who keeps coming back, so the same block is not opened twice.')}
     </ul>
   </section>

@@ -33,7 +33,7 @@ export const privacyPage = (stylesheet: string) =>
     `<header class="intro">
         <p class="kicker">Privacy</p>
         <h1>What ${SITE_NAME} keeps</h1>
-        <p class="lede">Very little. There are no accounts, and the addresses you look up are never stored by ${SITE_NAME}. Here is everything, part by part.</p>
+        <p class="lede">Very little. There are no accounts, and the addresses you look up are never stored by ${SITE_NAME}, unless you send feedback, which includes the page you were on. Here is everything, part by part.</p>
         <p>${SITE_NAME} is run by ${OPERATOR}, which is responsible for what this page describes.</p>
       </header>
       ${section('map', 'The map', [

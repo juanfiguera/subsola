@@ -162,7 +162,7 @@ const stat = (label: string, value: string) =>
 const guideBlock = () => `
   <section class="guide" aria-labelledby="guide-title">
     <h2 id="guide-title">New here?</h2>
-    <p>Colors are utilities, and each line's card says where it comes from.</p>
+    <p>This is what public records say is under this street. Each color is a utility. Tap a line to see where it came from.</p>
     <div class="guide-actions">
       <button class="pill pill-ink" data-action="explainer">What you're looking at</button>
       <button class="pill" data-action="guide-done">Got it</button>
@@ -207,7 +207,7 @@ export const homeCard = ({
     return `${heading}
       <div class="depth-block" style="--accent:var(--danger)">
         <strong>Street records could not be loaded</strong>
-        <p>NYC Open Data did not respond, so no utilities are shown. This does not mean the street is clear.</p>
+        <p>The city's open data did not respond, so no utilities are shown. This does not mean the street is clear.</p>
       </div>
       <button class="pill retry" data-action="retry">Try again</button>
       <p class="fine"><button class="link" data-action="about">View source status</button></p>`;
@@ -844,12 +844,12 @@ const verdict = ({ level, hits, depthFt }: DigAssessment) => {
     };
   if (level === 'likely-deeper')
     return {
-      title: 'Utilities here are typically deeper',
+      title: 'Lines on record usually sit deeper than this',
       text: `Records show ${listOf(hits)} near this location, typically below ${formatFeet(depthFt)}. Older lines may be shallower, so an 811 request is still required.`,
     };
   return {
     title: 'No utility records at this location',
-    text: `No street permits within ${NEAR_FT} ft in 30 years of records. Private lines do not appear in permits, so an 811 request is still required.`,
+    text: `No street permits on record within ${NEAR_FT} ft. Private lines do not appear in permits, so an 811 request is still required.`,
   };
 };
 
@@ -859,7 +859,7 @@ const REACH_TEXT: Record<DigHit['reach'], string> = {
   unknown: 'Depth unknown',
 };
 
-export const probeCard = (assessment: DigAssessment) => {
+export const probeCard = (assessment: DigAssessment, region: Region) => {
   const { title, text } = verdict(assessment);
   const tasks = DIG_TASKS.map(
     (task) =>
@@ -893,7 +893,7 @@ export const probeCard = (assessment: DigAssessment) => {
       </label>
     </section>
     ${hits ? `<section class="card-section"><h2>Utilities that may be present</h2><ul class="dig-hits">${hits}</ul></section>` : ''}
-    <a class="call-811 dig-811" href="https://www.newyork-811.com/" target="_blank" rel="noopener">Request a free markout (811)</a>
+    <a class="call-811 dig-811" href="${region.markout.url}" target="_blank" rel="noopener">Request a free locate (${escapeHtml(region.markout.center)})</a>
     <p class="fine">Service lines run from the mains to every building, so sidewalks and front yards may also contain gas, water and sewer lines. This is an estimate from public records, not a utility locate. <button class="link" data-action="probe">Check another location</button></p>`;
 };
 

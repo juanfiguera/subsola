@@ -56,7 +56,7 @@ const groups = (): Group[] => [
       {
         id: 'fresh',
         q: 'How up to date is it?',
-        a: `Every city is rebuilt each night from a fresh download, so a permit shows up the night after the city publishes it. Some cities publish their records days or weeks after the fact, and each card says when its records were last updated. When a city's server is down for a night, the map keeps the last good copy rather than going blank.`,
+        a: `Every city is rebuilt each night from a fresh download, so a permit usually shows up the night after the city publishes it. Some cities publish their records days or weeks after the fact, and each card says when its records were last updated. When a city's server is down for a night, the map keeps the last good copy rather than going blank.`,
       },
       {
         id: 'mistake',
@@ -72,7 +72,7 @@ const groups = (): Group[] => [
       {
         id: 'risk',
         q: 'Is it safe to put this information online?',
-        a: `${SITE_NAME} shows only what its publishers already put online, in the form they publish it. It has no access to utilities' private records and doesn't try to get them. Where a publisher's terms don't allow reuse, the layer is paused and ${SITE_NAME} links to the publisher's own site instead. Lines drawn from standards are general rules, not the location of anyone's equipment. Detailed private utility records are a different matter: New York, for one, is building a map of them that only authorized city staff will be able to see.`,
+        a: `${SITE_NAME} shows only what its publishers already put online, in the form they publish it. It has no access to utilities' private records and doesn't try to get them. Where a publisher's terms don't allow reuse, the layer is paused and ${SITE_NAME} links to the publisher's own site instead. Lines drawn from standards are general rules, not the location of anyone's equipment. Detailed private utility records are a different matter. New York, for one, is building a map of them that only authorized city staff will see.`,
       },
       {
         id: 'publisher',
@@ -82,7 +82,7 @@ const groups = (): Group[] => [
       {
         id: 'tracking',
         q: 'Do you keep the addresses I search?',
-        a: `No. ${SITE_NAME} has no accounts and never stores the addresses you look up, on the map or through AI assistants. The <a href="/privacy">privacy page</a> lists everything that is kept.`,
+        a: `No. ${SITE_NAME} has no accounts and never stores the addresses you look up, on the map or through AI assistants, unless you send feedback, which includes the page you were on. The <a href="/privacy">privacy page</a> lists everything that is kept.`,
       },
     ],
   },

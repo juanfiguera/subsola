@@ -554,7 +554,7 @@ const renderCard = ({ missed = false } = {}) => {
       REGIONS.filter((other) => other !== cityMap.region()),
       missed,
     );
-  else if (view.kind === 'probe') ui.card.innerHTML = dig ? probeCard(dig) : probePromptCard();
+  else if (view.kind === 'probe') ui.card.innerHTML = dig ? probeCard(dig, state.region) : probePromptCard();
   else if (view.kind === 'about') ui.card.innerHTML = aboutCard(state.statuses, state.region);
   else if (view.kind === 'feedback') {
     // Cards redraw as records arrive; a half-written note mustn't be wiped.

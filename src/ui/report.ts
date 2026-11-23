@@ -772,9 +772,9 @@ export const lotReportHtml = (report: LotReport, heading: ReportHeading) => {
 
       <section class="report-section report-811">
         <h2>Before you dig</h2>
-        <p>${escapeHtml(heading.region.markout.law)} requires a free markout request to ${escapeHtml(heading.region.markout.center)} at least ${escapeHtml(heading.region.markout.notice)} before any excavation, including on private property. Utilities then mark their lines on the ground. Private lines beyond the meter, such as yard lighting or irrigation, are the property owner's responsibility to locate.</p>
-        <a class="call-811" href="${heading.region.markout.url}" target="_blank" rel="noopener">Request a free markout (811)</a>
-        <p class="report-print-only">Dial 811 or request a markout at ${escapeHtml(new URL(heading.region.markout.url).host.replace(/^www\./, ''))}.</p>
+        <p>${escapeHtml(heading.region.markout.law)} requires a free locate request to ${escapeHtml(heading.region.markout.center)} at least ${escapeHtml(heading.region.markout.notice)} before any excavation, including on private property. Utilities then mark their lines on the ground. Private lines beyond the meter, such as yard lighting or irrigation, are the property owner's responsibility to locate.</p>
+        <a class="call-811" href="${heading.region.markout.url}" target="_blank" rel="noopener">Request a free locate (${escapeHtml(heading.region.markout.center)})</a>
+        <p class="report-print-only">Dial 811 or request a locate at ${escapeHtml(new URL(heading.region.markout.url).host.replace(/^www\./, ''))}.</p>
       </section>
 
       <footer class="report-sources">
