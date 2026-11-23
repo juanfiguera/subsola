@@ -236,38 +236,6 @@ svg {
   filter: invert(1);
 }
 
-.area-list {
-  display: grid;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.area strong {
-  display: block;
-  font: 700 19px/1.1 var(--display);
-}
-
-.area-when {
-  color: var(--ink-3);
-  font-size: 13px;
-}
-
-.area p {
-  margin: 4px 0 8px;
-  color: var(--ink-2);
-}
-
-.area-open {
-  padding: 6px 10px;
-  background: var(--panel-2);
-}
-
-.area-open:hover {
-  background: var(--hover);
-}
-
 [data-side='below'] .scene {
   background: var(--soil);
 }

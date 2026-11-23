@@ -58,7 +58,6 @@ import { CELL_REACH_M, cellAt, cellsAround, mergeBy, type Cell } from './tiles';
 import { builtCellsAround, gridCellBounds, gridCellOf, type GridCell } from './grid';
 import { fetchCell, fetchCellIndex, type CellIndex } from './sources/cells';
 import type { Continuation, Junction } from './scene/continuations';
-import { ANALYZED_AREAS, middleStop, type AreaStop } from './areas';
 import { createCityMap } from './city/cityMap';
 import { mapZoomFor, sceneZoomFor } from './city/zoom';
 import { createSheet } from './ui/sheet';
@@ -550,7 +549,6 @@ const renderCard = ({ missed = false } = {}) => {
   const dig = assessment();
   if (view.kind === 'city')
     ui.card.innerHTML = cityCard(
-      ANALYZED_AREAS,
       state.address ? prettyAddress(state.address.label.split(',')[0]!) : null,
       cityMap.region(),
       REGIONS.filter((other) => other !== cityMap.region()),
@@ -966,13 +964,9 @@ ui.card.addEventListener('click', (event) => {
       from: mcpLink.dataset.mcpLink ?? null,
     });
   const target = (event.target as Element).closest<HTMLElement>(
-    '[data-action], [data-utility], [data-ref], [data-dig-depth], [data-area]',
+    '[data-action], [data-utility], [data-ref], [data-dig-depth]',
   );
   if (!target) return;
-  if (target.dataset.area) {
-    const area = ANALYZED_AREAS[Number(target.dataset.area)];
-    return area ? cityMap.flyToStop(middleStop(area)) : undefined;
-  }
   if (target.dataset.digDepth) return setDigDepth(Number(target.dataset.digDepth));
   if (target.dataset.ref) return open({ kind: 'ref', ref: target.dataset.ref });
   if (target.dataset.action === 'probe') return startProbing();
@@ -2519,7 +2513,7 @@ presetButtons.forEach((button) =>
 /* City map */
 
 const cityMap = createCityMap(ui.city, {
-  onEnter: (lngLat, zoom, bearing, stop) => enterStreet(lngLat, zoom, bearing, stop),
+  onEnter: (lngLat, zoom, bearing) => enterStreet(lngLat, zoom, bearing),
   onRegion: () => {
     if (state.view.kind === 'city') renderCard();
   },
@@ -2594,26 +2588,20 @@ function revealStreet() {
 }
 
 /** Zoomed in to street scale on the city map: the loaded street if it's that close, else a new one. */
-const enterStreet = (
-  lngLat: [number, number],
-  zoom: number,
-  bearing: number,
-  stop: AreaStop | null,
-) => {
-  const target = stop?.lngLat ?? lngLat;
+const enterStreet = (lngLat: [number, number], zoom: number, bearing: number) => {
   const frame = state.frame;
-  const local = frame?.toLocal(target);
+  const local = frame?.toLocal(lngLat);
   if (frame && local && Math.hypot(...local) <= SEARCH_RADIUS_M) {
     scene.holdAbove(frame.toLocal(lngLat), sceneZoomFor(zoom, lngLat[1]), bearing);
     return revealStreet();
   }
-  void loadAddress(stop ? stop.address : target, { lngLat, zoom, bearing });
+  void loadAddress(lngLat, { lngLat, zoom, bearing });
 };
 
 /** Back to the loaded street the same way as zooming in: the city map flies there first. */
 const backToStreet = (preset: Preset | null = null) => {
   landIn = preset;
-  if (state.address) cityMap.flyTo(state.address.lngLat, null);
+  if (state.address) cityMap.flyTo(state.address.lngLat);
 };
 
 ui.cityTab.addEventListener('click', () => (inCity() ? backToStreet() : void enterCity()));

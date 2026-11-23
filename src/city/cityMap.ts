@@ -1,6 +1,5 @@
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl';
 import type { Feature, FeatureCollection, Point } from 'geojson';
-import type { AreaStop } from '../areas';
 import { NYC, REGIONS, regionAt, type Region } from '../regions';
 import { mapZoomFor } from './zoom';
 import { darkBasemap, type BasemapLayer, type PaintChange } from './basemapTheme';
@@ -62,10 +61,10 @@ const collection = <G extends Point>(features: Feature<G>[]): FeatureCollection<
 
 export interface CityMapHandlers {
   /**
-   * The city map was zoomed in to street scale at `lngLat` and `zoom`; `stop` if it flew to one.
-   * The map stays up until `hide`, so the street can load under it.
+   * The city map was zoomed in to street scale at `lngLat` and `zoom`. The map stays up until
+   * `hide`, so the street can load under it.
    */
-  onEnter: (lngLat: [number, number], zoom: number, bearing: number, stop: AreaStop | null) => void;
+  onEnter: (lngLat: [number, number], zoom: number, bearing: number) => void;
   /** The map was moved over another city, so the card can name it. */
   onRegion: (region: Region) => void;
 }
@@ -74,9 +73,8 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
   let map: MapLibreMap | null = null;
   let building: Promise<MapLibreMap> | null = null;
   let current: [number, number] | null = null;
-  // A flight in progress, and the stop it's for, so arriving loads that address rather than the
-  // nearest one.
-  let flight: { stop: AreaStop | null } | null = null;
+  // A flight in progress back to the loaded street, so arriving hands over without a gesture.
+  let flight = false;
   let shown = false;
   // Set once the map has handed over, so the rest of a zoom gesture doesn't hand over again.
   let entering = false;
@@ -175,10 +173,10 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
       created.on('mouseleave', 'city-dot', () => (created.getCanvas().style.cursor = ''));
     });
 
-    const enter = (stop: AreaStop | null) => {
+    const enter = () => {
       entering = true;
       const { lng, lat } = created.getCenter();
-      handlers.onEnter([lng, lat], created.getZoom(), created.getBearing(), stop);
+      handlers.onEnter([lng, lat], created.getZoom(), created.getBearing());
     };
     // Hands over the moment a zoom gesture crosses street scale, not when it settles, so the
     // street picks up the motion instead of the zoom stalling first.
@@ -192,7 +190,7 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
       // Between cities there's no street to open; the map just keeps zooming.
       if (!regionAt(created.getCenter().toArray())) return;
       created.stop();
-      enter(null);
+      enter();
     });
     created.on('moveend', () => {
       // Out between cities the card keeps the last one it named.
@@ -202,14 +200,13 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
         handlers.onRegion(over);
       }
       if (!shown || entering || !flight) return;
-      const { stop } = flight;
-      flight = null;
-      if (created.getZoom() >= enterZoomAt(created.getCenter().lat) - 0.01) enter(stop);
+      flight = false;
+      if (created.getZoom() >= enterZoomAt(created.getCenter().lat) - 0.01) enter();
     });
     created.on('dragend', () => (declined = false));
     // A drag or scroll of the user's own cancels a flight.
     created.on('movestart', (event) => {
-      if (event.originalEvent) flight = null;
+      if (event.originalEvent) flight = false;
     });
     map = created;
     return created;
@@ -247,32 +244,30 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
       .catch((error: unknown) => console.error('[subsola] city map failed to load', error));
   };
 
-  const flyTo = (lngLat: [number, number], stop: AreaStop | null) => {
+  const flyTo = (lngLat: [number, number]) => {
     if (!map) return;
     // Flying between cities would cross 200 miles of nothing; it cuts to the other city instead.
     const there = regionAt(lngLat) ?? region;
     if (there !== region) switchTo(there);
-    flight = { stop };
+    flight = true;
     map.flyTo({ center: lngLat, zoom: enterZoomAt(lngLat[1]), duration: 1400, essential: true });
   };
 
   /** Shows the whole of another city. */
   const switchTo = (next: Region) => {
     if (!map) return;
-    flight = null;
+    flight = false;
     region = next;
     if (shown) handlers.onRegion(next);
     map.jumpTo({ center: middleOf(next), zoom: WHOLE_CITY_ZOOM, bearing: 0 });
   };
-
-  const flyToStop = (stop: AreaStop) => flyTo(stop.lngLat, stop);
 
   /** Fades the map in at exactly this view, once its tiles are drawn or a moment has passed. */
   const show = async (center: [number, number], zoom: number, bearing: number) => {
     const shownMap = await ready();
     shown = true;
     entering = false;
-    flight = null;
+    flight = false;
     shownMap.resize();
     region = regionAt(center) ?? NYC;
     shownMap.jumpTo({ center, zoom, bearing, pitch: 0 });
@@ -291,7 +286,7 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
   /** Fades the map out, revealing the street under it. */
   const hide = () => {
     shown = false;
-    flight = null;
+    flight = false;
     container.classList.remove('is-shown');
   };
 
@@ -316,7 +311,6 @@ export const createCityMap = (container: HTMLElement, handlers: CityMapHandlers)
     resume,
     setCurrent,
     flyTo,
-    flyToStop,
     switchTo,
     region: () => region,
     map: () => map,

@@ -1,4 +1,4 @@
-import { cityNames, regionAt, type Region } from '../regions';
+import { cityNames, type Region } from '../regions';
 import { CITY_CREDITS, linkCredit } from '../attribution';
 import { sinceChoices, splitAtYear, type UtilitySummary } from '../brief';
 import type { RecordsFreshness } from './freshness';
@@ -25,7 +25,6 @@ import { isRecycled, isStormDrain, type SurveyedMain } from '../sources/mains';
 import { houseSewerStatus, type ConnectionPermit } from '../sources/connections';
 import type { ServiceLine } from '../scene/services';
 import type { DigSpot } from '../scene/digSpots';
-import type { AnalyzedArea } from '../areas';
 import type { Continuation, Junction } from '../scene/continuations';
 import { networkOf } from '../scene/assetStyle';
 import { lineCertainty } from '../scene/certainty';
@@ -898,35 +897,13 @@ export const probeCard = (assessment: DigAssessment) => {
     <p class="fine">Service lines run from the mains to every building, so sidewalks and front yards may also contain gas, water and sewer lines. This is an estimate from public records, not a utility locate. <button class="link" data-action="probe">Check another location</button></p>`;
 };
 
-const longDate = (isoDate: string) =>
-  new Date(`${isoDate}T12:00:00`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
 export const cityCard = (
-  areas: AnalyzedArea[],
   current: string | null,
   region: Region,
   others: Region[],
   // Zoomed in just past the city line, where there's no street to open.
   missed = false,
 ) => {
-  const items = areas
-    // The index is the area's place in the full list, which is how the button names it.
-    .map((area, index) => ({ area, index }))
-    .filter(({ area }) => regionAt(area.stops[0]!.lngLat) === region)
-    .map(
-      ({ area, index }) => `
-      <li class="area">
-        <strong>${escapeHtml(area.name)}</strong>
-        <span class="area-when">Reviewed ${longDate(area.checked)}</span>
-        <p>${escapeHtml(area.finding)}</p>
-        <button class="pill area-open" data-area="${index}">Open ${escapeHtml(area.name)}</button>
-      </li>`,
-    )
-    .join('');
   return `
     <span class="hood">${escapeHtml(region.name)}${region.beta ? betaTag(region.beta) : ''}</span>
     ${region.beta ? betaReason(region.beta) : ''}
@@ -935,11 +912,10 @@ export const cityCard = (
         ? `<h1 class="card-title">No streets mapped here</h1>
     <p class="hero-line">Subsola maps ${escapeHtml(cityNames())}. Zoom out and pick a street in one of them.</p>`
         : `<h1 class="card-title">City map</h1>
-    <p class="hero-line">Zoom in on any street to view the utilities below it${items ? ', or open an area that has been reviewed against the records' : ''}.</p>`
+    <p class="hero-line">Zoom in on any street to view the utilities below it.</p>`
     }
     ${current ? `<button class="pill report-cta" data-action="street">Back to ${escapeHtml(current)}</button>` : ''}
     ${others.map((other) => `<button class="pill" data-action="other-city" data-region="${other.id}">Go to ${escapeHtml(other.name)}</button>`).join('')}
-    ${items ? `<section class="card-section"><h2>Reviewed areas</h2><ul class="area-list">${items}</ul></section>` : ''}
     <p class="fine">Map from ${sourceLink('OpenFreeMap', 'https://openfreemap.org/')}, built on OpenStreetMap.</p>`;
 };
 
