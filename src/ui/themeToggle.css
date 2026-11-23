@@ -1,4 +1,4 @@
-/* The theme switch (src/ui/themeToggle.ts), shared by the map and the insights page. It reads only
+/* The theme switch (src/ui/themeToggle.ts), shared by the map and the page shell. It reads only
    the tokens both pages define: --panel, --panel-2, --line, --ink, --ink-2. */
 .theme-toggle {
   flex: none;

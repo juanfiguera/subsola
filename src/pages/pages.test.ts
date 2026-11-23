@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEN, NYC, REGIONS, SEA, citySlug } from '../regions';
 import { CITY_FACTS, readFigures } from './cities';
 import { cityPage, cityPath } from './cityPage';
-import { jsonLdScript } from './layout';
+import { jsonLdScript } from './shell';
 import { notFoundPage, robotsTxt, sitemapPaths, sitemapXml } from './siteFiles';
 import { pageFiles } from './build';
 import { faqPage } from './faq';

@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#e6e9ee" />
     <!-- Before anything paints: sets the light or dark theme (docs/dark-mode.md). -->
     <script src="/theme.js"></script>
+    <script src="/shell.js" defer></script>
     <title>Under the street: Subsola insights</title>
     <meta
       name="description"
@@ -39,18 +40,7 @@
     />
   </head>
   <body>
-    <a class="skip" href="#main">Skip to the figures</a>
-    <header class="topbar">
-      <a class="brand" href="/" aria-label="Subsola map">
-        <span class="mark" aria-hidden="true"></span>
-        <span>Subsola</span>
-      </a>
-      <nav class="site-nav" aria-label="Site">
-        <a href="/">Map</a>
-        <a href="/mcp">Use with AI assistants</a>
-      </nav>
-      <div id="theme-toggle"></div>
-    </header>
+    <!--shell:top insights-->
 
     <div class="layout">
       <nav id="section-nav" class="side" aria-label="On this page" data-after-load hidden>
@@ -427,6 +417,7 @@
           </a>
         </nav>
       </main>
+      <!--shell:foot-->
     </div>
     <script type="module" src="/src/insights/main.ts"></script>
   </body>

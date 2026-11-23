@@ -1,6 +1,6 @@
 import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { join, normalize, resolve } from 'node:path';
-import { defineConfig, runnerImport, type Plugin } from 'vite';
+import { defineConfig, preprocessCSS, runnerImport, type Plugin, type ResolvedConfig } from 'vite';
 import { configDefaults } from 'vitest/config';
 import type * as Pages from './src/pages/build.ts';
 
@@ -33,6 +33,7 @@ const localCells = (): Plugin => ({
 
 const DEFAULT_CELLS_URL = 'https://data.subsola.com';
 const PAGES_CSS = resolve('src/pages/pages.css');
+const SHELL_CSS = resolve('src/pages/shell.css');
 
 /**
  * The nightly figures the city pages quote, as JSON. A local build reads data/insights.json if
@@ -58,7 +59,8 @@ const loadInsights = async (): Promise<unknown> => {
 /**
  * The pages that are text rather than the map (src/pages/build.ts), written into dist/ so
  * crawlers read them without running a script, and served at the same paths while developing.
- * Also fills the city list into the map's search box label, so it follows REGIONS. The page code
+ * Also fills the city list into the map's search box label, so it follows REGIONS, and the shared
+ * top bar and footer into insights.html (src/pages/shell.ts). The page code
  * is loaded through Vite's module runner rather than imported here, so the config stays free of
  * the app's extensionless imports.
  */
@@ -69,20 +71,34 @@ const sitePages = (): Plugin => {
       configFile: false,
     }).then((result) => result.module));
   let insights: Promise<unknown> | null = null;
+  let config: ResolvedConfig | null = null;
+  // The sheets go out as single files, their @imports (shell.css, the theme switch) inlined.
+  const stylesheet = async (path: string) => {
+    if (!config) throw new Error('site-pages: the config has not resolved yet');
+    return (await preprocessCSS(readFileSync(path, 'utf8'), path, config)).code;
+  };
   const files = async (stylesheet: string) => {
     const { pageFiles, readFigures } = await loadPages();
     return pageFiles(stylesheet, readFigures(await (insights ??= loadInsights())));
   };
   return {
     name: 'site-pages',
-    transformIndexHtml: async (html) =>
-      html.replaceAll('__CITY_NAMES_OR__', (await loadPages()).searchCities()),
+    configResolved(resolved) {
+      config = resolved;
+    },
+    transformIndexHtml: async (html) => {
+      const { fillShell, searchCities } = await loadPages();
+      return fillShell(html.replaceAll('__CITY_NAMES_OR__', searchCities()));
+    },
     async generateBundle() {
       const css = this.emitFile({
         type: 'asset',
         name: 'pages.css',
-        source: readFileSync(PAGES_CSS, 'utf8'),
+        source: await stylesheet(PAGES_CSS),
       });
+      // At a fixed name for /mcp, which is rendered by a Pages Function that can't know the
+      // hashed one and links this under its nonce instead of carrying a copy.
+      this.emitFile({ type: 'asset', fileName: 'shell.css', source: await stylesheet(SHELL_CSS) });
       for (const [fileName, source] of Object.entries(await files(this.getFileName(css))))
         this.emitFile({ type: 'asset', fileName, source });
     },

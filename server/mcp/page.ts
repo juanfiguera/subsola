@@ -13,13 +13,17 @@ import { pageStyle } from './pageStyle';
 import { CONTACT_LINK } from '../../src/site';
 import { UTILITY_STYLES, type UtilityKind } from '../../src/utilities';
 import { PAGE_SCRIPT } from './pageScript';
+import { FONTS_URL, intro, sectionNav, siteFoot, topBar } from '../../src/pages/shell';
 
 /**
  * What a person sees when they open https://subsola.com/mcp in a browser: what the server answers,
  * how to add it to each assistant, the tools, coverage, limits and privacy. Served by the Pages
  * Function, where the site's _headers file doesn't reach, so it is one self-contained page that
  * brings its own security headers. The inline style and script carry a per-response nonce instead
- * of loosening the policy. Every list of cities, limit and tool parameter is read from the code
+ * of loosening the policy. The site's shared shell (src/pages/shell.ts: top bar, theme switch,
+ * section nav, intro, footer) is rendered from the same code as every other page; its stylesheet
+ * and scripts (/shell.css, /theme.js, /shell.js) are same-origin files the build writes, loaded
+ * under the nonce too, so the policy needs no 'self'. Every list of cities, limit and tool parameter is read from the code
  * that enforces it, so the page can't drift from the server.
  */
 
@@ -99,41 +103,41 @@ const copyBlock = (label: string, text: string) => {
 const copyButton = (id: string, label: string, text = 'Copy') =>
   `<button type="button" class="copy-button" data-copy="${id}" data-label="${text}" aria-label="Copy ${escapeHtml(label)}">${ICONS.copy}<span class="copy-label">${text}</span></button>`;
 
-const SECTIONS: [string, string][] = [
-  ['example', 'See it work'],
-  ['setup', 'Set up'],
-  ['tools', 'Tools'],
-  ['prompts', 'Prompts'],
-  ['coverage', 'Coverage'],
-  ['good-to-know', 'Good to know'],
-  ['help', 'Help'],
+// Shorter than the headings, so the nav reads as a list. The ids are the sections', not the h2s'.
+const SECTIONS: { id: string; title: string }[] = [
+  { id: 'example', title: 'See it work' },
+  { id: 'setup', title: 'Set up' },
+  { id: 'tools', title: 'Tools' },
+  { id: 'prompts', title: 'Prompts' },
+  { id: 'coverage', title: 'Coverage' },
+  { id: 'good-to-know', title: 'Good to know' },
+  { id: 'help', title: 'Help' },
 ];
 
 const hero = (cities: number) => {
   const cursor = CLIENTS.find((client) => client.id === 'cursor')!.install!;
   const vscode = CLIENTS.find((client) => client.id === 'vscode')!.install!;
-  return `
-  <header class="hero">
-    <p class="kicker">MCP server · version ${SERVER_VERSION}</p>
-    <h1>Subsola for AI assistants</h1>
-    <p class="lede">Ask your AI assistant what public records say is under a street, and who's been digging it up. It works with Claude, ChatGPT, Cursor and any other MCP client.</p>
-    <div class="endpoint">
+  return intro({
+    label: `MCP server · version ${SERVER_VERSION}`,
+    title: 'Subsola for AI assistants',
+    lede: "Ask your AI assistant what public records say is under a street, and who's been digging it up. It works with Claude, ChatGPT, Cursor and any other MCP client.",
+    chips: [
+      `${ICONS.check}Free`,
+      `${ICONS.key}No sign-in`,
+      `${ICONS.eye}Read-only`,
+      `${ICONS.pin}${cities} cities`,
+    ],
+    after: `<div class="endpoint">
       <span class="endpoint-label">Server URL</span>
       <code id="endpoint">${MCP_URL}</code>
       ${copyButton('endpoint', 'the server URL', 'Copy URL')}
     </div>
-    <ul class="chips" aria-label="At a glance">
-      <li class="chip">${ICONS.check}Free</li>
-      <li class="chip">${ICONS.key}No sign-in</li>
-      <li class="chip">${ICONS.eye}Read-only</li>
-      <li class="chip">${ICONS.pin}${cities} cities</li>
-    </ul>
     <div class="quick">
       <a class="button" href="${escapeHtml(cursor.href)}">${escapeHtml(cursor.label)}</a>
       <a class="button" href="${escapeHtml(vscode.href)}">${escapeHtml(vscode.label)}</a>
       <a class="button button-quiet" href="#setup">Other clients ${ICONS.arrow}</a>
-    </div>
-  </header>`;
+    </div>`,
+  });
 };
 
 const clientPanel = ({ id, name, steps, note, snippets, install }: ClientSetup) => `
@@ -405,8 +409,9 @@ export const docsPage = (nonce: string) => {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#e6e9ee" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f131a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#e6e9ee">
+<script nonce="${nonce}" src="/theme.js"></script>
+<script nonce="${nonce}" src="/shell.js" defer></script>
 <title>Subsola MCP server: use Subsola with AI assistants</title>
 <meta name="description" content="${escapeHtml(description)}">
 <link rel="canonical" href="${MCP_URL}">
@@ -420,21 +425,15 @@ export const docsPage = (nonce: string) => {
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@800&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="${FONTS_URL}">
+<link rel="stylesheet" href="/shell.css" nonce="${nonce}">
 <style nonce="${nonce}">${pageStyle()}</style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to the content</a>
-<header class="topbar">
-  <a class="brand" href="/" aria-label="Subsola map"><span class="mark" aria-hidden="true"></span><span>Subsola</span></a>
-  <nav class="site-nav" aria-label="Site"><a href="/">Map</a><a href="/insights">Insights</a></nav>
-</header>
+${topBar('mcp')}
 <div class="layout">
-  <nav class="side" aria-label="On this page">
-    <p>On this page</p>
-    <ol>${SECTIONS.map(([id, title]) => `<li><a href="#${id}">${title}</a></li>`).join('')}</ol>
-  </nav>
-  <main id="main">
+  ${sectionNav(SECTIONS)}
+  <main id="main" class="page">
     ${hero(REGIONS.length)}
     ${example()}
     ${setup()}
@@ -444,8 +443,8 @@ export const docsPage = (nonce: string) => {
     ${goodToKnow()}
     ${help(cities)}
   </main>
+  ${siteFoot()}
 </div>
-<footer class="site fine"><a href="/">Subsola</a> · <a href="/insights">Insights</a> · <a href="/credits">Data credits</a> · <a href="/privacy">Privacy</a> · Public records only</footer>
 <p class="status" role="status" aria-live="polite"></p>
 <script nonce="${nonce}">${PAGE_SCRIPT}</script>
 </body>

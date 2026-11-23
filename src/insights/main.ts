@@ -18,8 +18,7 @@ import {
 } from './derive';
 import { pageFigures } from './figures';
 import { insightsSchema, type Insights } from './schema';
-import { mountThemeToggle } from '../ui/themeToggle';
-import { fillIcons, watchSections } from './sectionNav';
+import { fillIcons } from './fillIcons';
 import { startAnalytics } from '../analytics';
 import './insights.css';
 
@@ -295,13 +294,11 @@ const load = async () => {
     byId('figures').hidden = false;
     for (const node of Array.from(document.querySelectorAll<HTMLElement>('[data-after-load]')))
       node.hidden = false;
-    watchSections(byId('section-nav'));
   } catch (error) {
     showError(error);
   }
 };
 
 fillIcons(document);
-mountThemeToggle(byId('theme-toggle'));
 byId('retry').addEventListener('click', () => void load());
 void load();

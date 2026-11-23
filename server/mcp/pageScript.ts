@@ -1,7 +1,7 @@
 /**
- * The docs page's only script: client tabs, copy buttons and the section nav. Without it the page
- * still works: every client's setup shows stacked under its own heading, and the nav is plain
- * links.
+ * The docs page's own script: client tabs and copy buttons. The theme switch and the section nav
+ * are the shared shell's (public/shell.js). Without it the page still works: every client's setup
+ * shows stacked under its own heading.
  */
 export const PAGE_SCRIPT = `
 (() => {
@@ -71,28 +71,5 @@ export const PAGE_SCRIPT = `
       }
     });
   }
-
-  // Marks the section being read in the nav: the last one whose top has passed under the bar.
-  const links = [...document.querySelectorAll('.side a')];
-  const sections = links.map((link) => document.getElementById(link.hash.slice(1)));
-  const mark = () => {
-    let current = 0;
-    sections.forEach((section, i) => {
-      if (section && section.getBoundingClientRect().top < 140) current = i;
-    });
-    links.forEach((link, i) => link.setAttribute('aria-current', String(i === current)));
-    const active = links[current];
-    const bar = active.closest('.side');
-    if (bar.scrollWidth > bar.clientWidth) {
-      const left = active.offsetLeft - 16;
-      if (left < bar.scrollLeft || left + active.offsetWidth > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = left;
-    }
-  };
-  let frame = 0;
-  addEventListener('scroll', () => {
-    cancelAnimationFrame(frame);
-    frame = requestAnimationFrame(mark);
-  }, { passive: true });
-  mark();
 })();
 `;

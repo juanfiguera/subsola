@@ -1,5 +1,5 @@
 import { REGIONS } from '../../src/regions';
-import { baseStyle } from './pageStyle';
+import { baseStyle } from './statsStyle';
 import { FAILURE_NOTES } from './healthCheck';
 import {
   RANGES,

@@ -13,6 +13,7 @@ import { faqPage } from './faq';
  */
 
 export { readFigures } from './cities';
+export { fillShell } from './shell';
 
 export const pageFiles = (stylesheet: string, figures: FiguresByCity): Record<string, string> => ({
   ...Object.fromEntries(

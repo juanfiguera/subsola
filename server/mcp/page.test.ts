@@ -101,9 +101,10 @@ describe('docs page', () => {
     expect(new Set(targets).size).toBe(targets.length);
   });
 
-  it('has a dark theme that swaps tokens only', () => {
-    expect(html).toContain('@media (prefers-color-scheme:dark)');
+  it('has a dark theme that swaps tokens only, set by the site theme script under the nonce', () => {
     expect(html).toContain(':root[data-theme=dark]');
+    expect(html).toContain('<script nonce="nonce" src="/theme.js"></script>');
+    expect(html).toContain('<link rel="stylesheet" href="/shell.css" nonce="nonce">');
   });
 
   it('uses no em dashes', () => {

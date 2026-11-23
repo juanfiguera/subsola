@@ -363,6 +363,10 @@ city and utility open data
   (Linux baselines come from CI).
 - **Each city's details**, from quirks in its permits to what it doesn't publish, are in
   [docs/regions/](docs/regions/). The MCP server is described in [docs/mcp.md](docs/mcp.md).
+- **Pages outside the map** (insights, /mcp, the FAQ, credits, privacy, city and 404 pages) share
+  one shell: top bar, theme switch, section nav, intro and footer, from `src/pages/shell.ts` and
+  `src/pages/shell.css`. A new page must use it; `src/pages/shell.test.ts` fails for one that
+  doesn't.
 
 <details>
 <summary><strong>How depths are chosen</strong></summary>

@@ -102,8 +102,31 @@ describe('map chrome, dark', () => {
   });
 });
 
+describe('shared page shell, dark', () => {
+  const token = darkTokens('./pages/shell.css');
+  const color = (name: string) => parse(token(name));
+
+  it.each(['--ink', '--ink-2', '--ink-3'])('%s text passes 4.5:1 on ground and panel', (ink) => {
+    for (const surface of ['--ground', '--panel', '--panel-2'])
+      expect(ratio(color(ink), color(surface)), `${ink} on ${surface}`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('text on an ink fill passes 4.5:1', () => {
+    expect(ratio(color('--on-ink'), color('--ink'))).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe('insights page, dark', () => {
-  const token = darkTokens('./insights/insights.css');
+  // The page's own tokens on top of the shell's.
+  const shell = darkTokens('./pages/shell.css');
+  const own = darkTokens('./insights/insights.css');
+  const token = (name: string) => {
+    try {
+      return own(name);
+    } catch {
+      return shell(name);
+    }
+  };
   const color = (name: string) => parse(token(name));
 
   it.each(['--ink', '--ink-2', '--ink-3'])('%s text passes 4.5:1 on ground and panel', (ink) => {
