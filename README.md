@@ -96,7 +96,7 @@ Then just ask:
 - _"Which utility permits near 55 Water St, New York keep getting renewed?"_
 
 It has two tools, `whats_under` and `recent_digs`, and every answer ends with the city's 811
-notice and the credits its publishers ask for.
+notice, a link to the spot on the map, and the credits its publishers ask for.
 
 ## Run your own copy
 

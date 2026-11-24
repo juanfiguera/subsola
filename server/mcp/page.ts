@@ -270,7 +270,7 @@ const tools = (cities: string) => `
         <li>An address outside ${escapeHtml(cities)}, or with no true match, is a tool error (<code>isError</code>) saying what was found instead and how to ask again.</li>
         <li>Arguments that don't fit come back as a tool error the assistant can fix, such as "radius_m must be between 10 and 400 (got 5000). Try 400."</li>
         <li>Protocol ${LATEST_PROTOCOL} (no handshake, <code>server/discover</code>) and ${LEGACY_PROTOCOLS.join(', ')} (with <code>initialize</code>) on the same URL. No sessions.</li>
-        <li>Every answer ends with the city's 811 notice and a link to the spot on the <a href="/">map</a>.</li>
+        <li>Every answer ends with the city's 811 notice, a link to the spot on the <a href="/">map</a>, and the credits its publishers ask for.</li>
       </ul>
     </details>
   </section>`;
