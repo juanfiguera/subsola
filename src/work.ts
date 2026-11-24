@@ -7,9 +7,9 @@ export interface ActiveWork {
   record: PermitRecord;
 }
 
-/** Today in New York as YYYY-MM-DD, the format DOT work dates use. */
-export const nycToday = (now = new Date()) =>
-  now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+/** Today in a city's time zone as YYYY-MM-DD, the format permit work dates use. */
+export const todayIn = (timeZone: string, now = new Date()) =>
+  now.toLocaleDateString('en-CA', { timeZone });
 
 /** A permit that opens the street with a work window that includes `today`. */
 export const isOpenOn = (record: PermitRecord, today: string) =>

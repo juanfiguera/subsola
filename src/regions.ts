@@ -46,6 +46,8 @@ export interface Region {
   name: string;
   /** As a label names it: "NYC". */
   short: string;
+  /** The city's IANA zone, so "permitted today" means today where the street is. */
+  timeZone: string;
   /** [west, south, east, north] in degrees, a little past the city line. */
   bounds: [number, number, number, number];
   depths: DepthStandards;
@@ -88,6 +90,7 @@ export const NYC: Region = {
   id: 'nyc',
   name: 'New York City',
   short: 'NYC',
+  timeZone: 'America/New_York',
   bounds: [-74.28, 40.47, -73.68, 40.93],
   depths: NYC_DEPTH_STANDARDS,
   geocode,
@@ -108,6 +111,7 @@ export const DC: Region = {
   id: 'dc',
   name: 'Washington, DC',
   short: 'DC',
+  timeZone: 'America/New_York',
   bounds: [-77.13, 38.78, -76.9, 39.0],
   depths: DC_DEPTH_STANDARDS,
   geocode: async (text, signal, magicKey) => (await dcGeocoder()).geocodeDc(text, signal, magicKey),
@@ -133,6 +137,7 @@ export const SF: Region = {
   id: 'sf',
   name: 'San Francisco',
   short: 'SF',
+  timeZone: 'America/Los_Angeles',
   bounds: [-122.52, 37.7, -122.35, 37.84],
   depths: SF_DEPTH_STANDARDS,
   geocode: async (text, signal, magicKey) => (await sfGeocoder()).geocodeSf(text, signal, magicKey),
@@ -157,6 +162,7 @@ export const LA: Region = {
   id: 'la',
   name: 'Los Angeles',
   short: 'LA',
+  timeZone: 'America/Los_Angeles',
   // The city's outer box. It takes in Santa Monica, Beverly Hills and other cities that aren't
   // LA; the geocoder keeps to the city itself.
   bounds: [-118.67, 33.7, -118.15, 34.34],
@@ -184,6 +190,7 @@ export const SD: Region = {
   id: 'sd',
   name: 'San Diego',
   short: 'SD',
+  timeZone: 'America/Los_Angeles',
   // The city's outer box. It takes in Chula Vista, National City and other cities that aren't
   // San Diego; the city's locator knows only its own addresses.
   bounds: [-117.29, 32.53, -116.9, 33.12],
@@ -209,6 +216,7 @@ export const SEA: Region = {
   id: 'sea',
   name: 'Seattle',
   short: 'SEA',
+  timeZone: 'America/Los_Angeles',
   bounds: [-122.44, 47.48, -122.22, 47.74],
   depths: SEA_DEPTH_STANDARDS,
   geocode: async (text, signal, magicKey) =>
@@ -237,6 +245,7 @@ export const DEN: Region = {
   id: 'den',
   name: 'Denver',
   short: 'DEN',
+  timeZone: 'America/Denver',
   // The City and County's outer box; it reaches out to the airport.
   bounds: [-105.11, 39.61, -104.6, 39.92],
   depths: DEN_DEPTH_STANDARDS,
@@ -265,6 +274,7 @@ export const CHI: Region = {
   id: 'chi',
   name: 'Chicago',
   short: 'CHI',
+  timeZone: 'America/Chicago',
   // The city with a little margin, out to O'Hare.
   bounds: [-87.95, 41.64, -87.52, 42.03],
   depths: CHI_DEPTH_STANDARDS,
@@ -294,6 +304,7 @@ export const DAL: Region = {
   id: 'dal',
   name: 'Dallas',
   short: 'DAL',
+  timeZone: 'America/Chicago',
   // The city with a little margin: Lake Ray Hubbard on the east, Mountain Creek Lake on the west.
   // It takes in Highland Park, University Park and other towns that aren't Dallas; the address
   // points know only the city's own.
@@ -324,6 +335,7 @@ export const SJ: Region = {
   id: 'sj',
   name: 'San Jose',
   short: 'SJ',
+  timeZone: 'America/Los_Angeles',
   // The city with a little margin, from Alviso on the bay down to Coyote Valley. It takes in
   // Campbell, the county's islands and other places that aren't San Jose; the address points
   // know only the city's own.

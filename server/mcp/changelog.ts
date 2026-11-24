@@ -12,6 +12,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.6.1',
+    date: '2026-11-23',
+    changes: [
+      "Permitted today and scheduled now go by the date in the address's city, not New York's, so a West Coast answer after 9 pm Pacific no longer counts tomorrow's work as today's.",
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-11-22',
     changes: [

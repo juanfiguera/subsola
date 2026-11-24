@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Feature, Geometry } from 'geojson';
-import { activeWork, nycToday } from './work';
+import { activeWork, todayIn } from './work';
 import type { PermitGroupProperties, PermitRecord } from './sources/permits';
 
 const record = (workStart: string, workEnd: string): PermitRecord => ({
@@ -51,8 +51,14 @@ describe('activeWork', () => {
   });
 });
 
-describe('nycToday', () => {
-  it('uses New York time, not UTC', () => {
-    expect(nycToday(new Date('2026-10-25T02:00:00Z'))).toBe('2026-10-24');
+describe('todayIn', () => {
+  it("uses the city's time, not UTC", () => {
+    expect(todayIn('America/New_York', new Date('2026-10-25T02:00:00Z'))).toBe('2026-10-24');
+  });
+
+  it('keeps the West Coast on its own day after 9 pm there', () => {
+    const lateInSanJose = new Date('2026-11-24T05:30:00Z');
+    expect(todayIn('America/New_York', lateInSanJose)).toBe('2026-11-24');
+    expect(todayIn('America/Los_Angeles', lateInSanJose)).toBe('2026-11-23');
   });
 });

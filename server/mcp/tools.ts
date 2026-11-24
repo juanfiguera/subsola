@@ -3,7 +3,7 @@ import { REGIONS, cityNames, type RegionId } from '../../src/regions';
 import { useDepthStandards } from '../../src/depth';
 import { ADDRESS_MAX } from '../../src/share';
 import { placeStreet, lotReportAt, CONTEXT_RADIUS_M } from '../../src/street';
-import { activeWork, nycToday } from '../../src/work';
+import { activeWork, todayIn } from '../../src/work';
 import { lookupPlace, permitsOnly, type Lookup, type LookupDeps } from './lookup';
 import { missText } from './misses';
 import { fartherLines } from './farther';
@@ -190,7 +190,7 @@ const whatsUnder: Tool<typeof whatsUnderInput> = {
     useDepthStandards(region.depths);
     const placed = placeStreet(frame, records);
     // The day the site counts as today, so "permitted today" and "scheduled" agree with the map.
-    const today = nycToday(deps.now());
+    const today = todayIn(region.timeZone, deps.now());
     const active = activeWork(records.permitGroups, today);
     const report = lotReportAt(frame, geocoded, records, placed, active);
     return {
@@ -244,7 +244,7 @@ const recentDigs: Tool<typeof recentDigsInput> = {
           utility: args.utility ?? null,
           permittedToday: args.permitted_today ?? false,
           // The day the site counts as today, so "permitted today" agrees with the map.
-          today: nycToday(deps.now()),
+          today: todayIn(region.timeZone, deps.now()),
           limit: MAX_DIGS,
         }),
       ),

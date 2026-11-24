@@ -37,7 +37,7 @@ import { gridBearing } from './scene/orientation';
 import { summarize, type UtilitySummary } from './brief';
 import { depthStandards, describeDepth, formatFeet, useDepthStandards } from './depth';
 import { assessDig } from './dig';
-import { activeWork, nycToday, type ActiveWork } from './work';
+import { activeWork, todayIn, type ActiveWork } from './work';
 import { RECYCLED_WATER, UTILITY_KINDS, UTILITY_STYLES, type UtilityKind } from './utilities';
 import {
   createFrame,
@@ -554,7 +554,8 @@ const renderCard = ({ missed = false } = {}) => {
       REGIONS.filter((other) => other !== cityMap.region()),
       missed,
     );
-  else if (view.kind === 'probe') ui.card.innerHTML = dig ? probeCard(dig, state.region) : probePromptCard();
+  else if (view.kind === 'probe')
+    ui.card.innerHTML = dig ? probeCard(dig, state.region) : probePromptCard();
   else if (view.kind === 'about') ui.card.innerHTML = aboutCard(state.statuses, state.region);
   else if (view.kind === 'feedback') {
     // Cards redraw as records arrive; a half-written note mustn't be wiped.
@@ -1913,7 +1914,7 @@ const nearPlace = (geometry: Geometry) =>
 /** New permit blocks join the end of the list, so earlier blocks keep their `permit-N` refs. */
 const addPermitGroups = (frame: LocalFrame, groups: Feature<Geometry, PermitGroupProperties>[]) => {
   state.permitGroups = mergeBy(state.permitGroups, groups, (group) => group.properties.key);
-  state.active = activeWork(state.permitGroups, nycToday());
+  state.active = activeWork(state.permitGroups, todayIn(state.region.timeZone));
   state.workZones = state.active.map(({ groupIndex }) =>
     workZoneOf(frame, state.permitGroups[groupIndex]!.geometry, `permit-${groupIndex}`),
   );
