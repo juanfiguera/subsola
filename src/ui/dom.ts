@@ -10,8 +10,10 @@ const ESCAPES: Record<string, string> = {
 export const escapeHtml = (value: unknown) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]!);
 
-// Company suffixes that read wrong in title case ("Llc").
-const ACRONYMS = /\b(Llc|Lp|Llp|Nyc|Dep|Ddc|Dot|Dc|Ddot|Rcn|At&T|Pg&E|Sfpuc)\b/g;
+// Company suffixes and agencies that read wrong in title case ("Llc"). NYC's geocoder names
+// landmarks in capitals too: "NYPD TIMES SQUARE SUBSTATION", "PS 41".
+const ACRONYMS =
+  /\b(Llc|Lp|Llp|Nyc|Dep|Ddc|Dot|Dc|Ddot|Rcn|At&T|Pg&E|Sfpuc|Nypd|Fdny|Mta|Nycha|Cuny|Suny|Nyu|Usps|Ymca|Ywca|Lirr|Dmv|Jfk|Ps|Jhs)\b/g;
 
 export const titleCase = (value: string) =>
   value
@@ -37,6 +39,9 @@ const SUFFIX: Record<string, string> = {
   PARKWAY: 'Pkwy',
 };
 
+const STREET_KIND =
+  /^(STREET|ST|AVENUE|AVE|ROAD|RD|PLACE|PL|DRIVE|DR|LANE|LN|BOULEVARD|BLVD|PARKWAY|PKWY|TERRACE|TER|COURT|CT|WAY)$/i;
+
 /** "25-87 37 STREET" becomes "25-87 37th St", the way people write it. */
 export const prettyAddress = (line: string): string => {
   // DC permits name a block by its address range: "600 - 699 BLOCK OF 7TH STREET NW".
@@ -49,7 +54,9 @@ export const prettyAddress = (line: string): string => {
       if (SUFFIX[upper]) return SUFFIX[upper];
       // DC's quadrants are part of the address: "800 F St NW".
       if (i > 0 && /^(NW|NE|SW|SE)$/.test(upper)) return upper;
-      if (i > 0 && /^\d+$/.test(word)) return ordinal(Number(word));
+      // "37 STREET" is 37th St, but "PS 41" is a school, not a 41st.
+      if (i > 0 && /^\d+$/.test(word) && STREET_KIND.test(words[i + 1] ?? ''))
+        return ordinal(Number(word));
       if (/^\d+(ST|ND|RD|TH)$/.test(upper)) return word.toLowerCase();
       return /\d/.test(word) ? word : titleCase(word);
     })

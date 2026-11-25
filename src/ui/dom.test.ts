@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ownerName, streetName } from './dom';
+import { ownerName, prettyAddress, streetName } from './dom';
 
 describe('streetName', () => {
   it('keeps a DC quadrant in capitals', () => {
@@ -34,5 +34,12 @@ describe('ownerName', () => {
     expect(ownerName('DC Water')).toBe('DC Water');
     expect(ownerName('Astound (RCN)')).toBe('Astound (RCN)');
     expect(ownerName('AT&T')).toBe('AT&T');
+  });
+});
+
+describe('prettyAddress', () => {
+  it("keeps the agencies in NYC's landmark names in capitals", () => {
+    expect(prettyAddress('NYPD TIMES SQUARE SUBSTATION')).toBe('NYPD Times Square Substation');
+    expect(prettyAddress('PS 41 GREENWICH VILLAGE SCHOOL')).toBe('PS 41 Greenwich Village School');
   });
 });

@@ -13,7 +13,7 @@ describe('streetLine', () => {
   });
 
   it('drops characters an address has no use for', () => {
-    expect(streetLine('"><script>alert(1)</script>')).toBe('Script Alert 1st /Script');
+    expect(streetLine('"><script>alert(1)</script>')).toBe('Script Alert 1 /Script');
     expect(streetLine('1 Main St <b>&amp;</b>')).toBe('1 Main St B Amp /B');
     expect(streetLine('<>"{}')).toBeNull();
     expect(streetLine('')).toBeNull();
