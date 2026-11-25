@@ -69,6 +69,7 @@ import {
 } from './tubes';
 import { linkAssets, type AssetLink } from './assetLinks';
 import { aroundBasins, chambersOf, servicesAroundBasins } from './aroundBasins';
+import { depthLayers } from './depthLayers';
 import {
   CODE_HYDRANT,
   fixtureLayers,
@@ -448,9 +449,10 @@ const clearOfSlab = <T extends { utility: UtilityKind; depthFt: number; radiusM?
 const visibleOf = (state: SceneState): Visible => {
   const { data, hidden, stretch } = state;
   const hideRecycled = hidden.has('recycled');
+  const layer = depthLayers(data.runs, stretch, (pipe) => clearOfSlab(pipe, stretch));
   const straight = data.runs
     .filter((r) => !hidden.has(r.utility) && !(hideRecycled && isRecycled(r.surveyed)))
-    .map((r) => clearOfSlab(r, stretch));
+    .map((r) => layer(clearOfSlab(r, stretch)));
   const points = data.points.filter((p) =>
     p.kind === 'permit-point' ? !p.utility || !hidden.has(p.utility) : !hidden.has(p.kind),
   );
@@ -463,7 +465,7 @@ const visibleOf = (state: SceneState): Visible => {
     ? runs.flatMap(piecesOf)
     : data.pieces
         .filter((p) => !hidden.has(p.utility) && !(hideRecycled && p.recycled))
-        .map((p) => clearOfSlab(p, stretch));
+        .map((p) => layer(clearOfSlab(p, stretch)));
   return {
     runs,
     pieces,

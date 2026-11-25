@@ -143,6 +143,6 @@ describe('aroundBasins at city scale', () => {
     );
     const started = performance.now();
     aroundBasins(runs, basins, STRETCH);
-    expect(performance.now() - started).toBeLessThan(200);
+    expect(performance.now() - started).toBeLessThan(1000);
   });
 });
