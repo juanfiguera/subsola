@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { aroundBasins, stepAround, type Chamber } from './aroundBasins';
+import { aroundBasins, servicesAroundBasins, stepAround, type Chamber } from './aroundBasins';
 import type { PipeRun } from './build';
 import type { Vec2 } from './local';
+import type { ServiceLine } from './services';
 
 const STRETCH = 6;
 const steamRun = (path: Vec2[], depthFt = 4.5): PipeRun => ({
@@ -89,5 +90,59 @@ describe('aroundBasins', () => {
     const runs = aroundBasins([sewer, surveyed], [basinAt([0, 0.2])], STRETCH);
     expect(runs[0]).toBe(sewer);
     expect(runs[1]).toBe(surveyed);
+  });
+});
+
+describe('aroundBasins with basins in pairs', () => {
+  it('clears both basins at a corner, even when stepping round one nears the other', () => {
+    const [run] = aroundBasins(
+      [steamRun(straight)],
+      [basinAt([0, 0.2]), basinAt([0.4, -1.4])],
+      STRETCH,
+    );
+    expect(crossesBox(run!.path, [0, 0.2], 0.45, 0.6)).toBe(false);
+    expect(crossesBox(run!.path, [0.4, -1.4], 0.45, 0.6)).toBe(false);
+  });
+});
+
+describe('servicesAroundBasins', () => {
+  const service = (a: Vec2, b: Vec2): ServiceLine => ({
+    ref: 'service-0',
+    utility: 'water',
+    a,
+    b,
+    depthFt: 4,
+    lot: {} as ServiceLine['lot'],
+  });
+
+  it('slides a service along the main until it clears a basin at the curb', () => {
+    const line = service([0, 0], [0, 8]);
+    const [moved] = servicesAroundBasins([line], [basinAt([0.2, 5])], STRETCH);
+    expect(crossesBox([moved!.a, moved!.b], [0.2, 5], 0.45, 0.6)).toBe(false);
+    // Still square to the main, and only slid along it.
+    expect(moved!.b[0] - moved!.a[0]).toBeCloseTo(0, 9);
+    expect(moved!.a[1]).toBeCloseTo(0, 9);
+  });
+
+  it('leaves a service that misses every basin', () => {
+    const line = service([0, 0], [0, 8]);
+    expect(servicesAroundBasins([line], [basinAt([3, 5])], STRETCH)[0]).toBe(line);
+  });
+});
+
+describe('aroundBasins at city scale', () => {
+  it('handles a few hundred basins in view quickly', () => {
+    const basins = Array.from({ length: 400 }, (_, i) =>
+      basinAt([((i * 37) % 520) - 260, ((i * 91) % 520) - 260]),
+    );
+    const runs = Array.from({ length: 300 }, (_, i) =>
+      steamRun([
+        [-260, i * 1.7 - 255],
+        [260, i * 1.7 - 255],
+      ]),
+    );
+    const started = performance.now();
+    aroundBasins(runs, basins, STRETCH);
+    expect(performance.now() - started).toBeLessThan(200);
   });
 });

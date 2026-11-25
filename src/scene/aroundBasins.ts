@@ -3,7 +3,8 @@ import type { PipeRun } from './build';
 import { BASIN_CHAMBER_M } from './fixtures';
 import type { Vec2 } from './local';
 import { FEET_TO_METERS } from '../depth';
-import { radiusOf } from './tubes';
+import type { ServiceLine } from './services';
+import { radiusOf, SERVICE_RADIUS_M } from './tubes';
 
 /** A catch basin's chamber, as fixtures.ts draws it: from the grate down to its lead's depth. */
 export interface Chamber {
@@ -34,7 +35,7 @@ export const chambersOf = (links: AssetLink[]): Chamber[] =>
  */
 export const stepAround = (
   path: Vec2[],
-  chamber: Chamber,
+  chamber: Pick<Chamber, 'position' | 'heading'>,
   halfX: number,
   halfY: number,
 ): Vec2[] => {
@@ -137,24 +138,187 @@ export const stepAround = (
  * around the chamber at the same depth. Surveyed lines keep their mapped route, and sewers are
  * left alone, since basins drain into them. Only the drawing moves, like `clearOfSlab`.
  */
+/** What a pipe must keep out of: one chamber, or several close ones, grown by the pipe's room. */
+interface Block {
+  position: Vec2;
+  heading: number;
+  halfX: number;
+  halfY: number;
+}
+
+const cornersOf = (block: Block): Vec2[] => {
+  const [cos, sin] = [Math.cos(block.heading), Math.sin(block.heading)];
+  return [
+    [block.halfX, block.halfY],
+    [-block.halfX, block.halfY],
+    [-block.halfX, -block.halfY],
+    [block.halfX, -block.halfY],
+  ].map(([x, y]) => [
+    block.position[0] + x! * cos - y! * sin,
+    block.position[1] + x! * sin + y! * cos,
+  ]);
+};
+
+/** The smallest box, turned like `a`, around both. */
+const merged = (a: Block, b: Block): Block => {
+  const [cos, sin] = [Math.cos(a.heading), Math.sin(a.heading)];
+  const local = [...cornersOf(a), ...cornersOf(b)].map(([x, y]): Vec2 => [
+    (x - a.position[0]) * cos + (y - a.position[1]) * sin,
+    -(x - a.position[0]) * sin + (y - a.position[1]) * cos,
+  ]);
+  const xs = local.map((p) => p[0]);
+  const ys = local.map((p) => p[1]);
+  const [midX, midY] = [
+    (Math.min(...xs) + Math.max(...xs)) / 2,
+    (Math.min(...ys) + Math.max(...ys)) / 2,
+  ];
+  return {
+    position: [a.position[0] + midX * cos - midY * sin, a.position[1] + midX * sin + midY * cos],
+    heading: a.heading,
+    halfX: (Math.max(...xs) - Math.min(...xs)) / 2,
+    halfY: (Math.max(...ys) - Math.min(...ys)) / 2,
+  };
+};
+
+/**
+ * Chambers grown by a pipe's room. Two whose grown boxes reach each other leave no gap a pipe
+ * could pass through, and stepping round one would only push it into the other (a corner with a
+ * basin on each curb), so they become one box to go round together.
+ */
+const blocksOf = (chambers: Chamber[], room: number): Block[] => {
+  const blocks: Block[] = chambers.map(({ position, heading }) => ({
+    position,
+    heading,
+    halfX: BASIN_CHAMBER_M[0] / 2 + room,
+    halfY: BASIN_CHAMBER_M[1] / 2 + room,
+  }));
+  const reach = (block: Block) => Math.hypot(block.halfX, block.halfY);
+  for (let joined = true; joined;) {
+    joined = false;
+    // Each sweep joins all it can; a box grown by a join may reach another, hence the next sweep.
+    for (let i = 0; i < blocks.length; i++)
+      for (let j = blocks.length - 1; j > i; j--) {
+        const [a, b] = [blocks[i]!, blocks[j]!];
+        const apart = Math.hypot(a.position[0] - b.position[0], a.position[1] - b.position[1]);
+        if (apart >= reach(a) + reach(b)) continue;
+        blocks[i] = merged(a, b);
+        blocks.splice(j, 1);
+        joined = true;
+      }
+  }
+  return blocks;
+};
+
+/** Whether a block comes within the box around a path; most are blocks away and skipped. */
+const nearBox = (path: Vec2[], block: Block) => {
+  const reach = Math.hypot(block.halfX, block.halfY);
+  const [x, y] = block.position;
+  let [minX, minY, maxX, maxY] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const [px, py] of path) {
+    if (px < minX) minX = px;
+    if (px > maxX) maxX = px;
+    if (py < minY) minY = py;
+    if (py > maxY) maxY = py;
+  }
+  return x > minX - reach && x < maxX + reach && y > minY - reach && y < maxY + reach;
+};
+
+// A pipe whose top sits below the chamber floor passes under it.
+const blocking = (chambers: Chamber[], depthFt: number, radius: number, stretch: number) => {
+  const metersPerFoot = FEET_TO_METERS * stretch;
+  return chambers.filter(
+    (chamber) => depthFt * metersPerFoot - radius < chamber.bottomFt * metersPerFoot,
+  );
+};
+
+/**
+ * Lines placed from permits sit at a standard offset and depth, so one can land on a catch basin
+ * the city mapped, and was drawn straight through its chamber. The estimate gives way: it steps
+ * around the chamber at the same depth. Surveyed lines keep their mapped route, and sewers are
+ * left alone, since basins drain into them. Only the drawing moves, like `clearOfSlab`.
+ */
 export const aroundBasins = (runs: PipeRun[], chambers: Chamber[], stretch: number): PipeRun[] => {
   if (!chambers.length) return runs;
-  const metersPerFoot = FEET_TO_METERS * stretch;
+  // Runs of one utility share a size and nearly always a depth, so their blocks are worked once.
+  const cache = new Map<string, Block[]>();
   return runs.map((run) => {
     if (run.surveyed || run.utility === 'sewer') return run;
     const radius = radiusOf(run);
-    const room = radius + CLEARANCE_M;
+    const key = `${radius}|${run.depthFt}`;
+    let blocks = cache.get(key);
+    if (!blocks) {
+      blocks = blocksOf(blocking(chambers, run.depthFt, radius, stretch), radius + CLEARANCE_M);
+      cache.set(key, blocks);
+    }
     let path = run.path;
-    for (const chamber of chambers) {
-      // A pipe whose top sits below the chamber floor passes under it.
-      if (run.depthFt * metersPerFoot - radius >= chamber.bottomFt * metersPerFoot) continue;
-      path = stepAround(
-        path,
-        chamber,
-        BASIN_CHAMBER_M[0] / 2 + room,
-        BASIN_CHAMBER_M[1] / 2 + room,
-      );
+    for (const block of blocks) {
+      if (!nearBox(path, block)) continue;
+      path = stepAround(path, block, block.halfX, block.halfY);
     }
     return path === run.path ? run : { ...run, path };
+  });
+};
+
+/**
+ * How far to slide a straight line sideways (along `normal`) so it clears a block: the smaller
+ * way out, or 0 when it already misses.
+ */
+const slideClear = (a: Vec2, b: Vec2, normal: Vec2, block: Block) => {
+  if (stepAround([a, b], block, block.halfX, block.halfY).length === 2) return 0;
+  const offsets = cornersOf(block).map(
+    (corner) => (corner[0] - a[0]) * normal[0] + (corner[1] - a[1]) * normal[1],
+  );
+  const [low, high] = [Math.min(...offsets), Math.max(...offsets)];
+  return -low < high ? low : high;
+};
+
+// Sliding clear of one block can land a service on another nearby; a few tries settle it.
+const MAX_SLIDES = 3;
+
+/**
+ * Service lines cross the curb, where basins sit, and are drawn as one straight from the main to
+ * the lot line; where the line meets the main is the drawing's guess. One that would pass
+ * through a chamber slides along the main, a foot or two, until it clears.
+ */
+export const servicesAroundBasins = (
+  services: ServiceLine[],
+  chambers: Chamber[],
+  stretch: number,
+): ServiceLine[] => {
+  if (!chambers.length) return services;
+  const cache = new Map<string, Block[]>();
+  return services.map((service) => {
+    const radius = SERVICE_RADIUS_M[service.utility];
+    const [dx, dy] = [service.b[0] - service.a[0], service.b[1] - service.a[1]];
+    const length = Math.hypot(dx, dy);
+    if (!length) return service;
+    const key = `${radius}|${service.depthFt}`;
+    let blocks = cache.get(key);
+    if (!blocks) {
+      blocks = blocksOf(blocking(chambers, service.depthFt, radius, stretch), radius + CLEARANCE_M);
+      cache.set(key, blocks);
+    }
+    const normal: Vec2 = [-dy / length, dx / length];
+    const shift = (point: Vec2, by: number): Vec2 => [
+      point[0] + normal[0] * by,
+      point[1] + normal[1] * by,
+    ];
+    let slid = 0;
+    for (let tries = 0; tries < MAX_SLIDES; tries++) {
+      const step = blocks.reduce(
+        (found, block) =>
+          found || slideClear(shift(service.a, slid), shift(service.b, slid), normal, block),
+        0,
+      );
+      if (!step) break;
+      slid += step;
+    }
+    if (!slid) return service;
+    return {
+      ...service,
+      a: shift(service.a, slid),
+      b: shift(service.b, slid),
+      ...(service.curbValve ? { curbValve: shift(service.curbValve, slid) } : {}),
+    };
   });
 };

@@ -311,7 +311,10 @@ export const tubeLayers = ({
 
 // Water services are an inch or two across and house sewers several inches, far thinner than the
 // mains, but drawn thick enough to see and pick at street scale.
-const SERVICE_RADIUS_M: Record<ServiceLine['utility'], number> = { water: 0.12, sewer: 0.18 };
+export const SERVICE_RADIUS_M: Record<ServiceLine['utility'], number> = {
+  water: 0.12,
+  sewer: 0.18,
+};
 // Valve bodies a little fuller than their pipe, as the castings are.
 const VALVE_SCALE = 1.2;
 

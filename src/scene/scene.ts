@@ -68,7 +68,7 @@ import {
   type Joint,
 } from './tubes';
 import { linkAssets, type AssetLink } from './assetLinks';
-import { aroundBasins, chambersOf } from './aroundBasins';
+import { aroundBasins, chambersOf, servicesAroundBasins } from './aroundBasins';
 import {
   CODE_HYDRANT,
   fixtureLayers,
@@ -456,7 +456,8 @@ const visibleOf = (state: SceneState): Visible => {
   );
   // Basins link to sewers, which never bend, so these links hold for the bent runs too.
   const links = linkAssets(points, straight);
-  const runs = aroundBasins(straight, chambersOf(links), stretch);
+  const chambers = chambersOf(links);
+  const runs = aroundBasins(straight, chambers, stretch);
   const bent = runs.some((run, i) => run !== straight[i]);
   const pieces = bent
     ? runs.flatMap(piecesOf)
@@ -488,10 +489,14 @@ const visibleOf = (state: SceneState): Visible => {
       : data.digSpots.filter(
           (spot) => !hidden.has(spot.utility) && issuedSince(spot.issued, state.since),
         ),
-    services: data.services.filter((s) =>
-      s.utility === 'water'
-        ? !hidden.has('services') && !hidden.has('water')
-        : !hidden.has('house-sewers') && !hidden.has('sewer'),
+    services: servicesAroundBasins(
+      data.services.filter((s) =>
+        s.utility === 'water'
+          ? !hidden.has('services') && !hidden.has('water')
+          : !hidden.has('house-sewers') && !hidden.has('sewer'),
+      ),
+      chambers,
+      stretch,
     ),
     workZones: hidden.has('work') ? [] : state.workZones,
   };
