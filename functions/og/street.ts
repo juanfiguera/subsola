@@ -109,6 +109,7 @@ const preview = async ({ request, env, waitUntil }: Context) => {
     const svg = streetPreviewSvg(
       { street, city: region.name, beta: Boolean(region.beta) },
       loaded.plan,
+      loaded.facts,
     );
     const resvg = new Resvg(svg, {
       font: { fontBuffers, defaultFontFamily: 'Barlow', loadSystemFonts: false },

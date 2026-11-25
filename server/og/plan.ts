@@ -10,7 +10,11 @@ import { mergeBy } from '../../src/tiles';
 import { curbsOf } from '../../src/scene/build';
 import { createFrame, type LocalFrame, type Vec2 } from '../../src/scene/local';
 import { placeStreet, type StreetRecords } from '../../src/street';
-import type { StreetPlan } from './draw';
+import { distanceMeters } from '../../src/geo';
+import { summarize } from '../../src/brief';
+import { activeWork, todayIn } from '../../src/work';
+import { ownerName } from '../../src/ui/dom';
+import type { StreetFacts, StreetPlan } from './draw';
 import { VIEW_M } from './draw';
 
 /**
@@ -18,9 +22,11 @@ import { VIEW_M } from './draw';
  * by the same code the map and the MCP server use.
  */
 
+/** The radius the map's address card counts permits in ("Within 500 ft"); see src/main.ts. */
+export const FACTS_RADIUS_M = 150;
 // Lines are placed from blocks; a block is stored in the cell its middle falls in, so cells a
-// little past the view still hold lines that cross it.
-const REACH_M = VIEW_M / 2 + 60;
+// little past what's counted still hold blocks that reach into it.
+const REACH_M = Math.max(VIEW_M / 2, FACTS_RADIUS_M) + 60;
 const CELL_TIMEOUT_MS = 6_000;
 const CELLS_AT_ONCE = 2;
 
@@ -51,15 +57,48 @@ export interface PlanDeps {
 
 export interface LoadedPlan {
   plan: StreetPlan;
+  facts: StreetFacts;
   frame: LocalFrame;
   streets: StreetSegment[];
 }
+
+/**
+ * What the preview says about the spot, counted the way the map's address card counts it: every
+ * permit that opens the street within 500 ft, the year of the first, and the dig whose work
+ * window includes today in the city's own time zone, soonest-ending first.
+ */
+export const streetFacts = (
+  groups: StreetRecords['permitGroups'],
+  lngLat: [number, number],
+  region: Region,
+  now: Date,
+): StreetFacts => {
+  const nearby = groups.filter((group) => distanceMeters(lngLat, group.geometry) <= FACTS_RADIUS_M);
+  const summaries = summarize(nearby, []);
+  const years = summaries.map((s) => s.firstYear).filter((year): year is number => year !== null);
+  const active = activeWork(nearby, todayIn(region.timeZone, now));
+  // A utility's own dig says more about what's under the street than a city project does.
+  const first = (active.find(({ record }) => record.utility !== 'capital') ?? active[0])?.record;
+  return {
+    permits: summaries.reduce((sum, s) => sum + s.permitCount, 0),
+    since: years.length ? Math.min(...years) : null,
+    diggingNow: first
+      ? {
+          count: active.length,
+          owner: first.permittee ? ownerName(first.permittee) : null,
+          utility: first.utility,
+          until: first.workEnd ?? null,
+        }
+      : null,
+  };
+};
 
 /** Null when no built cell reaches the spot or none of them loaded. */
 export const loadPlan = async (
   lngLat: [number, number],
   region: Region,
   deps: PlanDeps,
+  now: Date = new Date(),
 ): Promise<LoadedPlan | null> => {
   const frame = createFrame(lngLat);
   const index = await deps.cellIndex();
@@ -104,10 +143,12 @@ export const loadPlan = async (
   // Synchronous from here: placement reads the city's depth standards from a shared slot.
   useDepthStandards(region.depths);
   const placed = placeStreet(frame, records);
+  const facts = streetFacts(records.permitGroups, lngLat, region, now);
   const toLocal = (ring: Position[]): Vec2[] => ring.map((point) => frame.toLocal(point));
   return {
     frame,
     streets: records.streets,
+    facts,
     plan: {
       lines: placed.runs.map((run) => ({
         utility: run.utility,

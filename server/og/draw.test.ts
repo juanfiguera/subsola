@@ -6,7 +6,9 @@ import {
   fitStreet,
   inView,
   legendOf,
+  shortDate,
   streetPreviewSvg,
+  type StreetFacts,
   wrapWords,
   type PlanLine,
   type StreetPlan,
@@ -117,11 +119,21 @@ describe('legend', () => {
   });
 });
 
+const FACTS: StreetFacts = {
+  permits: 4129,
+  since: 1991,
+  diggingNow: { count: 3, owner: 'Con Edison', utility: 'gas', until: '2026-12-31' },
+};
+const NONE: StreetFacts = { permits: 0, since: null, diggingNow: null };
+const TODAY = new Date('2026-11-25T12:00:00Z');
+
 describe('streetPreviewSvg', () => {
   it('draws the address, the city and the lines at the preview size', () => {
     const svg = streetPreviewSvg(
       { street: '117 West St', city: 'New York City', beta: false },
       PLAN,
+      FACTS,
+      TODAY,
     );
     expect(svg).toContain(`width="${WIDTH}" height="${HEIGHT}"`);
     expect(svg).toContain('>117 West St</text>');
@@ -132,9 +144,47 @@ describe('streetPreviewSvg', () => {
     expect(svg).toContain('Call 811 before you dig.');
   });
 
+  it('leads with the digs within 500 ft and who is digging today', () => {
+    const svg = streetPreviewSvg(
+      { street: '117 West St', city: 'New York City', beta: false },
+      PLAN,
+      FACTS,
+      TODAY,
+    );
+    expect(svg).toContain('>4,129</text>');
+    expect(svg).toContain('>street permits within 500 ft</text>');
+    expect(svg).toContain('>since 1991</text>');
+    const city = streetPreviewSvg(
+      { street: '117 West St', city: 'New York City', beta: false },
+      PLAN,
+      { ...FACTS, diggingNow: { ...FACTS.diggingNow!, owner: 'Judlau', utility: 'capital' } },
+      TODAY,
+    );
+    expect(city).toContain('>Judlau, city street work, until\u00a0Dec\u00a031</text>');
+    expect(svg).toContain('>Digging now</text>');
+    expect(svg).toContain('>Con Edison, gas, until\u00a0Dec\u00a031</text>');
+    expect(svg).toContain('>and 2 more within 500 ft</text>');
+  });
+
+  it('draws lines carried through without a record pale, never dashed', () => {
+    const svg = streetPreviewSvg(
+      { street: '117 West St', city: 'New York City', beta: false },
+      { ...PLAN, lines: PLAN.lines.map((l) => ({ ...l, assumed: true })) },
+      FACTS,
+      TODAY,
+    );
+    expect(svg).not.toContain('stroke-dasharray');
+    expect(svg).toContain('stroke-opacity="0.4"');
+  });
+
   it('marks a beta city', () => {
     expect(
-      streetPreviewSvg({ street: '33 E Bayaud Ave', city: 'Denver', beta: true }, PLAN),
+      streetPreviewSvg(
+        { street: '33 E Bayaud Ave', city: 'Denver', beta: true },
+        PLAN,
+        FACTS,
+        TODAY,
+      ),
     ).toContain('BETA');
   });
 
@@ -142,17 +192,32 @@ describe('streetPreviewSvg', () => {
     expect(escapeXml(`<a href="x">'&'</a>`)).toBe(
       '&#60;a href=&#34;x&#34;&#62;&#39;&#38;&#39;&#60;/a&#62;',
     );
-    const svg = streetPreviewSvg({ street: '1 <script>', city: 'A & B', beta: false }, PLAN);
+    const svg = streetPreviewSvg(
+      { street: '1 <script>', city: 'A & B', beta: false },
+      PLAN,
+      { ...FACTS, diggingNow: { ...FACTS.diggingNow!, owner: '<b>Co</b>' } },
+      TODAY,
+    );
     expect(svg).not.toContain('<script>');
+    expect(svg).not.toContain('<b>');
     expect(svg).toContain('A &#38; B');
   });
 
-  it('says so when the block has no records', () => {
+  it('says so when there are no digs on record nearby', () => {
     expect(
       streetPreviewSvg(
         { street: '1 Main St', city: 'Seattle', beta: false },
         { ...PLAN, lines: [] },
+        NONE,
+        TODAY,
       ),
-    ).toContain('No utility records on this block yet');
+    ).toContain('No utility digs on record');
+  });
+});
+
+describe('shortDate', () => {
+  it("drops this year's year and keeps another's", () => {
+    expect(shortDate('2026-12-31', TODAY)).toBe('Dec 31');
+    expect(shortDate('2027-04-16', TODAY)).toBe('Apr 16, 2027');
   });
 });
