@@ -31,6 +31,7 @@ import type {
   ScenePoint,
   StreetLabel,
 } from './build';
+import { piecesOf } from './build';
 import {
   FONT,
   colorOf,
@@ -67,6 +68,7 @@ import {
   type Joint,
 } from './tubes';
 import { linkAssets, type AssetLink } from './assetLinks';
+import { aroundBasins, chambersOf } from './aroundBasins';
 import {
   CODE_HYDRANT,
   fixtureLayers,
@@ -446,15 +448,21 @@ const clearOfSlab = <T extends { utility: UtilityKind; depthFt: number; radiusM?
 const visibleOf = (state: SceneState): Visible => {
   const { data, hidden, stretch } = state;
   const hideRecycled = hidden.has('recycled');
-  const runs = data.runs
+  const straight = data.runs
     .filter((r) => !hidden.has(r.utility) && !(hideRecycled && isRecycled(r.surveyed)))
     .map((r) => clearOfSlab(r, stretch));
-  const pieces = data.pieces
-    .filter((p) => !hidden.has(p.utility) && !(hideRecycled && p.recycled))
-    .map((p) => clearOfSlab(p, stretch));
   const points = data.points.filter((p) =>
     p.kind === 'permit-point' ? !p.utility || !hidden.has(p.utility) : !hidden.has(p.kind),
   );
+  // Basins link to sewers, which never bend, so these links hold for the bent runs too.
+  const links = linkAssets(points, straight);
+  const runs = aroundBasins(straight, chambersOf(links), stretch);
+  const bent = runs.some((run, i) => run !== straight[i]);
+  const pieces = bent
+    ? runs.flatMap(piecesOf)
+    : data.pieces
+        .filter((p) => !hidden.has(p.utility) && !(hideRecycled && p.recycled))
+        .map((p) => clearOfSlab(p, stretch));
   return {
     runs,
     pieces,
@@ -474,7 +482,7 @@ const visibleOf = (state: SceneState): Visible => {
     points,
     assets: points.filter((p) => p.kind !== 'permit-point'),
     // From the drawn runs, so electric and telecom manholes reach their pipes below the slab.
-    links: linkAssets(points, runs),
+    links: bent ? linkAssets(points, runs) : links,
     digSpots: hidden.has('dig-spots')
       ? []
       : data.digSpots.filter(
@@ -1550,7 +1558,8 @@ export const createScene = (container: HTMLDivElement, handlers: SceneHandlers) 
     }
   };
 
-  const goTo = (preset: Preset, duration = 900) => transitionTo(presetFor(preset, container.clientWidth), duration);
+  const goTo = (preset: Preset, duration = 900) =>
+    transitionTo(presetFor(preset, container.clientWidth), duration);
 
   const poseView = ({ target, zoom, tilt, bearing }: CameraPose): Partial<OrbitViewState> => ({
     target: [target[0], target[1], 0],
@@ -1596,7 +1605,10 @@ export const createScene = (container: HTMLDivElement, handlers: SceneHandlers) 
     const duration = held.first ? DIVE_MS.first : DIVE_MS.again;
     const landing: Partial<OrbitViewState> = options.to
       ? poseView(options.to)
-      : { ...presetFor(options.preset ?? 'underground', container.clientWidth), target: [target[0], target[1], 0] };
+      : {
+          ...presetFor(options.preset ?? 'underground', container.clientWidth),
+          target: [target[0], target[1], 0],
+        };
     if (!options.motion) {
       motion.revealPending = false;
       motion.revealStart = -Infinity;

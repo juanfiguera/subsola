@@ -31,7 +31,7 @@ export interface FixturePose {
 // True size is a few pixels at street zoom; drawn half again as big, like the oversized pipes.
 const FIXTURE_SCALE = 1.5;
 // A typical precast basin chamber, about 3 by 4 ft in plan.
-const BASIN_CHAMBER_M: Vec2 = [0.9, 1.2];
+export const BASIN_CHAMBER_M: Vec2 = [0.9, 1.2];
 // The chamber's open top sits right under the grate, so the grate rests on it. A gap here, once
 // the depth stretch was applied, made grates look like they were floating over their basins.
 const BASIN_TOP_M = 0;
