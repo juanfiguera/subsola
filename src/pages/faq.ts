@@ -82,7 +82,7 @@ const groups = (): Group[] => [
       {
         id: 'tracking',
         q: 'Do you keep the addresses I search?',
-        a: `No. ${SITE_NAME} has no accounts and never stores the addresses you look up, on the map or through AI assistants, unless you send feedback, which includes the page you were on. The <a href="/privacy">privacy page</a> lists everything that is kept.`,
+        a: `No. ${SITE_NAME} has no accounts and never stores the addresses you look up, on the map or through AI assistants, unless you send feedback, which includes the page you were on. Suggestions for a street address are matched in your browser, so what you type stays there until you pick one. The <a href="/privacy">privacy page</a> lists everything that is kept.`,
       },
     ],
   },

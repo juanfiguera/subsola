@@ -347,9 +347,9 @@ How it fits together:
 
 ```text
 city and utility open data
-        |  nightly: pnpm download, then pnpm build-cells
+        |  nightly: pnpm download, then pnpm build-cells and pnpm build-addresses
         v
-250 m map cells (data/cells, or data.subsola.com)
+250 m map cells and the address index (data/, or data.subsola.com)
         |
         +--> the map (src/)            3D street, cards, lot reports
         +--> the MCP server (server/)  whats_under, recent_digs at /mcp
@@ -357,8 +357,9 @@ city and utility open data
 
 - **The full build:** `pnpm download` fetches every city's records (it resumes if stopped),
   `pnpm download-osm` adds OpenStreetMap's manholes, lamps and signals for New York (needs
-  `osmium-tool`), `pnpm build-cells` writes about 80,000 cells, and `pnpm insights` writes the
-  figures behind [subsola.com/insights](https://subsola.com/insights).
+  `osmium-tool`), `pnpm build-cells` writes about 80,000 cells, `pnpm build-addresses` writes the
+  search box's address index ([docs/addresses.md](docs/addresses.md)), and `pnpm insights` writes
+  the figures behind [subsola.com/insights](https://subsola.com/insights).
 - **Visual tests:** `pnpm test:visual` replays recorded network traffic and compares screenshots
   (Linux baselines come from CI).
 - **Each city's details**, from quirks in its permits to what it doesn't publish, are in

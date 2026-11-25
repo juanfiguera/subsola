@@ -136,6 +136,11 @@ const main = async () => {
     `${local.size.toLocaleString()} local files, ${remote.size.toLocaleString()} in ${env.R2_BUCKET}: ` +
       `${cells.length.toLocaleString()} cells to send (${megabytes.toFixed(0)} MB), ${remove.length} to remove`,
   );
+  const addressKey = (key: string) => key.startsWith('addresses/');
+  console.log(
+    `  of which the address index: ${changed.filter(addressKey).length.toLocaleString()} to send, ` +
+      `${remove.filter(addressKey).length.toLocaleString()} to remove`,
+  );
   if (dryRun) return;
   if (remove.length > remote.size * MAX_REMOVED_SHARE && !process.argv.includes('--allow-shrink'))
     throw new Error(
