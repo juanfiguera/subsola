@@ -13,13 +13,14 @@ import { CONTACT_NAV, SHARE_IMAGE, SHARE_IMAGE_ALT, SITE_NAME, SITE_URL } from '
  * src/pages/shell.test.ts renders every page and fails when one is missing a piece.
  */
 
-export type NavPage = 'map' | 'insights' | 'mcp' | 'faq';
+export type NavPage = 'map' | 'insights' | 'mcp' | 'faq' | 'about';
 
 export const SITE_NAV: { page: NavPage; href: string; label: string }[] = [
   { page: 'map', href: '/', label: 'Map' },
   { page: 'insights', href: '/insights', label: 'Insights' },
   { page: 'mcp', href: '/mcp', label: 'AI assistants' },
   { page: 'faq', href: '/faq', label: 'FAQ' },
+  { page: 'about', href: '/about', label: 'About' },
 ];
 
 export const FOOT_LINKS: { href: string; label: string }[] = [

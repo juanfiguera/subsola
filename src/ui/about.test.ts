@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { REGIONS } from '../regions';
-import { CONFIDENCE_LABELS, type SourceKey } from '../sources/catalog';
+import type { SourceKey } from '../sources/catalog';
 import { aboutCard, aboutSources, sourceTally } from './about';
 import type { SourceStatus } from './sources';
 
@@ -95,16 +95,9 @@ describe('aboutCard', () => {
     expect(html).toContain('not a utility locate');
   });
 
-  it('lists every confidence label it explains', () => {
-    for (const confidence of [
-      'surveyed',
-      'utility',
-      'block-level',
-      'lot-level',
-      'crowdsourced',
-      'inferred',
-    ] as const)
-      expect(html).toContain(CONFIDENCE_LABELS[confidence].label);
+  it('links to the full About page for everything else', () => {
+    expect(html).toContain('href="/about"');
+    expect(html).toContain('id="about-sources"');
   });
 
   // Insights, AI assistants, Privacy and contact live in the site links row under the card.

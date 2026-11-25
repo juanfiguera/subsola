@@ -6,6 +6,7 @@ import { jsonLdScript } from './shell';
 import { notFoundPage, robotsTxt, sitemapPaths, sitemapXml } from './siteFiles';
 import { pageFiles } from './build';
 import { faqPage } from './faq';
+import { aboutPage } from './about';
 
 const CSS = 'assets/pages-abc123.css';
 
@@ -33,6 +34,7 @@ describe('city slugs', () => {
       '/privacy',
       '/credits',
       '/faq',
+      '/about',
       '/api',
       '/og',
       '/fonts',
@@ -152,6 +154,7 @@ describe('site files', () => {
       '/privacy',
       '/credits',
       '/faq',
+      '/about',
       ...REGIONS.map((region) => `/${citySlug(region)}`),
     ]);
     const xml = sitemapXml(['/', '/a&b']);
@@ -181,10 +184,29 @@ describe('site files', () => {
         'privacy.html',
         'credits.html',
         'faq.html',
+        'about.html',
         'robots.txt',
         'sitemap.xml',
       ].sort(),
     );
+  });
+});
+
+describe('About page', () => {
+  const html = aboutPage(CSS);
+
+  it('uses the shared shell and marks About in the nav', () => {
+    expect(html).toContain('<a href="/about" aria-current="page">About</a>');
+    expect(html).toContain('<link rel="canonical" href="https://subsola.com/about" />');
+  });
+
+  it("names every city's one-call center", () => {
+    for (const region of REGIONS) expect(html).toContain(region.markout.center);
+  });
+
+  it('says it is research, not a locate, and links the credits', () => {
+    expect(html).toContain('Research, not a utility locate');
+    expect(html).toContain('href="/credits"');
   });
 });
 

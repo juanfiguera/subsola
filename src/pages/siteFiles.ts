@@ -18,6 +18,7 @@ export const sitemapPaths = (): string[] => [
   '/privacy',
   '/credits',
   '/faq',
+  '/about',
   ...REGIONS.map(cityPath),
 ];
 

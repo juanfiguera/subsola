@@ -4,11 +4,11 @@ import { SOURCES } from '../sources/catalog';
 /**
  * About, the other pages and a contact link, in one quiet row: in the map's bottom corner on
  * a wide screen, and at the foot of the card on a phone, where the corner is taken by the sheet.
- * About opens the About card; the rest are plain links.
+ * All plain links; About is its own page.
  */
 export const siteLinks = (where: 'corner' | 'card') => `
   <nav class="site-links site-links-${where}" aria-label="About Subsola">
-    <button class="link" data-action="about">About</button>
+    <a href="/about">About</a>
     <a href="/insights">Insights</a>
     <a href="/mcp" data-mcp-link="${where === 'corner' ? 'site links' : 'card links'}">${where === 'corner' ? 'AI assistants' : 'Use with AI assistants'}</a>
     <a href="/faq">FAQ</a>

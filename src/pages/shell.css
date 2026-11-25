@@ -369,8 +369,11 @@ h1 {
     font-size: 17px;
   }
 
+  /* If the links still don't fit, they scroll rather than slide under the theme switch. */
   .site-nav {
     gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
   .site-nav a {
@@ -384,7 +387,7 @@ h1 {
   }
 }
 
-@media (max-width: 370px) {
+@media (max-width: 440px) {
   /* The brand's word goes first, so every link still fits beside the mark. */
   .brand span:last-child {
     display: none;

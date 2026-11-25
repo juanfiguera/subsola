@@ -42,7 +42,14 @@ const between = (html: string, start: RegExp, end: string) => {
 describe('the shared shell, on every page outside the map', () => {
   it('covers the generated pages, the insights page and /mcp', () => {
     const names = PAGES.map(([name]) => name);
-    for (const name of ['faq.html', 'credits.html', 'privacy.html', '404.html', 'seattle.html'])
+    for (const name of [
+      'faq.html',
+      'about.html',
+      'credits.html',
+      'privacy.html',
+      '404.html',
+      'seattle.html',
+    ])
       expect(names).toContain(name);
     expect(names).toContain('insights.html');
     expect(names).toContain('mcp');

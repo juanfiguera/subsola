@@ -5,10 +5,11 @@ import { notFoundPage, robotsTxt, sitemapXml } from './siteFiles';
 import { privacyPage } from './privacy';
 import { creditsPage } from './credits';
 import { faqPage } from './faq';
+import { aboutPage } from './about';
 
 /**
  * What the build writes beside the map, by file name in dist/: one page per city (seattle.html,
- * which Pages serves at /seattle), the privacy, credits and FAQ pages, the 404 page, robots.txt and sitemap.xml. vite.config.ts loads
+ * which Pages serves at /seattle), the about, privacy, credits and FAQ pages, the 404 page, robots.txt and sitemap.xml. vite.config.ts loads
  * this through Vite's module runner, so the config itself doesn't import the app's code.
  */
 
@@ -26,6 +27,7 @@ export const pageFiles = (stylesheet: string, figures: FiguresByCity): Record<st
   'privacy.html': privacyPage(stylesheet),
   'credits.html': creditsPage(stylesheet),
   'faq.html': faqPage(stylesheet),
+  'about.html': aboutPage(stylesheet),
   'robots.txt': robotsTxt(),
   'sitemap.xml': sitemapXml(),
 });
