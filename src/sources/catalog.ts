@@ -791,6 +791,30 @@ export const SOURCES = {
     confidence: 'context',
     license: 'County of Santa Clara GIS data; no use limitations stated, provided as is',
   },
+  // Every street address in each city, for Subsola's own type-ahead (src/sources/addressIndex.ts):
+  // only the house number and street are read, and only the index built from them is published.
+  addressPoints: nycOpenData('uf93-f8nk', 'Address Points', 'NYC OTI', 'context'),
+  chiAddresses: {
+    id: '78yw-iddh',
+    name: 'Address Points',
+    publisher: 'Cook County',
+    url: 'https://datacatalog.cookcountyil.gov/d/78yw-iddh',
+    confidence: 'context',
+    license: 'Cook County open data; public domain',
+  },
+  dalAddresses: dalLayer(
+    'AddressPoints/FeatureServer/0',
+    'Address points',
+    'City of Dallas',
+    'context',
+  ),
+  denAddresses: denLayer(
+    'ODC_CITY_LOC_ADDRESSPUBLIC_P/FeatureServer/31',
+    'Addresses',
+    'City and County of Denver',
+    'context',
+  ),
+  sjAddresses: sjLayer(36, 'Site addresses', 'City of San Jose', 'context'),
   // San Jose Water's inventory for the EPA's lead rule. Paused (PAUSED_SOURCES): the company's
   // website terms bar reproducing or republishing its content.
   sjServiceLines: {

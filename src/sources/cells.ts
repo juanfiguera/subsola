@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { readGzipJson } from './gzipJson';
 import type { Feature, Geometry } from 'geojson';
 import type { GridCell } from '../grid';
 import type { PermitGroupProperties } from './permits';
@@ -99,17 +100,6 @@ const indexSchema = z.object({
 
 export type CellIndex = z.infer<typeof indexSchema>;
 
-const GZIP_MAGIC = [0x1f, 0x8b];
-
-/** Bundles are gzipped files; a host that sends them with Content-Encoding has unzipped them already. */
-const readJson = async (res: Response): Promise<unknown> => {
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  if (bytes[0] !== GZIP_MAGIC[0] || bytes[1] !== GZIP_MAGIC[1])
-    return JSON.parse(new TextDecoder().decode(bytes));
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  return JSON.parse(await new Response(stream).text());
-};
-
 const fetchOk = async (url: string, signal?: AbortSignal) => {
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`${url} returned ${res.status}`);
@@ -125,7 +115,7 @@ export const fetchCell = async (
   signal?: AbortSignal,
 ): Promise<CellData> => {
   const bundle = bundleSchema.parse(
-    await readJson(await fetchOk(`${baseUrl}/${cell.key}.json.gz`, signal)),
+    await readGzipJson(await fetchOk(`${baseUrl}/${cell.key}.json.gz`, signal)),
   );
   // Cells built before a source was paused still carry it until the next build replaces them.
   return {

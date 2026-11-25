@@ -31,6 +31,7 @@ import { DEN_DATASETS } from './den/datasets';
 import { CHI_DATASETS } from './chi/datasets';
 import { DAL_DATASETS } from './dal/datasets';
 import { SJ_DATASETS } from './sj/datasets';
+import { addressDatasets } from './addresses/datasets';
 
 export interface DatasetSpec {
   name: SourceKey;
@@ -115,8 +116,7 @@ const NYC_DATASETS: DatasetSpec[] = [
   },
 ];
 
-/** Each city's datasets, so one city can be downloaded and built alone (CITY=sea). */
-export const CITY_DATASETS: Record<RegionId, DatasetSpec[]> = {
+const BY_CITY: Record<RegionId, DatasetSpec[]> = {
   nyc: NYC_DATASETS,
   dc: DC_DATASETS,
   sf: SF_DATASETS,
@@ -128,6 +128,14 @@ export const CITY_DATASETS: Record<RegionId, DatasetSpec[]> = {
   dal: DAL_DATASETS,
   sj: SJ_DATASETS,
 };
+
+/** Each city's datasets, so one city can be downloaded and built alone (CITY=sea). */
+export const CITY_DATASETS = Object.fromEntries(
+  Object.entries(BY_CITY).map(([city, specs]) => [
+    city,
+    [...specs, ...addressDatasets(city as RegionId)],
+  ]),
+) as Record<RegionId, DatasetSpec[]>;
 
 /** Every dataset the build reads, every city's. */
 export const DATASETS: DatasetSpec[] = Object.values(CITY_DATASETS).flat();

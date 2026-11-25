@@ -4,6 +4,8 @@
  * cells that aren't there yet, and cells the build no longer makes are removed after that.
  * data/insights.json, when `pnpm insights` made one, goes up after the index as insights.json at
  * the bucket root for subsola.com/insights; a night without one leaves the last copy up.
+ * The type-ahead index in data/addresses goes up under addresses/ beside the cells, its manifest
+ * after its files for the same reason as the index.
  * Everything under archive/ belongs to pipeline/archive and is never removed here (planUpload).
  *
  *   pnpm upload-cells           reads R2_* from .env.r2 locally, or from the environment in CI
@@ -13,10 +15,11 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { AwsClient } from 'aws4fetch';
 import { z } from 'zod';
 import { dataDir } from './paths';
+import { ADDRESS_MANIFEST } from '../src/sources/addressIndex';
 import { parseListing, planUpload } from './r2';
 
 const CONCURRENCY = 16;
@@ -32,6 +35,8 @@ const JSON_CACHE: Record<string, string> = {
   [INDEX_KEY]: INDEX_CACHE,
   [INSIGHTS_KEY]: INSIGHTS_CACHE,
 };
+// Sent after everything else, in this order: each tells the app what the files before it hold.
+const LAST = [INDEX_KEY, INSIGHTS_KEY, ADDRESS_MANIFEST];
 // A real build loses a handful of cells at most; losing more means a download came back short.
 const MAX_REMOVED_SHARE = 0.02;
 
@@ -93,6 +98,17 @@ const main = async () => {
     bytesOf.set(name, bytes);
   }
   if (!local.has(INDEX_KEY)) throw new Error(`No ${INDEX_KEY} in ${cellDir}; run pnpm build-cells`);
+  const addressDir = join(dataDir, 'addresses');
+  if (existsSync(addressDir))
+    for (const entry of await readdir(addressDir, { recursive: true, withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      const path = join(entry.parentPath, entry.name);
+      const bytes = await readFile(path);
+      const key = `addresses/${relative(addressDir, path)}`;
+      local.set(key, md5(bytes));
+      bytesOf.set(key, bytes);
+    }
+  else console.warn(`No ${addressDir}; the published type-ahead index stays as it was`);
   const insightsPath = join(dataDir, INSIGHTS_KEY);
   if (existsSync(insightsPath)) {
     const bytes = await readFile(insightsPath);
@@ -109,8 +125,12 @@ const main = async () => {
     token = page.next;
   }
 
-  const { send: changed, remove } = planUpload(local, remote, new Set([INSIGHTS_KEY]));
-  const cells = changed.filter((key) => !(key in JSON_CACHE));
+  // A night without an address build keeps last night's index rather than deleting it.
+  const keep = new Set([INSIGHTS_KEY]);
+  if (!existsSync(addressDir))
+    for (const key of remote.keys()) if (key.startsWith('addresses/')) keep.add(key);
+  const { send: changed, remove } = planUpload(local, remote, keep);
+  const cells = changed.filter((key) => !LAST.includes(key));
   const megabytes = cells.reduce((sum, key) => sum + bytesOf.get(key)!.length, 0) / 1e6;
   console.log(
     `${local.size.toLocaleString()} local files, ${remote.size.toLocaleString()} in ${env.R2_BUCKET}: ` +
@@ -130,7 +150,8 @@ const main = async () => {
       headers: {
         // Stored gzipped and sent as is; the app unzips them itself (src/sources/cells.ts).
         'Content-Type': key in JSON_CACHE ? 'application/json' : 'application/gzip',
-        'Cache-Control': JSON_CACHE[key] ?? CELL_CACHE,
+        // The manifest says which address files exist, so it turns over as fast as the index.
+        'Cache-Control': JSON_CACHE[key] ?? (key === ADDRESS_MANIFEST ? INDEX_CACHE : CELL_CACHE),
       },
     });
 
@@ -141,8 +162,7 @@ const main = async () => {
     if (done % 1000 === 0)
       console.log(`  ${done.toLocaleString()} of ${cells.length.toLocaleString()}`);
   });
-  if (changed.includes(INDEX_KEY)) await put(INDEX_KEY);
-  if (changed.includes(INSIGHTS_KEY)) await put(INSIGHTS_KEY);
+  for (const key of LAST) if (changed.includes(key)) await put(key);
   await runAll(remove, async (key) => {
     await send(`${bucketUrl}/${key}`, { method: 'DELETE' });
   });

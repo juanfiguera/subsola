@@ -126,7 +126,8 @@ import {
   regionAt,
   type Region,
 } from './regions';
-import { suggestAddresses, type CitySuggestion } from './sources/suggest';
+import { SUGGESTION_LIMIT, suggestAddresses, type CitySuggestion } from './sources/suggest';
+import { createAddressIndex } from './sources/addressIndex';
 import { attachSuggestions } from './ui/suggestions';
 import { fetchConEdStructures } from './sources/conEd';
 import type { MeshData } from './scene/meshes';
@@ -2014,6 +2015,10 @@ const loadCell = async (cell: Cell, signal: AbortSignal) => {
 const CELLS_URL = (import.meta.env.VITE_CELLS_URL as string | undefined)?.replace(/\/$/, '');
 // A built cell is one small file, so more can load at once and more can be kept. Phones get
 // fewer: an iPhone kills the tab past its memory budget, which reloads the page mid-visit.
+// Subsola's own type-ahead index, beside the cells unless pointed elsewhere for testing.
+const ADDRESSES_URL =
+  (import.meta.env.VITE_ADDRESSES_URL as string | undefined)?.replace(/\/$/, '') ?? CELLS_URL;
+const addressIndex = ADDRESSES_URL ? createAddressIndex(ADDRESSES_URL) : null;
 const builtCellsAtOnce = () => (phone.matches ? 3 : 6);
 const maxBuiltCells = () => (phone.matches ? 48 : 120);
 let cellIndexTask: Promise<CellIndex | null> | null = null;
@@ -2625,7 +2630,14 @@ attachSuggestions({
   form: ui.form,
   input: ui.input,
   // The city being looked at: the city map's when it's up, else the loaded street's.
-  ask: (text, signal) => suggestAddresses(text, inCity() ? cityMap.region() : state.region, signal),
+  ask: (text, signal) =>
+    suggestAddresses(
+      text,
+      inCity() ? cityMap.region() : state.region,
+      signal,
+      SUGGESTION_LIMIT,
+      addressIndex ?? undefined,
+    ),
   onPick: (row) => {
     // Which city, never what was picked: the address stays on the device.
     trackEvent('suggestion_picked', { city: row.region.id });

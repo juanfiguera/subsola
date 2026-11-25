@@ -7,6 +7,7 @@ import {
   suggestAddresses,
   type CitySuggestion,
 } from './suggest';
+import type { AddressIndex } from './addressIndex';
 
 const ids = (regions: Region[]) => regions.map((region) => region.id);
 
@@ -105,5 +106,80 @@ describe('suggestAddresses', () => {
     expect(found.map((row) => row.region.id)).toEqual(['nyc']);
     expect(info).toHaveBeenCalledOnce();
     expect(String(info.mock.calls[0]![0])).not.toMatch(/secret/i);
+  });
+});
+
+describe('suggestAddresses with the index', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  const indexFor = (
+    rows: Record<string, { line: string; place: string }[] | null>,
+  ): AddressIndex => ({
+    lookup: vi.fn(async (city: string) => rows[city] ?? null),
+  });
+
+  it('answers a street address from the index, asking no city lookup', async () => {
+    const dal = vi.spyOn(DAL, 'suggest');
+    const nyc = vi.spyOn(NYC, 'suggest');
+    const index = indexFor({
+      dal: [{ line: '1500 MARILLA ST', place: 'Dallas' }],
+      nyc: [{ line: '1500 MARKET ST', place: 'Brooklyn' }],
+    });
+    const found = await suggestAddresses('1500 Mar', DAL, undefined, 6, index);
+    expect(found.map((row) => [row.line, row.query, row.region.id])).toEqual([
+      ['1500 MARILLA ST', '1500 MARILLA ST', 'dal'],
+      ['1500 MARKET ST', '1500 MARKET ST, Brooklyn', 'nyc'],
+    ]);
+    expect(dal).not.toHaveBeenCalled();
+    expect(nyc).not.toHaveBeenCalled();
+  });
+
+  it("asks the city's own lookup for a city the index doesn't cover", async () => {
+    const dc = vi
+      .spyOn(DC, 'suggest')
+      .mockResolvedValue([{ line: '800 F ST NW', place: 'Washington, DC', query: '800 F St NW' }]);
+    const index = indexFor({ nyc: [] });
+    const found = await suggestAddresses('800 F St NW', DC, undefined, 6, index);
+    expect(found.map((row) => row.region.id)).toEqual(['dc']);
+    expect(dc).toHaveBeenCalledOnce();
+  });
+
+  it('sends a landmark to the city lookup, since the index holds only street addresses', async () => {
+    const nyc = vi
+      .spyOn(NYC, 'suggest')
+      .mockResolvedValue([{ line: 'TIMES SQUARE', place: 'Manhattan', query: 'Times Square' }]);
+    const index = indexFor({ nyc: [] });
+    await suggestAddresses('Times Squ', NYC, undefined, 6, index);
+    expect(index.lookup).not.toHaveBeenCalled();
+    expect(nyc).toHaveBeenCalledOnce();
+  });
+});
+
+describe('suggestAddresses across cities with the index', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('finds a street address in any indexed city, the city on the map first', async () => {
+    const chi = vi.spyOn(CHI, 'suggest');
+    const index: AddressIndex = {
+      lookup: vi.fn(async (city: string) =>
+        city === 'chi'
+          ? [{ line: '233 S WACKER DR', place: 'Chicago' }]
+          : city === 'nyc'
+            ? []
+            : null,
+      ),
+    };
+    vi.spyOn(SF, 'suggest').mockResolvedValue([]);
+    const found = await suggestAddresses('233 S Wack', SF, undefined, 6, index);
+    expect(found.map((row) => [row.line, row.region.id])).toEqual([['233 S WACKER DR', 'chi']]);
+    expect(chi).not.toHaveBeenCalled();
+    // Cities with no index are reached only through their own lookup, and only the chosen two.
+    expect(vi.mocked(index.lookup).mock.calls.length).toBeGreaterThan(2);
+  });
+
+  it('keeps to the city named after a comma', async () => {
+    const index: AddressIndex = { lookup: vi.fn(async () => []) };
+    await suggestAddresses('233 S Wack, Chicago', SF, undefined, 6, index);
+    expect(vi.mocked(index.lookup).mock.calls.map(([city]) => city)).toEqual(['chi']);
   });
 });
