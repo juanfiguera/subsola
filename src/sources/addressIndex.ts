@@ -67,6 +67,9 @@ export const normalizeAddress = (text: string): string => {
   return shortened.join(' ') + (trailing ? ' ' : '');
 };
 
+/** A street alone, normalized as it would be after a house number ("4TH AVE" to "4 AVE "). */
+const normalizeStreet = (street: string) => normalizeAddress(`0 ${street} `).slice(2);
+
 /** How many characters pick a file. */
 export const KEY_LENGTH = 3;
 
@@ -117,7 +120,8 @@ export const buildAddressFiles = (addresses: IndexedAddress[]): Map<string, Addr
   for (const { number, street, place } of addresses) {
     const cleanNumber = number.trim().toUpperCase();
     const cleanStreet = street.trim().replace(/\s+/g, ' ');
-    if (!/^\d/.test(cleanNumber) || !cleanStreet) continue;
+    // San Diego files placeholder points as house number 0; no one lives at 0 Broadway.
+    if (!/^\d/.test(cleanNumber) || /^0+$/.test(cleanNumber) || !cleanStreet) continue;
     const key = indexKey(normalizeAddress(`${cleanNumber} ${cleanStreet} `));
     if (!key) continue;
     const streets = byKey.get(key) ?? new Map();
@@ -166,7 +170,7 @@ export const matchAddressFile = (
   for (const [street, placeIndex, numbers] of file.streets) {
     if (
       typedStreet &&
-      !normalizeAddress(`${street} `).startsWith(typedStreet) &&
+      !normalizeStreet(street).startsWith(typedStreet) &&
       !street.toUpperCase().startsWith(typedStreet)
     )
       continue;

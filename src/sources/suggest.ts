@@ -73,12 +73,14 @@ export const streetPart = (text: string) => {
   return comma >= 0 ? text.slice(0, comma).trim() : text;
 };
 
-/**
- * What to hand the city's geocoder for an address from the index. New York's needs the borough,
- * since "233 Broadway" alone could be Brooklyn's; the others read the line back as typed.
- */
+// Cities whose geocoder needs the place the index filed an address under: New York's borough,
+// since "233 Broadway" alone could be Brooklyn's, and the ZIP for LA's and San Diego's locators,
+// which find nothing for a bare street line. The rest read the line back as typed.
+const PLACE_IN_QUERY = new Set(['nyc', 'la', 'sd']);
+
+/** What to hand the city's geocoder for an address from the index. */
 export const indexQuery = (region: Region, line: string, place: string) =>
-  region === NYC ? `${line}, ${place}` : line;
+  PLACE_IN_QUERY.has(region.id) && place ? `${line}, ${place}` : line;
 
 // The index holds street addresses, which start with a house number; a landmark or a corner
 // ("Times Square", "Broadway and 42nd") still needs the city's lookup.

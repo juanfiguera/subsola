@@ -18,6 +18,7 @@ const files = buildAddressFiles([
   { number: '12', street: 'BARCLAY STREET', place: 'Manhattan' },
   { number: '120', street: 'BROADWAY', place: 'Manhattan' },
   { number: '1905', street: 'E 52 ST', place: 'Brooklyn' },
+  { number: '600', street: '4TH AVE', place: 'Seattle' },
 ]);
 
 describe('normalizeAddress', () => {
@@ -45,7 +46,7 @@ describe('indexKey', () => {
 
 describe('buildAddressFiles', () => {
   it('cuts addresses into files by key, each street once with its numbers', () => {
-    expect([...files.keys()].sort()).toEqual(['104', '12 ', '120', '190', '233']);
+    expect([...files.keys()].sort()).toEqual(['104', '12 ', '120', '190', '233', '600']);
     const file = addressFileSchema.parse(files.get('233'));
     expect(file.places).toEqual(['Brooklyn', 'Manhattan']);
     expect(file.streets).toContainEqual(['BROADWAY', 1, ['233', '2330']]);
@@ -55,6 +56,7 @@ describe('buildAddressFiles', () => {
   it('skips rows without a house number or street', () => {
     expect(buildAddressFiles([{ number: '', street: 'MAIN ST', place: 'X' }]).size).toBe(0);
     expect(buildAddressFiles([{ number: '5', street: ' ', place: 'X' }]).size).toBe(0);
+    expect(buildAddressFiles([{ number: '0', street: 'BROADWAY', place: 'X' }]).size).toBe(0);
   });
 });
 
@@ -89,6 +91,12 @@ describe('matchAddressFile', () => {
       { line: '1905 E 52 ST', place: 'Brooklyn' },
     ]);
     expect(matchAddressFile(files.get('190')!, '1905 East 52n', 6)).toHaveLength(1);
+  });
+
+  it('finds a street whose name starts with an ordinal, filed with its ending', () => {
+    expect(matchAddressFile(files.get('600')!, '600 4th Av', 6)).toEqual([
+      { line: '600 4TH AVE', place: 'Seattle' },
+    ]);
   });
 
   it('returns nothing for text that is not an address', () => {

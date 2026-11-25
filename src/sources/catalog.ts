@@ -815,6 +815,39 @@ export const SOURCES = {
     'context',
   ),
   sjAddresses: sjLayer(36, 'Site addresses', 'City of San Jose', 'context'),
+  dcAddresses: dcGis(
+    'DCGIS_DATA/Location_WebMercator/MapServer/0',
+    'Address Points (Master Address Repository)',
+    'OCTO',
+    'context',
+  ),
+  sfAddresses: {
+    id: '3mea-di5p',
+    name: 'Addresses (Enterprise Addressing System)',
+    publisher: 'City and County of San Francisco',
+    url: 'https://data.sf.gov/d/3mea-di5p',
+    confidence: 'context',
+    license: 'DataSF, Open Data Commons PDDL',
+  },
+  laAddresses: {
+    id: 'https://services.arcgis.com/RmCCgQtiZLDCtblq/arcgis/rest/services/eGIS_Addressing_ADDRESS_POINTSv2/FeatureServer/0',
+    name: 'Address points (CAMS)',
+    publisher: 'County of Los Angeles',
+    url: 'https://egis-lacounty.hub.arcgis.com/',
+    confidence: 'context',
+    license:
+      'County of Los Angeles eGIS terms: free to copy, publish and adapt; no County endorsement',
+  },
+  sdAddresses: sanGisLayer('Address_Points', 'Address points', 'SanGIS', 'context'),
+  seaAddresses: {
+    id: 'https://services.arcgis.com/Ej0PsM5Aw677QF1W/arcgis/rest/services/ADDRESS_POINT_642/FeatureServer/0',
+    name: 'Addresses in King County',
+    publisher: 'King County',
+    url: 'https://gis-kingcounty.opendata.arcgis.com/',
+    confidence: 'context',
+    license:
+      'King County GIS terms: free to copy and use; not to be sold without a written agreement',
+  },
   // San Jose Water's inventory for the EPA's lead rule. Paused (PAUSED_SOURCES): the company's
   // website terms bar reproducing or republishing its content.
   sjServiceLines: {
