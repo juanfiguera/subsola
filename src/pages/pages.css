@@ -189,3 +189,24 @@ b {
     font-size: 27px;
   }
 }
+
+/* The maker's links on /about: each with its site's icon, as the map's card had them. */
+.maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.maker a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+}
+
+.maker svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}

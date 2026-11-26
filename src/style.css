@@ -1944,35 +1944,6 @@ svg {
 }
 
 /* The maker's links, after the agenticpoa.com footer: icon, then name. */
-.maker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  color: var(--ink-2);
-  font-size: 12.5px;
-}
-
-.maker a {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--ink-2);
-  font-weight: 600;
-}
-
-.maker a:hover {
-  color: var(--ink);
-}
-
-.maker svg {
-  width: 14px;
-  height: 14px;
-}
-
 .error-text {
   color: var(--danger);
 }
