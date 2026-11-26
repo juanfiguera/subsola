@@ -6,7 +6,7 @@ import { page } from './shell';
 
 /**
  * subsola.com/about: what Subsola is and isn't, who it's for, how the map is built, where the
- * data comes from and who makes it. It speaks for every city, since a page isn't tied to one
+ * data comes from and who's behind it. It speaks for every city, since a page isn't tied to one
  * address; the map's own card keeps what is (the sources that answered for the address on
  * screen, and that city's 811 notice). Every claim describes what the code and the data do.
  */
@@ -92,7 +92,7 @@ export const aboutPage = (stylesheet: string) =>
         <p>The code is open source under the AGPL, on <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>, and AI assistants can ask about any address through the <a href="/mcp">MCP server</a>.</p>`,
     )}${section(
       'who',
-      'Who makes it',
+      `Who's behind ${SITE_NAME}`,
       `<p>${SITE_NAME} is made by <a href="${MAKER.linkedin}" target="_blank" rel="noopener">${MAKER.name}</a> (<a href="${MAKER.github}" target="_blank" rel="noopener">GitHub</a>) and run by ${OPERATOR}.</p>
         <p>A wrong line, a missing street or an idea: use the <a href="/?sel=feedback">feedback form</a> on the map, or email ${CONTACT_LINK}. Common questions are answered in the <a href="/faq">FAQ</a>.</p>`,
     )}`,
