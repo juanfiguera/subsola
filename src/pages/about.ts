@@ -59,33 +59,33 @@ export const aboutPage = (stylesheet: string) =>
     intro: {
       label: 'About',
       title: `About ${SITE_NAME}`,
-      lede: 'The pipes and cables under the street, mapped from public records. Made for engineers, contractors, utility coordinators and real estate teams who plan work there.',
+      lede: `${SITE_NAME} maps what public records say is under the street, for the engineers, contractors, utility coordinators and real estate teams who plan work there, and for anyone curious about their own block.`,
       chips: [`${REGIONS.length} cities`, 'Rebuilt nightly', 'Free, no account', 'Open source'],
       after: '<p><a class="cta" href="/">Open the map</a></p>',
     },
     body: `${section(
       'not-a-locate',
       'Research, not a utility locate',
-      `<p>Many gas, electric and telecom companies don't publish where their mains are, and private lines on a property never appear in permits. What ${SITE_NAME} shows is what the public record says, not what's in the ground.</p>
-        <p><b>Before any digging,</b> the law in every city ${SITE_NAME} covers requires a free request to its one-call center, which sends the utilities out to mark their lines:</p>
+      `<p>${SITE_NAME} shows what the public record says. That isn't always what's in the ground. Many gas, electric and telecom companies don't publish where their mains are, and private lines on a property never show up in permits.</p>
+        <p><b>Before any digging,</b> the law in every city ${SITE_NAME} covers requires a free request to its one-call center, which sends the utilities out to mark their lines on the ground. Each city’s center and the notice it needs:</p>
         ${markoutList()}`,
       'warn',
     )}${section(
       'uses',
       "What it's for",
-      `${point('Site research', 'Which utilities serve a lot, how deep they likely run and who digs there, before the survey.')}
-        ${point('Scoping a dig', 'What is likely in the way of a trench and at what depth, to plan the work and the locate request.')}
-        ${point('Due diligence', "A property's water service and house sewer, lead status where the city publishes it, and how often its street gets opened, in a lot report you can print.")}
-        ${point('Coordinating street work', 'Who has permits out front today and who keeps coming back, so the same block is not opened twice.')}`,
+      `${point('Site research', 'See which utilities serve a lot, how deep they likely run and who digs there, before you order a survey.')}
+        ${point('Scoping a dig', 'See what is likely in the way of a trench, and how deep, so you can plan the work and the locate request.')}
+        ${point('Due diligence', "Check a property's water service and house sewer, its lead status where the city publishes it, and how often its street gets opened, all in a lot report you can print.")}
+        ${point('Coordinating street work', 'See who has permits out front today and who keeps coming back, so the same block isn’t opened twice.')}`,
     )}${section(
       'how',
       'How the map is built',
-      `${point('A permit puts a utility on a block', 'A utility appears on a block when the city has issued an excavation permit for it there. Permits name the block, not the position in the street, so each utility gets its own lane, spaced so none hides another. Where crews wrote down how far from the curbs they opened the street, those notes set the lane instead.')}
-        ${point("A city's own map, where it publishes one", 'Where a city maps its sewers, storm drains or water mains, those lines are drawn on their surveyed route, at their recorded depth when the city keeps one, in place of anything guessed from permits.')}
-        ${point('Gaps are filled and labeled', 'Mains run the length of a street, but permits only cover the blocks someone dug. A utility with permits on part of a street is carried through the rest of it and labeled Inferred.')}
+      `${point('A permit puts a utility on a block', 'A utility appears on a block when the city has issued an excavation permit for it there. Permits name the block but not the spot in the street, so each utility gets its own lane, spaced so none hides another. Where crews noted how far from the curbs they opened the street, those notes set the lane instead.')}
+        ${point("The city's own map, where there is one", 'Where a city maps its sewers, storm drains or water mains, those lines follow their surveyed route, at their recorded depth when the city keeps one. They replace anything placed from permits.')}
+        ${point('Gaps are filled and labeled', 'Mains run the length of a street, but permits only cover the blocks someone dug. When a utility has permits on part of a street, its line is carried through the rest and labeled Inferred.')}
         ${point('Services run straight to each lot', 'Water services and house sewers are drawn straight from the main to each lot, because their routes are not published.')}
         ${point('Depth from standards', 'Few public records give the actual depth of a pipe. Where they don’t, lines sit at the minimum cover that federal, state, city and utility installation standards require, and their labels say "est." Older lines may be shallower or deeper.')}
-        ${point('Every line says how it is known', 'Each line carries a label for where it came from:')}
+        ${point('Every line says how it’s known', 'Each line carries one of these labels:')}
         <ul class="plain-list">${LABEL_ORDER.map(
           (confidence) =>
             `<li><b>${escapeHtml(CONFIDENCE_LABELS[confidence].label)}:</b> ${escapeHtml(CONFIDENCE_LABELS[confidence].detail)}</li>`,
@@ -94,13 +94,13 @@ export const aboutPage = (stylesheet: string) =>
       'data',
       'Where the data comes from',
       `<p>Only from records that cities, counties and utilities already publish: excavation and street opening permits, sewer, water and storm drain maps, lead service line inventories, hydrants, catch basins, manholes and street lights. Every city is rebuilt each night from a fresh download.</p>
-        <p>Each source, city by city, with its license and how it's credited, is on the <a href="/credits">data credits page</a>. On the map, an address's card shows which sources answered for it.</p>
-        <p>The code is open source under the AGPL, on <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>, and AI assistants can ask about any address through the <a href="/mcp">MCP server</a>.</p>`,
+        <p>The <a href="/credits">data credits page</a> lists every source, city by city, with its license and how it's credited. On the map, each address's card shows which sources answered for it.</p>
+        <p>The code is open source under the AGPL, on <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a>. AI assistants can look up any address through the <a href="/mcp">MCP server</a>.</p>`,
     )}${section(
       'who',
       `Who's behind ${SITE_NAME}`,
       `<p class="maker"><span>Made by</span><a href="${MAKER.linkedin}" target="_blank" rel="noopener">${LINKEDIN_ICON}${MAKER.name}</a><a href="${MAKER.github}" target="_blank" rel="noopener">${GITHUB_ICON}GitHub</a></p>
-        <p>Run by ${OPERATOR}.</p>
-        <p>A wrong line, a missing street or an idea: use the <a href="/?sel=feedback">feedback form</a> on the map, or email ${CONTACT_LINK}. Common questions are answered in the <a href="/faq">FAQ</a>.</p>`,
+        <p>${SITE_NAME} is a one-person project, run by ${OPERATOR}. It isn't affiliated with any city or utility.</p>
+        <p>Spotted a wrong line or a missing street, or have an idea? Use the <a href="/?sel=feedback">feedback form</a> on the map or email ${CONTACT_LINK}. The <a href="/faq">FAQ</a> answers the common questions.</p>`,
     )}`,
   });

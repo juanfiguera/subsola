@@ -30,17 +30,17 @@ const groups = (): Group[] => [
       {
         id: 'locate',
         q: `Can I dig based on what ${SITE_NAME} shows?`,
-        a: `No. ${SITE_NAME} is research, not a utility locate. Call 811 a few working days before any digging: it's free, in most cases the law requires it, and the utilities send someone to mark their lines on the ground. Use ${SITE_NAME} earlier, when you're scoping, designing or bidding, to know what to expect.`,
+        a: `No. ${SITE_NAME} is research, not a utility locate. Call 811 a few working days before any digging. It's free, in most cases the law requires it, and the utilities send someone to mark their lines on the ground. Use ${SITE_NAME} earlier, while you're scoping, designing or bidding, so you know what to expect.`,
       },
       {
         id: 'accuracy',
         q: 'How accurate is it?',
-        a: `It depends on the record, and each line says which kind it is. Some come from the owner's own map with measured depths, such as many city sewers; their labels give the depth plainly ("Sewer, 7 ft"). Others aren't published anywhere, so ${SITE_NAME} draws them at the standard spot and depth that codes and utility rules give, and labels them as estimates ("Gas, est. 1 ft 6 in"). Tap any line to see where it came from. Real lines can sit feet away from either, and private lines on a property never appear.`,
+        a: `It depends on the record, and each line says which kind it is. Some come from the owner's own map with measured depths, as many city sewers do, and their labels give the depth plainly ("Sewer, 7 ft"). Others aren't published anywhere, so ${SITE_NAME} draws them at the standard spot and depth that codes and utility rules give, and labels them as estimates ("Gas, est. 1 ft 6 in"). Tap any line to see where it came from. Real lines can sit feet away from either, and private lines on a property never appear.`,
       },
       {
         id: 'missing',
         q: 'Why does a utility say "not published"?',
-        a: `Many utilities don't publish where their mains are. Where a city or utility hasn't released a layer, ${SITE_NAME} shows what the permits and the standards say instead, and says "not published" rather than guessing.`,
+        a: `Many utilities don't publish where their mains are. Where a city or utility hasn't released a layer, ${SITE_NAME} shows what the permits and the standards say instead, and labels the rest "not published" rather than guessing.`,
       },
     ],
   },
@@ -61,7 +61,7 @@ const groups = (): Group[] => [
       {
         id: 'mistake',
         q: 'I found a mistake. What should I do?',
-        a: `Send a note with the <a href="/?sel=feedback">feedback form</a> on the map, or email ${CONTACT_LINK}, with the address and what looks wrong. Most mistakes trace back to a record, and we can usually find it from the address alone.`,
+        a: `Tell us the address and what looks wrong, through the <a href="/?sel=feedback">feedback form</a> on the map or by email to ${CONTACT_LINK}. Most mistakes trace back to a record, and we can usually find it from the address alone.`,
       },
     ],
   },
@@ -72,7 +72,7 @@ const groups = (): Group[] => [
       {
         id: 'risk',
         q: 'Is it safe to put this information online?',
-        a: `${SITE_NAME} shows only what its publishers already put online, in the form they publish it. It has no access to utilities' private records and doesn't try to get them. Where a publisher's terms don't allow reuse, the layer is paused and ${SITE_NAME} links to the publisher's own site instead. Lines drawn from standards are general rules, not the location of anyone's equipment. Detailed private utility records are a different matter. New York, for one, is building a map of them that only authorized city staff will see.`,
+        a: `${SITE_NAME} shows only what its publishers already put online, in the form they publish it. It has no access to utilities' private records and doesn't try to get them. Where a publisher's terms don't allow reuse, the layer is paused and ${SITE_NAME} links to the publisher's own site instead. Lines drawn from standards show where codes say a line usually goes. They don't locate anyone's equipment. Detailed private utility records are a different matter. New York, for one, is building a map of them that only authorized city staff will see.`,
       },
       {
         id: 'publisher',
@@ -119,12 +119,12 @@ const groups = (): Group[] => [
       {
         id: 'my-city',
         q: "Why isn't my city here?",
-        a: `A city needs to publish where its streets have been dug up, at least, and most don't yet. We check new cities' open data regularly. To ask for yours, use the <a href="/?sel=feedback">feedback form</a> or email ${CONTACT_LINK}.`,
+        a: `At the least, a city needs to publish where its streets have been dug up, and most don't yet. We check new cities' open data regularly. To ask for yours, use the <a href="/?sel=feedback">feedback form</a> or email ${CONTACT_LINK}.`,
       },
       {
         id: 'ai',
         q: 'How do AI assistants use it?',
-        a: `${SITE_NAME} runs an MCP server, a standard way for AI assistants to look things up. Add it to Claude, ChatGPT, Cursor or any MCP client and ask about an address. It's free and read-only. <a href="/mcp">Set it up</a>.`,
+        a: `${SITE_NAME} runs an MCP server, a standard way for AI assistants to look things up. Add it to Claude, ChatGPT, Cursor or any other MCP client, then ask about an address. It's free and read-only. <a href="/mcp">Set it up</a>.`,
       },
     ],
   },

@@ -206,8 +206,8 @@ export const homeCard = ({
   if (failed) {
     return `${heading}
       <div class="depth-block" style="--accent:var(--danger)">
-        <strong>Street records could not be loaded</strong>
-        <p>The city's open data did not respond, so no utilities are shown. This does not mean the street is clear.</p>
+        <strong>Couldn't load street records</strong>
+        <p>The city's open data didn't respond, so no utilities are shown. That doesn't mean the street is clear.</p>
       </div>
       <button class="pill retry" data-action="retry">Try again</button>
       <p class="fine"><button class="link" data-action="about">View source status</button></p>`;
@@ -823,7 +823,7 @@ export const digSpotCard = (spot: DigSpot) => {
 export const probePromptCard = () => `
   ${backButton}
   <h1 class="card-title">Check a location</h1>
-  <p class="hero-line">Select the point on the map where you plan to dig to see which utilities may be below and their expected depths.</p>
+  <p class="hero-line">Pick the spot on the map where you plan to dig. You'll see which utilities may be below it and how deep they're expected to be.</p>
   <button class="pill" data-action="back">Cancel</button>`;
 
 const NEAR_FT = Math.round(NEAR_M / 0.3048 / 5) * 5;
@@ -845,11 +845,11 @@ const verdict = ({ level, hits, depthFt }: DigAssessment) => {
   if (level === 'likely-deeper')
     return {
       title: 'Lines on record usually sit deeper than this',
-      text: `Records show ${listOf(hits)} near this location, typically below ${formatFeet(depthFt)}. Older lines may be shallower, so an 811 request is still required.`,
+      text: `Records show ${listOf(hits)} near this location, typically below ${formatFeet(depthFt)}. Older lines may be shallower, so you still need to call 811.`,
     };
   return {
     title: 'No utility records at this location',
-    text: `No street permits on record within ${NEAR_FT} ft. Private lines do not appear in permits, so an 811 request is still required.`,
+    text: `No street permits on record within ${NEAR_FT} ft. Private lines don't appear in permits, so you still need to call 811.`,
   };
 };
 
@@ -912,7 +912,7 @@ export const cityCard = (
         ? `<h1 class="card-title">No streets mapped here</h1>
     <p class="hero-line">Subsola maps ${escapeHtml(cityNames())}. Zoom out and pick a street in one of them.</p>`
         : `<h1 class="card-title">City map</h1>
-    <p class="hero-line">Zoom in on any street to view the utilities below it.</p>`
+    <p class="hero-line">Zoom in on any street to see what's under it.</p>`
     }
     ${current ? `<button class="pill report-cta" data-action="street">Back to ${escapeHtml(current)}</button>` : ''}
     ${others.map((other) => `<button class="pill" data-action="other-city" data-region="${other.id}">Go to ${escapeHtml(other.name)}</button>`).join('')}

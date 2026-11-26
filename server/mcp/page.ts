@@ -261,7 +261,7 @@ const toolCard = (tool: ReturnType<typeof toolList>[number]) => {
 const tools = (cities: string) => `
   <section id="tools" aria-labelledby="tools-title">
     <h2 id="tools-title">Tools</h2>
-    <p class="section-lede">Two read-only tools. Your assistant picks one from how you ask.</p>
+    <p class="section-lede">Two read-only tools. Your assistant picks the right one from how you ask.</p>
     <div class="tools">${toolList().map(toolCard).join('')}</div>
     <details class="card sources">
       <summary>How addresses and errors work</summary>
@@ -361,7 +361,7 @@ const goodToKnow = () => {
   <section id="good-to-know" aria-labelledby="good-title">
     <h2 id="good-title">Good to know</h2>
     <ul class="facts-list">
-      ${fact('811', ICONS.warn, 'Not a substitute for 811', 'Answers come from public records. They are not a survey or a utility locate. Call 811 before you dig.', ["Every covered city's law requires a free request to its one-call center before any digging, and every answer ends with that center and link.", 'Utilities don’t publish exact positions or depths. A line nobody has dug up since the records begin won’t appear.'], true)}
+      ${fact('811', ICONS.warn, 'Not a substitute for 811', 'Answers come from public records. They are research, not a survey or a utility locate. Call 811 before you dig.', ["Every covered city's law requires a free request to its one-call center before any digging, and every answer ends with that center and link.", 'Utilities don’t publish exact positions or depths, and a line nobody has dug up since the records begin won’t appear.'], true)}
       ${fact('data', ICONS.clock, 'Fresh every night', 'Rebuilt nightly from city and utility open data. Each answer gives its records-as-of date.', ['The same records the <a href="/">map</a> shows: excavation permits, pipe and asset maps, lead service line inventories and installation standards.', 'For what the records say across the cities, see <a href="/insights">Insights</a>.'])}
       ${fact('limits', ICONS.gauge, 'Limits', `${minute} questions a minute and ${day} a day per connection.`, [`All connections together get ${limitOf('all-minute')} questions a minute. Over a limit, the answer is a tool error saying how many seconds to wait.`, 'Connecting and listing the tools don’t count.', `<code>recent_digs</code> lists at most ${MAX_DIGS} permits and gives the total found.`, `Each lookup of an address or of map data gives up after ${UPSTREAM_TIMEOUT_MS / 1000} seconds.`, '"Permitted today" uses New York’s date, the same day the map uses.'])}
       ${fact('privacy', ICONS.lock, 'Privacy', 'The addresses you ask about are never stored or logged by Subsola.', ['To find an address, its text goes to the city’s own address lookup, which has its own policy.', `Each call leaves a stats row: the tool, the city, how it ended, how long it took, the app’s name and protocol version, and for an address outside the covered cities, the city named (such as "Boston, MA").`, 'The row also keeps an anonymous requester ID, made by scrambling the IP address with a secret key, and the network’s name and the country, as Cloudflare reports them. Never the address or the IP itself.', `Rows are deleted after ${CALL_KEEP_SECONDS / 86_400} days.`, 'Beyond that, the server logs counts and error names only.', `To enforce the limits, each connection’s IP address is hashed with a secret; only the hash and a count are kept, and they are deleted after ${keepDays === 1 ? 'one day' : `${keepDays} days`}.`, 'Subsola runs on Cloudflare, which keeps its own request logs under <a href="https://www.cloudflare.com/privacypolicy/">its privacy policy</a>.', 'This page sets no cookies and runs no analytics. Its fonts come from Google Fonts.', 'The whole site’s policy: <a href="/privacy">subsola.com/privacy</a>.'])}
@@ -379,15 +379,15 @@ const help = (cities: string) => {
       <details id="troubleshooting"><summary>Troubleshooting</summary>
         <dl>
           <div><dt>"405 Method Not Allowed" from curl</dt>
-          <dd>Expected: MCP clients use POST, and a plain GET gets 405. To test by hand:${copyBlock('the curl command', `curl -X POST ${MCP_URL} \\\n  -H 'Content-Type: application/json' \\\n  -H 'Accept: application/json, text/event-stream' \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`)}</dd></div>
+          <dd>That's expected. MCP clients use POST, and a plain GET gets 405. To test by hand:${copyBlock('the curl command', `curl -X POST ${MCP_URL} \\\n  -H 'Content-Type: application/json' \\\n  -H 'Accept: application/json, text/event-stream' \\\n  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`)}</dd></div>
           <div><dt>"Subsola is answering too many questions from here right now"</dt>
-          <dd>Over ${minute} a minute or ${day} a day from your connection, or everyone together over ${limitOf('all-minute')} a minute. The message says how many seconds to wait.</dd></div>
+          <dd>Your connection went over ${minute} a minute or ${day} a day, or everyone together went over ${limitOf('all-minute')} a minute. The message says how many seconds to wait.</dd></div>
           <div><dt>"Couldn't find" an address</dt>
           <dd>The error says what the closest match was and why it didn't count. Give the house number, street and city or borough ("350 5th Ave, Manhattan"), or set the <code>city</code> input. Only ${escapeHtml(cities)} are covered.</dd></div>
           <div><dt>The answer starts "Matched to ..."</dt>
           <dd>The match reads differently from what was asked, such as 190C for 190. If it's the wrong place, add the city or borough.</dd></div>
           <div><dt>My client can't connect</dt>
-          <dd>Check it supports remote servers over Streamable HTTP, the URL is exactly <code>${MCP_URL}</code>, and no sign-in or OAuth is set for it. Some clients allow remote servers only on certain plans.</dd></div>
+          <dd>Check that it supports remote servers over Streamable HTTP, that the URL is exactly <code>${MCP_URL}</code>, and that no sign-in or OAuth is set for it. Some clients allow remote servers only on certain plans.</dd></div>
           <div><dt>"Origin not allowed" (403) from a web page</dt>
           <dd>Pages on any https site, desktop apps and <code>http://localhost</code> tools may all call the server. Only plain http from another host is turned away, as the protocol asks servers to check Origin. Server-side clients send no Origin and aren't affected.</dd></div>
         </dl>

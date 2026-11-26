@@ -78,7 +78,7 @@ export const explainerHtml = ({ region, utilities, recycled, stretch }: Explaine
     <div class="explainer-body">
       <section>
         <h3>Colors are utilities</h3>
-        <p>The colors crews paint on the pavement before a dig (the APWA code). On the map these colors only ever mean a utility line, and every line has a label too.</p>
+        <p>These are the colors crews paint on the pavement before a dig (the APWA code). On the map, a color always means a utility line, and every line has a label too.</p>
         <ul class="explainer-colors">${colors}</ul>
       </section>
       <section>
@@ -101,7 +101,7 @@ export const explainerHtml = ({ region, utilities, recycled, stretch }: Explaine
         </ul>
       </section>
       <section class="explainer-notice">
-        <h3>Evidence, not a locate</h3>
+        <h3>Research, not a utility locate</h3>
         <p>Everything here comes from public records: excavation permits, city and utility maps, and lot inventories. It shows what the records say, not what a locator would find. Private lines never appear.</p>
         <p>${escapeHtml(region.markout.law)} requires a free request to ${escapeHtml(region.markout.center)} at least ${escapeHtml(region.markout.notice)} before any digging.</p>
         <a class="call-811" href="${escapeHtml(region.markout.url)}" target="_blank" rel="noopener">Call 811 before digging</a>

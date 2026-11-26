@@ -30,7 +30,7 @@ export const creditsPage = (stylesheet: string) =>
     intro: {
       label: 'Credits',
       title: 'Whose records these are',
-      lede: `${SITE_NAME} is built from public records that cities, counties and utilities publish. Each city's map and answers credit them as their terms ask. ${escapeHtml(NOT_ENDORSED)}`,
+      lede: `${SITE_NAME} is built from public records that cities, counties and utilities publish. The map and its answers credit each one the way its terms ask. ${escapeHtml(NOT_ENDORSED)}`,
     },
     body: `${REGIONS.map(
       (region) => `
@@ -47,7 +47,7 @@ export const creditsPage = (stylesheet: string) =>
       </section>
       <section class="block" aria-labelledby="credits-paused">
         <h2 id="credits-paused">Paused while we ask</h2>
-        <p>These records are public, but their publishers' terms don't allow republishing them, so ${SITE_NAME} doesn't show them while it asks for permission.</p>
+        <p>These records are public, but their publishers' terms don't allow republishing them. ${SITE_NAME} leaves them out while it asks for permission, and links to each publisher's own lookup instead.</p>
         <ul class="plain-list">${pausedItems()}</ul>
       </section>
       <section class="block" aria-labelledby="credits-contact">

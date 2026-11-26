@@ -33,7 +33,7 @@ export const privacyPage = (stylesheet: string) =>
     intro: {
       label: 'Privacy',
       title: `What ${SITE_NAME} keeps`,
-      lede: `Very little. There are no accounts, and the addresses you look up are never stored by ${SITE_NAME}, unless you send feedback, which includes the page you were on. Here is everything, part by part.`,
+      lede: `Very little. There are no accounts, and the addresses you look up are never stored by ${SITE_NAME}, unless you send feedback, which includes the page you were on. Here's all of it, part by part.`,
       after: `<p class="intro-note">${SITE_NAME} is run by ${OPERATOR}, which is responsible for what this page describes.</p>`,
     },
     body: `${section('map', 'The map', [
@@ -45,7 +45,7 @@ export const privacyPage = (stylesheet: string) =>
       'The map sets no cookies. It keeps two small notes in your browser’s storage: whether you have seen the welcome guide, and how far a page load got, so a load that crashed can be reported on your next visit (stages only, never an address).',
     ])}
       ${section('analytics', 'Analytics and error reports', [
-        'Product analytics run on PostHog, set up to know no one: nothing is stored on your device, there are no profiles or session recordings, and the project discards IP addresses.',
+        'Product analytics run on PostHog, set up so it can’t tell who anyone is: nothing is stored on your device, there are no profiles or session recordings, and the project discards IP addresses.',
         'Events say what was done and in which city ("address searched", "report opened"), never the address or the spot you looked at. Page addresses are sent without the part that holds the address.',
         'Errors are reported to Sentry with the same care: addresses are cut from page links and messages before a report leaves your browser, and Sentry is told not to keep IPs or cookies.',
         'Cloudflare, which hosts the site, can count page views with its own Web Analytics, which uses no cookies.',
