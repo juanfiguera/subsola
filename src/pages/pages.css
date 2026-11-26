@@ -190,23 +190,27 @@ b {
   }
 }
 
-/* The maker's links on /about: each with its site's icon, as the map's card had them. */
-.maker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-}
-
-.maker a {
+/* The maker's LinkedIn and GitHub on /about, as icons in the sentence, each with room to tap. */
+.maker-links {
   display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
+  gap: 2px;
+  margin: 0 2px 0 6px;
+  vertical-align: -5px;
 }
 
-.maker svg {
-  width: 18px;
-  height: 18px;
-  flex: none;
+.maker-links a {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 6px;
+  color: var(--ink-2);
+}
+
+.maker-links a:hover {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.maker-links svg {
+  width: 19px;
+  height: 19px;
 }

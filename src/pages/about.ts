@@ -1,6 +1,6 @@
 import { REGIONS } from '../regions';
 import { CONFIDENCE_LABELS, type Confidence } from '../sources/catalog';
-import { CONTACT_LINK, OPERATOR, REPO_URL, SITE_NAME } from '../site';
+import { CONTACT_LINK, REPO_URL, SITE_NAME } from '../site';
 import { escapeHtml } from '../ui/dom';
 import { page } from './shell';
 
@@ -99,8 +99,7 @@ export const aboutPage = (stylesheet: string) =>
     )}${section(
       'who',
       `Who's behind ${SITE_NAME}`,
-      `<p class="maker"><span>Made by</span><a href="${MAKER.linkedin}" target="_blank" rel="noopener">${LINKEDIN_ICON}${MAKER.name}</a><a href="${MAKER.github}" target="_blank" rel="noopener">${GITHUB_ICON}GitHub</a></p>
-        <p>${SITE_NAME} is an independent project run by ${OPERATOR}, and isn't affiliated with any city or utility.</p>
+      `<p>${SITE_NAME} was made by ${MAKER.name}<span class="maker-links"><a href="${MAKER.linkedin}" target="_blank" rel="noopener" aria-label="${MAKER.name} on LinkedIn" title="LinkedIn">${LINKEDIN_ICON}</a><a href="${MAKER.github}" target="_blank" rel="noopener" aria-label="${MAKER.name} on GitHub" title="GitHub">${GITHUB_ICON}</a></span> and isn't affiliated with any city or utility.</p>
         <p>Spotted a wrong line or a missing street, or have an idea? Use the <a href="/?sel=feedback">feedback form</a> on the map or email ${CONTACT_LINK}. The <a href="/faq">FAQ</a> answers the common questions.</p>`,
     )}`,
   });
