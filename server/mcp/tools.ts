@@ -8,6 +8,7 @@ import { lookupPlace, permitsOnly, type Lookup, type LookupDeps } from './lookup
 import { missText } from './misses';
 import { fartherLines } from './farther';
 import { argumentErrorText } from './argErrors';
+import { lenientArgs, problemLabel } from './lenientArgs';
 import { cityInput as city } from './cityInput';
 import { SERVER_ICONS } from './meta';
 import { UTILITY_KINDS, UTILITY_STYLES } from '../../src/utilities';
@@ -299,13 +300,19 @@ export const callTool = async (name: unknown, args: unknown, deps: ToolDeps): Pr
       ok: false,
       code: -32602,
       message: `Unknown tool: ${String(name)}`,
-      facts: { outcome: 'bad_args', tool: null, ...NO_FACTS },
+      facts: { outcome: 'unknown_tool', tool: null, ...NO_FACTS },
     };
-  const parsed = tool.input.safeParse(args ?? {});
+  const fixed = lenientArgs(args);
+  const parsed = tool.input.safeParse(fixed);
   if (!parsed.success)
     return {
       ok: true,
-      facts: { outcome: 'bad_args', tool: tool.name, ...NO_FACTS },
+      facts: {
+        outcome: 'bad_args',
+        tool: tool.name,
+        ...NO_FACTS,
+        problem: problemLabel(parsed.error.issues, fixed),
+      },
       result: {
         content: [
           {
@@ -313,7 +320,7 @@ export const callTool = async (name: unknown, args: unknown, deps: ToolDeps): Pr
             text: argumentErrorText(
               tool.name,
               parsed.error.issues,
-              args ?? {},
+              fixed,
               jsonSchema(tool.input, 'input'),
             ),
           },

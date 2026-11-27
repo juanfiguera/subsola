@@ -77,6 +77,8 @@ export interface Stats {
   byMethod: Count[];
   /** Outside-coverage misses by place; a null label is a miss whose place wasn't recognized. */
   missed: Count[];
+  /** Bad-argument calls by what failed ("address:missing"); null on rows from before 0005. */
+  badArgs: Count[];
   /** Distinct requesters in the range; calls from before 0004 have none and aren't counted. */
   requesterCount: number;
   requesters: RequesterRow[];
@@ -196,7 +198,7 @@ export const loadStats = async <Statement>(
   const real = (sql: string) => db.prepare(sql).bind(since, HEALTH_CLIENT);
   const statements = [
     real(
-      `SELECT COUNT(*) AS total, COALESCE(SUM(method = 'tools/call'), 0) AS toolCalls, COALESCE(SUM(method = 'tools/call' AND outcome = 'answered'), 0) AS answered ${REAL}`,
+      `SELECT COUNT(*) AS total, COALESCE(SUM(method = 'tools/call' AND outcome != 'unknown_tool'), 0) AS toolCalls, COALESCE(SUM(method = 'tools/call' AND outcome = 'answered'), 0) AS answered ${REAL}`,
     ),
     real(PERCENTILES),
     // A bound number can arrive as REAL, which would make the division fractional.
@@ -222,6 +224,7 @@ export const loadStats = async <Statement>(
     real(REQUESTERS),
     real(LIMITED_BY_NETWORK),
     real(`SELECT COUNT(DISTINCT requester) AS n ${REAL} AND outcome = 'rate_limited'`),
+    real(grouped('problem', `${REAL} AND outcome = 'bad_args'`)),
   ];
   const results = await db.batch<Record<string, unknown>>(statements);
   const rows = <T>(i: number) => (results[i]?.results ?? []) as T[];
@@ -248,6 +251,7 @@ export const loadStats = async <Statement>(
     requesters: rows<RequesterQueryRow>(13).map(requesterRow),
     limitedByNetwork: rows<LimitedNetwork>(14),
     limitedRequesters: count(15),
+    badArgs: rows<Count>(16),
     health: {
       latest: healthCheck(rows<HealthQueryRow>(9)[0]),
       total: health?.total ?? 0,

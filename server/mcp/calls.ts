@@ -16,6 +16,8 @@ export const OUTCOMES = [
   // Found the address, but no built cells reach it.
   'no_records',
   'bad_args',
+  // A tools/call for a name the server doesn't have: mostly scanners trying names.
+  'unknown_tool',
   // A geocoder timed out, or the cell index or every cell failed to load.
   'upstream_error',
   'rate_limited',
@@ -35,6 +37,8 @@ export interface CallFacts {
   region: RegionId | null;
   /** For outside_coverage only: a place from missedPlace.ts's fixed list, or null. */
   missedPlace: string | null;
+  /** For bad_args only: which fields failed and how, from lenientArgs.ts's problemLabel. */
+  problem?: string | null;
 }
 
 export interface CallRecord extends CallFacts {

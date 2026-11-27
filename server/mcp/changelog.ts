@@ -12,6 +12,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.6.2',
+    date: '2026-11-27',
+    changes: [
+      'Tool arguments are read more forgivingly: null or blank optional fields count as not given, numbers and true/false sent as strings are read as such, radius_m out of range or fractional is rounded to the nearest allowed value, since_year takes a date like "2024-01-01", utility takes any case, a plural or a common name like "electrical", the address is also read from location or query, and arguments sent as a JSON string are opened.',
+    ],
+  },
+  {
     version: '1.6.1',
     date: '2026-11-23',
     changes: [

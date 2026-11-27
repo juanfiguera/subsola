@@ -399,19 +399,20 @@ describe('handleMcp tools/call', () => {
 
   it.each([
     [
-      { name: 'recent_digs', arguments: { address: '1 Main St', radius_m: 5000 } },
-      'Invalid arguments for recent_digs: radius_m must be between 10 and 400 (got 5000). Try 400.',
+      { name: 'recent_digs', arguments: { address: '1 Main St', radius_m: 'wide' } },
+      'Invalid arguments for recent_digs: radius_m must be a number (got a string: "wide").',
     ],
     [
-      { name: 'recent_digs', arguments: { address: '1 Main St', radius_m: 12.5 } },
-      'radius_m must be a whole number (got 12.5).',
+      { name: 'recent_digs', arguments: { address: '1 Main St', since_year: 1850 } },
+      'since_year must be between 1900 and 2100 (got 1850). Try 1900.',
     ],
     [
       { name: 'whats_under', arguments: { address: 'x'.repeat(201) } },
       'address can be at most 200 characters (got 201).',
     ],
     [{ name: 'whats_under', arguments: {} }, 'address is required.'],
-    [{ name: 'whats_under', arguments: { address: '' } }, "address can't be empty."],
+    // Blank counts as not given, like the null some clients send for every field they leave out.
+    [{ name: 'whats_under', arguments: { address: '' } }, 'address is required.'],
     [
       { name: 'whats_under', arguments: { address: '1 Main St', city: 'boston' } },
       'city: "boston" isn\'t a city Subsola covers. Use one of "nyc" (New York City), "dc" (Washington, DC)',
@@ -425,8 +426,8 @@ describe('handleMcp tools/call', () => {
       'city must be a string (got a number: 7).',
     ],
     [
-      { name: 'recent_digs', arguments: { address: '1 Main St', permitted_today: 'yes' } },
-      'permitted_today must be a boolean (got a string: "yes").',
+      { name: 'recent_digs', arguments: { address: '1 Main St', permitted_today: 'maybe' } },
+      'permitted_today must be a boolean (got a string: "maybe").',
     ],
   ])('answers bad arguments as a tool error the model can fix: %j', async (params, text) => {
     const { body } = await call(rpc('tools/call', params));
@@ -765,12 +766,18 @@ describe('handleMcp stats rows', () => {
 
   it('records bad arguments, unknown tools, the rate limit and a server error', async () => {
     expect(
-      (await rowsFor(rpc('tools/call', { name: 'recent_digs', arguments: { radius_m: 5 } })))[0],
-    ).toMatchObject({ outcome: 'bad_args', tool: 'recent_digs' });
+      (
+        await rowsFor(rpc('tools/call', { name: 'recent_digs', arguments: { radius_m: 'wide' } }))
+      )[0],
+    ).toMatchObject({
+      outcome: 'bad_args',
+      tool: 'recent_digs',
+      problem: 'address:missing,radius_m:invalid_type',
+    });
     // A tool name the server doesn't have is never stored.
     expect(
       (await rowsFor(rpc('tools/call', { name: '1 Main St Boston', arguments: {} })))[0],
-    ).toMatchObject({ outcome: 'bad_args', tool: null });
+    ).toMatchObject({ outcome: 'unknown_tool', tool: null });
     expect(
       (await rowsFor(whatsUnder('1 Main St'), {}, { limit: async () => 30 }))[0],
     ).toMatchObject({ outcome: 'rate_limited', tool: 'whats_under' });

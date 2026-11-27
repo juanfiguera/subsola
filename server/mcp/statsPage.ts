@@ -32,6 +32,7 @@ const OUTCOME_NOTES: Record<string, string> = {
   outside_coverage: 'outside the covered cities',
   no_records: 'found, but no records there',
   bad_args: 'bad arguments',
+  unknown_tool: 'a tool name the server lacks',
   upstream_error: 'a city source or map data failed',
   rate_limited: 'over the rate limit',
   server_error: 'the tool threw',
@@ -246,8 +247,9 @@ ${table(
 ${table('By client', stats.byClient, (label) => label ?? 'none', 'No calls.')}
 ${table('By method', stats.byMethod, (label) => label ?? 'none', 'No calls.')}
 ${table('Missed places', stats.missed, (label) => label ?? 'Not recognized', 'No addresses outside the covered cities.')}
+${table('Bad arguments', stats.badArgs, (label) => label ?? 'Not recorded', 'No bad arguments.')}
 </div>
-<p class="note footnote">Missed places are addresses outside the covered cities, most asked first: the city to add next. Only places on the server's own list are named; anything else counts as not recognized.</p>
+<p class="note footnote">Missed places are addresses outside the covered cities, most asked first: the city to add next. Only places on the server's own list are named; anything else counts as not recognized. Bad arguments name the field that failed and how, never what was sent; calls from before Nov 27 weren't recorded. Tool calls leave out calls for a tool name the server lacks, mostly scanners.</p>
 ${requesters(stats)}
 ${limitedByNetwork(stats)}`;
   return `<!doctype html>

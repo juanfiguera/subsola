@@ -3,7 +3,7 @@
   "name": "com.subsola/subsola",
   "title": "Subsola",
   "description": "What public records say is under US city streets: utilities, depths, lead lines and digs.",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "websiteUrl": "https://subsola.com/mcp",
   "icons": [
     { "src": "https://subsola.com/favicon.svg", "mimeType": "image/svg+xml", "sizes": ["any"] },

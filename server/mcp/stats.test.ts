@@ -47,6 +47,7 @@ const database = () => {
         value('requester', 'aaaaaaaaaaaa'),
         value('network', 'Anthropic, PBC'),
         value('country', 'US'),
+        value('problem', null),
       );
   };
   const insertHealth = (row: {
@@ -65,6 +66,21 @@ const database = () => {
 };
 
 describe('loadStats', () => {
+  it('breaks bad arguments down by what failed, and leaves unknown tools out of tool calls', async () => {
+    const { db, insert } = database();
+    insert({});
+    insert({ outcome: 'bad_args', problem: 'address:missing' });
+    insert({ outcome: 'bad_args', problem: 'address:missing' });
+    insert({ outcome: 'bad_args', problem: 'utility:invalid_value' });
+    insert({ outcome: 'unknown_tool', tool: null });
+    const stats = await loadStats(db, '7d', NOW);
+    expect(stats.badArgs).toEqual([
+      { label: 'address:missing', n: 2 },
+      { label: 'utility:invalid_value', n: 1 },
+    ]);
+    expect(stats).toMatchObject({ toolCalls: 4, answered: 1 });
+  });
+
   it('is all zeros on day one', async () => {
     const { db } = database();
     const stats = await loadStats(db, '7d', NOW);
@@ -287,6 +303,7 @@ const sample = (overrides: Partial<Stats> = {}): Stats => ({
   ],
   limitedByNetwork: [{ network: 'OpenAI', limited: 12, requesters: 2, calls: 50 }],
   limitedRequesters: 2,
+  badArgs: [{ label: 'address:missing', n: 4 }],
   health: {
     latest: { at: NOW - 300, ok: true, durationMs: 812, reason: null, message: null },
     total: 288,

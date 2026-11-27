@@ -10,7 +10,7 @@ export const CALL_KEEP_SECONDS = 90 * 86_400;
 const PRUNE_EVERY = 200;
 
 export const INSERT_CALL =
-  'INSERT INTO mcp_calls (at, method, tool, region, outcome, duration_ms, client, protocol, missed_place, requester, network, country) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)';
+  'INSERT INTO mcp_calls (at, method, tool, region, outcome, duration_ms, client, protocol, missed_place, requester, network, country, problem) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)';
 export const PRUNE_CALLS = 'DELETE FROM mcp_calls WHERE at < ?1';
 
 /** The D1 calls a stats write needs; the full type lives in @cloudflare/workers-types. */
@@ -44,6 +44,7 @@ export const saveCall = async <Statement>(
         call.requester,
         call.network,
         call.country,
+        call.problem ?? null,
       ),
   ];
   if (random() < 1 / PRUNE_EVERY)

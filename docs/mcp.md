@@ -260,6 +260,7 @@ deletes rows older than 90 days (`CALL_KEEP_SECONDS`), in the same batch.
 | `requester`    | The first 12 hex characters of HMAC-SHA256 of `CF-Connecting-IP` under the `REQUESTER_KEY` Pages secret (`server/mcp/requester.ts`, migration `0004`). The same caller groups together; the IP is never stored, and without the key a guessed IP can't be checked against it. It is not the limiter's `FEEDBACK_SALT`, so the two hashes can't be joined. Null without a key or an IP, and on rows from before 0004                          |
 | `network`      | `request.cf.asOrganization`, the network's org name ("Anthropic, PBC", "Comcast Cable"), whitespace collapsed and cut to 80 characters; null when Cloudflare gives none                                                                                                                                                                                                                                                                      |
 | `country`      | `request.cf.country`, two letters ("US", "T1" for Tor); null otherwise                                                                                                                                                                                                                                                                                                                                                                       |
+| `problem`      | Only for `bad_args`: which fields failed and how, as `field:code` pairs (`address:missing`, `utility:invalid_value`) from `problemLabel` in `lenientArgs.ts`. Field names are the tools' own or `other`, codes are zod's: never a value that was sent (migration `0005`)                                                                                                                                                                     |
 
 Outcomes (`OUTCOMES` in `calls.ts`):
 
@@ -270,8 +271,11 @@ Outcomes (`OUTCOMES` in `calls.ts`):
   (or only a lookalike outside every city) and the text names a place on the missed-place list
   (`missFacts`). This is how "100 Main St, Boston" lands here, as "Boston, MA".
 - `no_records`: found, but no built cells reach it (`missFacts`).
-- `bad_args`: arguments that fail the schema, an unknown tool, or a bad prompts/get (`callTool`,
-  `answer` in `protocol.ts`).
+- `bad_args`: arguments that fail the schema after `lenientArgs` (`server/mcp/lenientArgs.ts`)
+  has fixed the plain near-misses, or a bad prompts/get (`callTool`, `answer` in `protocol.ts`).
+  `problem` says which fields failed.
+- `unknown_tool`: a tools/call for a name the server doesn't have, mostly scanners. Left out of
+  the stats page's tool calls and success rate. Migration `0005` moved older such rows here.
 - `upstream_error`: the geocoders timed out, or the cell index or every cell failed to load
   (`missFacts`).
 - `rate_limited`: over a limit in `limit.ts` (`answer`).
