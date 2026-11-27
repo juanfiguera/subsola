@@ -23,7 +23,7 @@
 
 **Numbers and units:** digits for every count and measurement ("3 ft 5 in", "500 ft", "10 cities"). Abbreviate units after a number (ft, in, m); spell them out in prose without one ("a few feet"). Thousands get commas. Dates in data are ISO (2026-11-14). Never type a figure that the code or data can supply.
 
-**Accuracy and the 811 limit.** Subsola is research, not a utility locate. Say so wherever a reader might act on a line, using those words. Then name the city's one-call center and its notice period. Say "estimated" or "est." whenever a position or depth comes from a standard rather than a record. Say "not published" rather than guessing. Never say or imply "safe to dig", "exact", "precise" or "verified" unless the record itself says so.
+**Accuracy and the 811 limit.** Subsola is research, not a utility locate. Say so wherever a reader might act on a line, using those words. Then name the city's one-call center and its notice period. Say "estimated" or "est." whenever a position or depth comes from a standard rather than a record. Say "not published" rather than guessing. Always tell people to call before any digging, with no "in most cases" or "usually": err on the side of caution. Never say or imply "safe to dig", "exact", "precise" or "verified" unless the record itself says so.
 
 **People.** Talk to the reader as "you". Subsola is "Subsola" in most copy and "we" only where a person answers ("We'll change a credit right away"). Use "they" for anyone whose pronouns you don't know.
 

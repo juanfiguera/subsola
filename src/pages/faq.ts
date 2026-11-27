@@ -30,7 +30,7 @@ const groups = (): Group[] => [
       {
         id: 'locate',
         q: `Can I dig based on what ${SITE_NAME} shows?`,
-        a: `No. ${SITE_NAME} is research, not a utility locate. Call 811 a few working days before any digging. It's free, in most cases the law requires it, and the utilities send someone to mark their lines on the ground. Use ${SITE_NAME} earlier, while you're scoping, designing or bidding, so you know what to expect.`,
+        a: `No. ${SITE_NAME} is research, not a utility locate. Call 811 a few working days before any digging. It's free, the law requires it, and the utilities send someone to mark their lines on the ground. Use ${SITE_NAME} earlier, while you're scoping, designing or bidding, so you know what to expect.`,
       },
       {
         id: 'accuracy',
