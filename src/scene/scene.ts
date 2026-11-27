@@ -84,6 +84,7 @@ import type { ServiceLine } from './services';
 import type { ServiceMaterial } from '../sources/services';
 import { currentTheme, onThemeChange } from '../theme';
 import { scenePalette, type ScenePalette } from './palette';
+import { isInAppBrowser } from '../device';
 
 // Deck loads its icons (data: URLs) through loaders.gl, whose workers default to its CDN on
 // unpkg.com. The CSP blocks that and the site should never reach a third-party CDN; nothing
@@ -606,7 +607,8 @@ export const createScene = (container: HTMLDivElement, handlers: SceneHandlers) 
     parent: container,
     // A 3x phone screen at full resolution needs drawing and picking buffers over twice the size
     // of 2x, for a difference too fine to see at this size. iPhones kill tabs that run short.
-    useDevicePixels: Math.min(window.devicePixelRatio || 1, 2),
+    // In-app browsers get even less memory than Safari (src/device.ts), so they draw at 1.5x.
+    useDevicePixels: Math.min(window.devicePixelRatio || 1, isInAppBrowser(navigator.userAgent) ? 1.5 : 2),
     views: orbitView,
     effects: [lighting],
     initialViewState: INITIAL_VIEW,

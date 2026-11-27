@@ -131,6 +131,7 @@ import { createAddressIndex } from './sources/addressIndex';
 import { attachSuggestions } from './ui/suggestions';
 import { fetchConEdStructures } from './sources/conEd';
 import type { MeshData } from './scene/meshes';
+import { isInAppBrowser } from './device';
 import {
   findPicked,
   readSharedView,
@@ -2019,8 +2020,9 @@ const CELLS_URL = (import.meta.env.VITE_CELLS_URL as string | undefined)?.replac
 const ADDRESSES_URL =
   (import.meta.env.VITE_ADDRESSES_URL as string | undefined)?.replace(/\/$/, '') ?? CELLS_URL;
 const addressIndex = ADDRESSES_URL ? createAddressIndex(ADDRESSES_URL) : null;
-const builtCellsAtOnce = () => (phone.matches ? 3 : 6);
-const maxBuiltCells = () => (phone.matches ? 48 : 120);
+const inApp = isInAppBrowser(navigator.userAgent);
+const builtCellsAtOnce = () => (inApp ? 2 : phone.matches ? 3 : 6);
+const maxBuiltCells = () => (inApp ? 24 : phone.matches ? 48 : 120);
 let cellIndexTask: Promise<CellIndex | null> | null = null;
 let cellIndex: CellIndex | null = null;
 
@@ -2706,6 +2708,7 @@ if (new URLSearchParams(location.search).has('debug'))
       'cells loaded': loadedCells.size,
       'cells loading': cellsLoading,
       'cell limit': maxBuiltCells(),
+      'in-app browser': inApp ? 'yes' : 'no',
       'permit records': state.permitGroups.reduce((sum, group) => sum + group.properties.count, 0),
       assets: state.assets.length,
     })),
