@@ -61,7 +61,10 @@ export const watchForCrashes = (): Crash | null => {
   let crash: Crash | null = null;
   try {
     const previous = sessionStorage.getItem(KEY);
-    if (previous) {
+    // Chrome unloads idle background tabs to save memory (Memory Saver), with no pagehide, and
+    // reloads them when they're next shown. That's a tab left open for hours, not a load dying.
+    const discarded = (document as Document & { wasDiscarded?: boolean }).wasDiscarded === true;
+    if (previous && !discarded) {
       const dead = JSON.parse(previous) as OpenPage;
       const seconds = Math.round((Date.now() - dead.openedAt) / 1000);
       crash = {
