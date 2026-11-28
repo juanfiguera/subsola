@@ -1,9 +1,4 @@
-import {
-  captureConsoleIntegration,
-  captureException,
-  captureMessage,
-  init,
-} from '@sentry/browser';
+import { captureConsoleIntegration, captureException, captureMessage, init } from '@sentry/browser';
 import { withoutQuery, withoutQuoted } from './errors';
 
 /**
@@ -18,8 +13,9 @@ export const startSentry = (dsn: string, early: unknown[], earlyLogs: string[]) 
     // by default.
     tracesSampleRate: 0,
     integrations: [captureConsoleIntegration({ levels: ['error'] })],
-    // An aborted request is the user moving on, not a fault.
-    ignoreErrors: ['AbortError'],
+    // An aborted request is the user moving on, not a fault. A browser without WebGL 2 is
+    // counted in analytics instead (map_unavailable), and the page explains it to the reader.
+    ignoreErrors: ['AbortError', 'Failed to create WebGL context', 'WebGL2 is required'],
     // A searched address is personal: page URLs carry it in the query, geocoder requests in
     // theirs, and some messages quote it. All of that is cut before an event leaves.
     beforeSend: (event) => {

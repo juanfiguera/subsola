@@ -131,7 +131,7 @@ import { createAddressIndex } from './sources/addressIndex';
 import { attachSuggestions } from './ui/suggestions';
 import { fetchConEdStructures } from './sources/conEd';
 import type { MeshData } from './scene/meshes';
-import { isInAppBrowser } from './device';
+import { canDrawWebGL2, isInAppBrowser } from './device';
 import {
   findPicked,
   readSharedView,
@@ -152,6 +152,15 @@ const byId = <T extends HTMLElement>(id: string): T => {
 
 const crash = watchForCrashes();
 if (crash) trackEvent('load_crashed', { seconds: crash.seconds, stage: crash.stage });
+
+// Without WebGL 2 the card still answers for the address; the map's place explains why it's
+// empty (index.html). Counted here rather than left to Sentry, where crawlers without a GPU
+// would bury real errors.
+const canDraw = canDrawWebGL2();
+if (!canDraw) {
+  document.body.classList.add('no-3d');
+  trackEvent('map_unavailable');
+}
 
 const DEFAULT_ADDRESS = '1 Times Square, New York, NY 10036';
 // About 500 ft: the block plus both intersections.
@@ -591,7 +600,8 @@ const renderCard = ({ missed = false } = {}) => {
         .filter(({ groupIndex }) => nearPlace(state.permitGroups[groupIndex]!.geometry))
         .map(liveWork),
       records: state.recordsBuiltAt ? recordsFreshness(state.recordsBuiltAt, new Date()) : null,
-      guide: !guideSeen,
+      // The tip says to tap a line, and none are drawn without the map.
+      guide: !guideSeen && canDraw,
       beta: state.region.beta,
       region: state.region,
       since: state.since,
@@ -1479,7 +1489,7 @@ const CITY_MAP_DELAY_MS = 6000;
 const prepareCityMapLater = (lngLat: [number, number]) => {
   // A second WebGL context and its tile workers are too much memory to hold ahead of time on a
   // touch device; there the map builds when it's first opened.
-  if (window.matchMedia('(pointer: coarse)').matches) return;
+  if (!canDraw || window.matchMedia('(pointer: coarse)').matches) return;
   setTimeout(() => cityMap.prepare(lngLat), CITY_MAP_DELAY_MS);
 };
 

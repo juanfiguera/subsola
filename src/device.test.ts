@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { isInAppBrowser } from './device';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { canDrawWebGL2, isInAppBrowser } from './device';
 
 const SAFARI =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1';
@@ -25,5 +25,24 @@ describe('isInAppBrowser', () => {
 
   it('spots Instagram, which writes its name without a slash', () => {
     expect(isInAppBrowser(INSTAGRAM)).toBe(true);
+  });
+});
+
+describe('canDrawWebGL2', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const withContext = (context: unknown) =>
+    vi.stubGlobal('document', { createElement: () => ({ getContext: () => context }) });
+
+  it('says no when the browser gives no WebGL 2 context', () => {
+    withContext(null);
+    expect(canDrawWebGL2()).toBe(false);
+  });
+
+  it('says yes, and lets go of the test context', () => {
+    const loseContext = vi.fn();
+    withContext({ getExtension: () => ({ loseContext }) });
+    expect(canDrawWebGL2()).toBe(true);
+    expect(loseContext).toHaveBeenCalled();
   });
 });

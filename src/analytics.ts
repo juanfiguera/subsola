@@ -29,6 +29,7 @@ export type AnalyticsEvent =
   | 'link_copied'
   | 'feedback_sent'
   | 'load_crashed'
+  | 'map_unavailable'
   | 'explainer_opened'
   | 'coverage_missed'
   | 'mcp_link_clicked';

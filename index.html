@@ -59,6 +59,18 @@
       aria-label="3D view of the street and the utilities under it"
     ></div>
     <div id="city" class="city" aria-label="City map"></div>
+    <!-- Shown in place of the map when the browser can't draw WebGL 2 (src/device.ts). -->
+    <section class="no-3d-note panel" aria-labelledby="no-3d-title">
+      <h2 id="no-3d-title">This browser can't draw the map</h2>
+      <p>
+        The map needs WebGL 2, which is turned off or not supported here. Everything the records say
+        about this address is still in the card: expected depths, active work and the lot report.
+      </p>
+      <p>
+        To see the map, turn on hardware acceleration in your browser's settings, or open Subsola in
+        another browser.
+      </p>
+    </section>
 
     <header class="topbar">
       <a class="brand" href="./" aria-label="Subsola home">

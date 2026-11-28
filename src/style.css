@@ -184,6 +184,45 @@ svg {
   transition: opacity 280ms ease;
 }
 
+/* No WebGL 2 (src/device.ts): the note stands where the map would be, and the controls that
+   only move the map go, so nothing on screen does nothing. */
+.no-3d-note {
+  display: none;
+}
+
+.no-3d .no-3d-note {
+  display: block;
+  position: fixed;
+  top: 50%;
+  left: 16px;
+  right: calc(16px + var(--card-w) + 12px);
+  max-width: 440px;
+  margin: 0 auto;
+  transform: translateY(-50%);
+  padding: 18px 20px;
+  border-radius: 12px;
+}
+
+.no-3d-note h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.no-3d-note p {
+  margin: 6px 0 0;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.no-3d .layers,
+.no-3d .toolbar,
+.no-3d .views,
+.no-3d .city-button,
+.no-3d .dig-cta,
+.no-3d .phone-key {
+  display: none;
+}
+
 .layers,
 .toolbar {
   transition: opacity 280ms ease;
@@ -2419,7 +2458,8 @@ svg {
   }
 
   [data-layers='open'] .phone-key,
-  [data-mode='city'] .phone-key {
+  [data-mode='city'] .phone-key,
+  .no-3d .phone-key {
     display: none;
   }
 
@@ -3424,4 +3464,13 @@ svg {
 
 .feedback-check {
   min-height: 65px;
+}
+
+@media (max-width: 900px), (max-height: 520px) {
+  /* Clear of the round buttons down the right edge. */
+  .no-3d .no-3d-note {
+    top: 72px;
+    right: 68px;
+    transform: none;
+  }
 }
