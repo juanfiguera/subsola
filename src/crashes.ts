@@ -71,8 +71,9 @@ export const watchForCrashes = (): Crash | null => {
         path: dead.path ?? [],
       };
       remember(crash);
+      // No quotes around the stage: error reports blank out quoted text, where addresses go.
       console.error(
-        `[subsola] the last page load ended without closing, likely killed for memory: ${seconds} s after opening, at "${dead.stage}"`,
+        `[subsola] the last page load ended without closing, likely killed for memory: ${seconds} s after opening, at stage: ${dead.stage}`,
       );
     }
   } catch (error) {

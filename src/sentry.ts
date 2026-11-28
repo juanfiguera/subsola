@@ -1,4 +1,9 @@
-import { captureConsoleIntegration, captureException, init } from '@sentry/browser';
+import {
+  captureConsoleIntegration,
+  captureException,
+  captureMessage,
+  init,
+} from '@sentry/browser';
 import { withoutQuery, withoutQuoted } from './errors';
 
 /**
@@ -6,7 +11,7 @@ import { withoutQuery, withoutQuoted } from './errors';
  * bundler still drops the parts of the SDK it doesn't use. `early` is what went wrong before it
  * arrived.
  */
-export const startSentry = (dsn: string, early: unknown[]) => {
+export const startSentry = (dsn: string, early: unknown[], earlyLogs: string[]) => {
   init({
     dsn,
     // Errors only: no performance tracing or session replay. The SDK leaves out IPs and cookies
@@ -34,4 +39,5 @@ export const startSentry = (dsn: string, early: unknown[]) => {
     },
   });
   for (const error of early) captureException(error);
+  for (const message of earlyLogs) captureMessage(message, 'error');
 };
